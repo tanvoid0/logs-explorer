@@ -4,6 +4,48 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 
 ![WindSurf Logo](static/tauri.svg)
 
+## 📊 Status & Build Information
+
+[![Release Build](https://github.com/tanvoid0/logs-explorer/workflows/Build%20and%20Release/badge.svg?branch=main&event=push)](https://github.com/tanvoid0/logs-explorer/actions/workflows/release.yml)
+[![Beta Build](https://github.com/tanvoid0/logs-explorer/workflows/Build%20and%20Release/badge.svg?branch=develop&event=push)](https://github.com/tanvoid0/logs-explorer/actions/workflows/release.yml)
+[![Tests](https://github.com/tanvoid0/logs-explorer/workflows/Build%20and%20Release/badge.svg?branch=main&event=pull_request)](https://github.com/tanvoid0/logs-explorer/actions/workflows/release.yml)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/tanvoid0/logs-explorer/releases)
+[![Node.js](https://img.shields.io/badge/Node.js-22.x-green.svg)](https://nodejs.org/)
+[![Rust](https://img.shields.io/badge/Rust-stable-orange.svg)](https://rust-lang.org/)
+[![Tauri](https://img.shields.io/badge/Tauri-Latest-purple.svg)](https://tauri.app/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-Latest-red.svg)](https://kit.svelte.dev/)
+[![pnpm](https://img.shields.io/badge/pnpm-Latest-yellow.svg)](https://pnpm.io/)
+
+### 📦 Latest Release
+[![Current Version](https://img.shields.io/badge/Version-0.1.0-blue.svg)](https://github.com/tanvoid0/logs-explorer/releases/latest)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/releases/latest)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/tanvoid0/logs-explorer?include_prereleases&sort=semver)](https://github.com/tanvoid0/logs-explorer/releases)
+[![GitHub downloads](https://img.shields.io/github/downloads/tanvoid0/logs-explorer/latest/total)](https://github.com/tanvoid0/logs-explorer/releases/latest)
+
+### 🔧 Development Status
+[![Code Size](https://img.shields.io/github/languages/code-size/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer)
+[![Repo Size](https://img.shields.io/github/repo-size/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer)
+[![Issues](https://img.shields.io/github/issues/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/pulls)
+[![Contributors](https://img.shields.io/github/contributors/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/tanvoid0/logs-explorer/main)](https://github.com/tanvoid0/logs-explorer/commits/main)
+
+### 📋 Badge Descriptions
+
+- **Release Build**: Status of builds on the main branch (production releases)
+- **Beta Build**: Status of builds on the develop branch (beta releases)
+- **Tests**: Status of tests on pull requests
+- **Platform**: Supported operating systems
+- **Node.js/Rust/Tauri/SvelteKit/pnpm**: Technology stack versions
+- **Current Version**: Latest stable version
+- **GitHub Release**: Latest GitHub release version
+- **Downloads**: Total downloads of the latest release
+- **Code Size/Repo Size**: Repository statistics
+- **Issues/PRs**: Open issues and pull requests
+- **Contributors**: Number of contributors
+- **Last Commit**: Most recent commit on main branch
+
 ## 🚀 Features
 
 - **Multi-Cluster Management**: Connect to multiple Kubernetes clusters
@@ -16,6 +58,37 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 - **Copy-to-Clipboard**: Easy copying of log messages, fields, and configurations
 - **Dark/Light Theme**: Modern UI with theme support
 - **Cross-Platform**: Works on Windows, macOS, and Linux
+
+## 🔄 CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+### Workflow Jobs
+
+1. **Test Job**: Runs on all branches and PRs
+   - Installs dependencies (Node.js, Rust, system packages)
+   - Runs test suite
+   - Uses comprehensive caching for faster builds
+
+2. **Build Jobs**: Run on main and develop branches
+   - **Linux Build**: Creates AppImage and .deb packages
+   - **macOS Build**: Creates .dmg packages (Intel + Apple Silicon)
+   - **Windows Build**: Creates .msi and .exe installers
+
+3. **Release Jobs**: Create GitHub releases
+   - **Production Release**: Creates full release from main branch
+   - **Beta Release**: Creates prerelease from develop branch
+
+### Caching Strategy
+
+- **pnpm Dependencies**: Caches `node_modules` and `~/.pnpm-store`
+- **Rust Dependencies**: Caches `~/.cargo/registry`, `~/.cargo/git`, and `target`
+- **System Dependencies**: Caches apt packages for faster installation
+
+### Build Times
+
+- **First Run**: ~10-15 minutes (no cache)
+- **Subsequent Runs**: ~5-8 minutes (with caching)
 
 ## 📦 Installation
 
@@ -44,6 +117,23 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
   - **Linux**: Ubuntu 18.04+, CentOS 7+, or similar
 
 ## 🛠️ Development Setup
+
+### Version Management
+
+This project uses a version management script to keep `package.json` and `Cargo.toml` versions in sync.
+
+```bash
+# Show current versions
+./scripts/version.sh show
+
+# Sync to a specific version
+./scripts/version.sh sync 0.1.1
+
+# Bump version (patch, minor, major)
+./scripts/version.sh bump patch   # 0.1.0 → 0.1.1
+./scripts/version.sh bump minor   # 0.1.0 → 0.2.0
+./scripts/version.sh bump major   # 0.1.0 → 1.0.0
+```
 
 ### Prerequisites
 
