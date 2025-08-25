@@ -1,6 +1,6 @@
 {
   "name": "logs-explorer",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "",
   "type": "module",
   "scripts": {
@@ -39,20 +39,15 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitest/ui": "^1.0.0",
-    "cookie": "^1.0.2",
     "eslint": "^8.0.0",
     "eslint-plugin-svelte": "^2.0.0",
     "jsdom": "^24.0.0",
     "prettier": "^3.0.0",
     "prettier-plugin-svelte": "^3.0.0",
-    "set-cookie-parser": "^2.7.1",
-    "source-map-js": "^1.2.1",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.1.12",
-    "totalist": "^3.0.1",
     "typescript": "~5.6.2",
-    "undici": "^7.15.0",
     "vite": "^6.0.3",
     "vitest": "^1.0.0"
   }
