@@ -1,43 +1,57 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { k8sAPI } from './k8s';
 
-// Mock the invoke function
+// Mock the Tauri API before importing the module under test
+const mockInvoke = vi.fn();
+
 vi.mock('@tauri-apps/api', () => ({
-  invoke: vi.fn()
+  invoke: mockInvoke
 }));
+
+// Mock the window object for Tauri
+Object.defineProperty(global, 'window', {
+  value: {
+    __TAURI_INTERNALS__: {
+      invoke: mockInvoke
+    }
+  },
+  writable: true
+});
+
+// Import after mocking
+import { k8sAPI } from './k8s';
 
 describe('Kubernetes API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the singleton instance state
+    (k8sAPI as any).isInitialized = false;
   });
 
   it('should initialize successfully', async () => {
-    const { invoke } = await import('@tauri-apps/api');
-    vi.mocked(invoke).mockResolvedValue(true);
+    mockInvoke.mockResolvedValue(true);
 
     const result = await k8sAPI.init();
     expect(result).toBe(true);
-    expect(invoke).toHaveBeenCalledWith('init_k8s');
+    expect(mockInvoke).toHaveBeenCalledWith('init_k8s', {}, undefined);
   });
 
   it('should handle initialization errors', async () => {
-    const { invoke } = await import('@tauri-apps/api');
-    vi.mocked(invoke).mockRejectedValue(new Error('Connection failed'));
+    mockInvoke.mockRejectedValue(new Error('Connection failed'));
 
     const result = await k8sAPI.init();
     expect(result).toBe(false);
+    expect(mockInvoke).toHaveBeenCalledWith('init_k8s', {}, undefined);
   });
 
   it('should get namespaces', async () => {
-    const { invoke } = await import('@tauri-apps/api');
     const mockNamespaces = [
       { name: 'default', status: 'Active', age: '1d' },
       { name: 'kube-system', status: 'Active', age: '1d' }
     ];
-    vi.mocked(invoke).mockResolvedValue(mockNamespaces);
+    mockInvoke.mockResolvedValue(mockNamespaces);
 
     const namespaces = await k8sAPI.getNamespaces();
     expect(namespaces).toEqual(mockNamespaces);
-    expect(invoke).toHaveBeenCalledWith('k8s_get_namespaces');
+    expect(mockInvoke).toHaveBeenCalledWith('k8s_get_namespaces', {}, undefined);
   });
 });
