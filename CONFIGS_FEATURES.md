@@ -1,6 +1,6 @@
 # Interactive Configurations & Secrets Management
 
-This document describes the new interactive ConfigMaps and Secrets management features in the WindSurf application.
+This document describes the new interactive ConfigMaps and Secrets management features in the Kubernetes Logs Explorer application.
 
 ## Features
 

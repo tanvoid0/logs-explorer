@@ -6,7 +6,7 @@ vi.mock('@tauri-apps/api', () => ({
   invoke: vi.fn(),
   app: {
     getVersion: vi.fn(() => Promise.resolve('1.0.0')),
-    getName: vi.fn(() => Promise.resolve('WindSurf'))
+    getName: vi.fn(() => Promise.resolve('Kubernetes Logs Explorer'))
   }
 }));
 

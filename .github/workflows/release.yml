@@ -320,7 +320,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          name: WindSurf v${{ steps.version.outputs.version }}
+          name: Kubernetes Logs Explorer v${{ steps.version.outputs.version }}
           files: |
             artifacts/linux-app/**/*
             artifacts/macos-app/**/*
@@ -359,7 +359,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          name: WindSurf v${{ steps.version.outputs.version }} Beta
+          name: Kubernetes Logs Explorer v${{ steps.version.outputs.version }} Beta
           files: |
             artifacts/linux-app/**/*
             artifacts/macos-app/**/*

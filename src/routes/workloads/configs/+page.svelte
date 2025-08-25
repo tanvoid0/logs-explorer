@@ -148,7 +148,7 @@
 </script>
 
 <svelte:head>
-  <title>Configurations & Secrets - WindSurf</title>
+  <title>Configurations & Secrets - Kubernetes Logs Explorer</title>
 </svelte:head>
 
 <div class="configs-page">

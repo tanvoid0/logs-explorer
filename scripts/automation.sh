@@ -299,7 +299,7 @@ clean_build() {
 
 # Function to show help
 show_help() {
-    echo -e "${CYAN}WindSurf Automation Script${NC}"
+    echo -e "${CYAN}Kubernetes Logs Explorer Automation Script${NC}"
     echo ""
     echo "Usage: $0 {command} [options]"
     echo ""

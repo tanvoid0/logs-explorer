@@ -1,8 +1,8 @@
-# WindSurf - Kubernetes Logs Explorer
+# Kubernetes Logs Explorer
 
 A modern, cross-platform desktop application for exploring and managing Kubernetes clusters, built with Tauri, SvelteKit, and Rust.
 
-![WindSurf Logo](static/tauri.svg)
+![App Logo](static/tauri.svg)
 
 ## 📊 Status & Build Information
 
@@ -94,18 +94,18 @@ This project uses GitHub Actions for continuous integration and deployment:
 
 ### From Release Packages
 
-1. **Download the latest release** from the [Releases page](https://github.com/your-username/windsurf/releases)
+1. **Download the latest release** from the [Releases page](https://github.com/tanvoid0/logs-explorer/releases)
 2. **Choose your platform**:
-   - **Windows**: Download `windsurf_x64.msi` or `windsurf_x64-setup.exe`
-   - **macOS**: Download `windsurf_x64.dmg` (Intel) or `windsurf_aarch64.dmg` (Apple Silicon)
-   - **Linux**: Download `windsurf_x64.AppImage` or `windsurf_x64.deb`
+   - **Windows**: Download `logs-explorer_x64.msi` or `logs-explorer_x64-setup.exe`
+   - **macOS**: Download `logs-explorer_x64.dmg` (Intel) or `logs-explorer_aarch64.dmg` (Apple Silicon)
+   - **Linux**: Download `logs-explorer_x64.AppImage` or `logs-explorer_x64.deb`
 
 3. **Install the application**:
    - **Windows**: Run the `.msi` or `.exe` installer
    - **macOS**: Open the `.dmg` file and drag to Applications
    - **Linux**: 
-     - **AppImage**: Make executable and run: `chmod +x windsurf_x64.AppImage && ./windsurf_x64.AppImage`
-     - **Debian**: `sudo dpkg -i windsurf_x64.deb`
+     - **AppImage**: Make executable and run: `chmod +x logs-explorer_x64.AppImage && ./logs-explorer_x64.AppImage`
+     - **Debian**: `sudo dpkg -i logs-explorer_x64.deb`
 
 ### Prerequisites
 
@@ -147,7 +147,7 @@ This project uses an automation script to manage versions, releases, and develop
 - **Production Releases**: Uses version from `package.json` (e.g., `v0.1.0`)
 - **Beta Releases**: Uses version with `-beta` suffix (e.g., `v0.1.0-beta`)
 - **Automatic Tagging**: GitHub Actions automatically creates Git tags matching the version
-- **Release Names**: Automatically named "WindSurf vX.Y.Z" or "WindSurf vX.Y.Z Beta"
+- **Release Names**: Automatically named "Kubernetes Logs Explorer vX.Y.Z" or "Kubernetes Logs Explorer vX.Y.Z Beta"
 
 #### Automation Workflow
 
@@ -232,8 +232,8 @@ xcode-select --install
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/windsurf.git
-   cd windsurf
+   git clone https://github.com/tanvoid0/logs-explorer.git
+   cd logs-explorer
    ```
 
 2. **Install Node.js dependencies**:
@@ -396,9 +396,9 @@ logs-explorer/
 ### Application Settings
 
 The application stores settings in:
-- **Linux**: `~/.config/windsurf/`
-- **macOS**: `~/Library/Application Support/windsurf/`
-- **Windows**: `%APPDATA%\windsurf\`
+- **Linux**: `~/.config/logs-explorer/`
+- **macOS**: `~/Library/Application Support/logs-explorer/`
+- **Windows**: `%APPDATA%\logs-explorer\`
 
 ## 🚀 Deployment
 
@@ -495,10 +495,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/your-username/windsurf/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/windsurf/discussions)
-- **Documentation**: [Wiki](https://github.com/your-username/windsurf/wiki)
+- **Issues**: [GitHub Issues](https://github.com/tanvoid0/logs-explorer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/tanvoid0/logs-explorer/discussions)
+- **Documentation**: [Wiki](https://github.com/tanvoid0/logs-explorer/wiki)
 
 ---
 
-**Note**: This project is actively developed. Please check the [releases page](https://github.com/your-username/windsurf/releases) for the latest version and changelog.
+**Note**: This project is actively developed. Please check the [releases page](https://github.com/tanvoid0/logs-explorer/releases) for the latest version and changelog.
