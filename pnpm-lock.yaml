@@ -75,6 +75,9 @@ importers:
       prettier-plugin-svelte:
         specifier: ^3.0.0
         version: 3.4.0(prettier@3.6.2)(svelte@5.38.2)
+      source-map-js:
+        specifier: ^1.2.1
+        version: 1.2.1
       svelte:
         specifier: ^5.0.0
         version: 5.38.2
