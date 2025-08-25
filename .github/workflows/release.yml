@@ -228,22 +228,22 @@ jobs:
           path: src-tauri/target/release/bundle/
           retention-days: 30
 
-  build-windows:
-    name: Build Windows
-    runs-on: windows-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
+    # build-windows:
+  #   name: Build Windows
+  #   runs-on: windows-latest
+  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '22'
+  #     
+  #     - name: Setup Rust
+  #       uses: dtolnay/rust-toolchain@stable
+  #       with:
+  #         targets: x86_64-pc-windows-msvc
       
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -296,7 +296,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-beta')
-    needs: [build-linux, build-macos, build-windows]
+    needs: [build-linux, build-macos]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -324,7 +324,6 @@ jobs:
           files: |
             artifacts/linux-app/**/*
             artifacts/macos-app/**/*
-            artifacts/windows-app/**/*
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -336,7 +335,7 @@ jobs:
     name: Create Pre-release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-beta')
-    needs: [build-linux, build-macos, build-windows]
+    needs: [build-linux, build-macos]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -364,7 +363,6 @@ jobs:
           files: |
             artifacts/linux-app/**/*
             artifacts/macos-app/**/*
-            artifacts/windows-app/**/*
           draft: false
           prerelease: true
           generate_release_notes: true
