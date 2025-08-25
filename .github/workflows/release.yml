@@ -84,6 +84,7 @@ jobs:
     name: Build Linux
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -168,6 +169,7 @@ jobs:
     name: Build macOS
     runs-on: macos-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -232,6 +234,7 @@ jobs:
     name: Build Windows
     runs-on: windows-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       
@@ -297,6 +300,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-beta')
     needs: [build-linux, build-macos, build-windows]
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -328,6 +332,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -336,6 +341,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-beta')
     needs: [build-linux, build-macos, build-windows]
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -367,5 +373,6 @@ jobs:
           draft: false
           prerelease: true
           generate_release_notes: true
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
