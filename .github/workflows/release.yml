@@ -151,6 +151,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: List build artifacts
+        run: |
+          echo "Build artifacts:"
+          find src-tauri/target/release/bundle/ -type f 2>/dev/null || echo "No bundle directory found"
+          ls -la src-tauri/target/release/ 2>/dev/null || echo "No release directory found"
+      
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -208,6 +214,12 @@ jobs:
         run: pnpm tauri build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: List build artifacts
+        run: |
+          echo "Build artifacts:"
+          find src-tauri/target/release/bundle/ -type f 2>/dev/null || echo "No bundle directory found"
+          ls -la src-tauri/target/release/ 2>/dev/null || echo "No release directory found"
       
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -267,6 +279,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: List build artifacts
+        run: |
+          echo "Build artifacts:"
+          find src-tauri/target/release/bundle/ -type f 2>/dev/null || echo "No bundle directory found"
+          ls -la src-tauri/target/release/ 2>/dev/null || echo "No release directory found"
+      
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -290,6 +308,13 @@ jobs:
       
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f -name "*.AppImage" -o -name "*.deb" -o -name "*.dmg" -o -name "*.msi" -o -name "*.exe" | head -20
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -297,9 +322,9 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: WindSurf v${{ steps.version.outputs.version }}
           files: |
-            linux-app/**/*
-            macos-app/**/*
-            windows-app/**/*
+            artifacts/linux-app/**/*
+            artifacts/macos-app/**/*
+            artifacts/windows-app/**/*
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -322,6 +347,13 @@ jobs:
       
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f -name "*.AppImage" -o -name "*.deb" -o -name "*.dmg" -o -name "*.msi" -o -name "*.exe" | head -20
       
       - name: Create Pre-release
         uses: softprops/action-gh-release@v1
@@ -329,9 +361,9 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: WindSurf v${{ steps.version.outputs.version }} Beta
           files: |
-            linux-app/**/*
-            macos-app/**/*
-            windows-app/**/*
+            artifacts/linux-app/**/*
+            artifacts/macos-app/**/*
+            artifacts/windows-app/**/*
           draft: false
           prerelease: true
           generate_release_notes: true
