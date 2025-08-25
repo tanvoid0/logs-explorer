@@ -18,7 +18,7 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 [![pnpm](https://img.shields.io/badge/pnpm-Latest-yellow.svg)](https://pnpm.io/)
 
 ### 📦 Latest Release
-[![Current Version](https://img.shields.io/badge/Version-0.1.0-blue.svg)](https://github.com/tanvoid0/logs-explorer/releases/latest)
+[![Current Version](https://img.shields.io/github/v/release/tanvoid0/logs-explorer?label=Current%20Version&color=blue)](https://github.com/tanvoid0/logs-explorer/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/releases/latest)
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/tanvoid0/logs-explorer?include_prereleases&sort=semver)](https://github.com/tanvoid0/logs-explorer/releases)
 [![GitHub downloads](https://img.shields.io/github/downloads/tanvoid0/logs-explorer/latest/total)](https://github.com/tanvoid0/logs-explorer/releases/latest)
@@ -118,22 +118,79 @@ This project uses GitHub Actions for continuous integration and deployment:
 
 ## 🛠️ Development Setup
 
-### Version Management
+### Automation & Version Management
 
-This project uses a version management script to keep `package.json` and `Cargo.toml` versions in sync.
+This project uses an automation script to manage versions, releases, and development workflows. The GitHub Actions workflow automatically uses the version from `package.json` for releases.
 
 ```bash
 # Show current versions
-./scripts/version.sh show
-
-# Sync to a specific version
-./scripts/version.sh sync 0.1.1
+./scripts/automation.sh version show
 
 # Bump version (patch, minor, major)
-./scripts/version.sh bump patch   # 0.1.0 → 0.1.1
-./scripts/version.sh bump minor   # 0.1.0 → 0.2.0
-./scripts/version.sh bump major   # 0.1.0 → 1.0.0
+./scripts/automation.sh version bump patch   # 0.1.0 → 0.1.1
+./scripts/automation.sh version bump minor   # 0.1.0 → 0.2.0
+./scripts/automation.sh version bump major   # 0.1.0 → 1.0.0
+
+# Prepare and push release with version bump
+./scripts/automation.sh push patch           # Auto-detect branch and push
+./scripts/automation.sh release prepare patch 'Fix critical bug'
+./scripts/automation.sh release beta minor 'Add new features'
+
+# Development commands
+./scripts/automation.sh test                 # Run test suite
+./scripts/automation.sh build                # Build application
+./scripts/automation.sh clean                # Clean build artifacts
 ```
+
+#### Release Versioning
+
+- **Production Releases**: Uses version from `package.json` (e.g., `v0.1.0`)
+- **Beta Releases**: Uses version with `-beta` suffix (e.g., `v0.1.0-beta`)
+- **Automatic Tagging**: GitHub Actions automatically creates Git tags matching the version
+- **Release Names**: Automatically named "WindSurf vX.Y.Z" or "WindSurf vX.Y.Z Beta"
+
+#### Automation Workflow
+
+1. **Development**: Work on features in feature branches
+2. **Beta Release**: 
+   ```bash
+   git checkout develop
+   ./scripts/automation.sh push patch  # Bumps version, commits, tags, and pushes
+   ```
+3. **Production Release**:
+   ```bash
+   git checkout main
+   ./scripts/automation.sh push minor  # Bumps version, commits, tags, and pushes
+   ```
+
+**Important**: The automation script increments the version **before** pushing, so GitHub Actions will use the new version for the release.
+
+The automation script handles:
+- ✅ Version bumping in both `package.json` and `Cargo.toml`
+- ✅ Git commit creation with version changes
+- ✅ Git tag creation matching the version
+- ✅ Branch validation (main/develop only)
+- ✅ Automatic pushing with tags
+- ✅ GitHub Actions trigger for release creation with correct version
+
+#### Complete Release Process
+
+1. **Version Increment**: Automation script bumps version in both files
+2. **Git Operations**: Creates commit and tag with new version
+3. **Push**: Pushes changes and tags to trigger GitHub Actions
+4. **Build**: GitHub Actions builds for all platforms (Linux, macOS, Windows)
+5. **Release**: GitHub Actions creates release with correct version tag
+6. **Artifacts**: Release includes all platform installers
+
+**Example Flow**:
+```bash
+# Current version: 0.1.0
+./scripts/automation.sh push patch
+# → Bumps to 0.1.1, commits, tags as v0.1.1, pushes
+# → GitHub Actions builds and creates release v0.1.1
+```
+
+**Important**: The workflow now triggers on tags, so releases are only created when tags are pushed, not on every push to main/develop.
 
 ### Prerequisites
 
