@@ -257,6 +257,97 @@ push_with_bump() {
     esac
 }
 
+# Function to publish with complete workflow
+publish() {
+    local bump_type=$1
+    local commit_message=$2
+    local branch=$(git branch --show-current)
+    
+    print_header "Publishing Release"
+    
+    # Validate branch
+    if [ "$branch" != "main" ] && [ "$branch" != "develop" ]; then
+        print_error "Publishing only works on 'main' or 'develop' branches"
+        print_error "Current branch: $branch"
+        exit 1
+    fi
+    
+    # Check if there are uncommitted changes
+    if [ -n "$(git status --porcelain)" ]; then
+        print_status "Found uncommitted changes. Committing them first..."
+        
+        # Use provided commit message or generate one
+        if [ -z "$commit_message" ]; then
+            case $bump_type in
+                patch)
+                    commit_message="fix: patch release"
+                    ;;
+                minor)
+                    commit_message="feat: minor release with new features"
+                    ;;
+                major)
+                    commit_message="feat: major release with breaking changes"
+                    ;;
+            esac
+        fi
+        
+        # Add all changes and commit
+        git add .
+        git commit -m "$commit_message"
+        print_success "Committed changes with message: $commit_message"
+    else
+        print_status "No uncommitted changes found."
+    fi
+    
+    # Run tests before publishing
+    print_status "Running tests before publishing..."
+    if ! run_tests_silent; then
+        print_error "Tests failed! Aborting publish."
+        exit 1
+    fi
+    print_success "All tests passed!"
+    
+    # Bump version and create release
+    case $branch in
+        main)
+            print_status "Preparing production release on main branch..."
+            prepare_release "$bump_type"
+            print_status "Pushing to main branch with new version..."
+            git push origin main --tags
+            print_success "Pushed to main with version bump!"
+            print_status "GitHub Actions will now build and create release v$(get_package_version)"
+            ;;
+        develop)
+            print_status "Preparing beta release on develop branch..."
+            prepare_beta "$bump_type"
+            print_status "Pushing to develop branch with new version..."
+            git push origin develop --tags
+            print_success "Pushed to develop with version bump!"
+            print_status "GitHub Actions will now build and create beta release v$(get_package_version)-beta"
+            ;;
+    esac
+    
+    # Show next steps
+    print_success "Publish completed successfully!"
+    print_status "Next steps:"
+    print_status "1. Monitor GitHub Actions: https://github.com/tanvoid0/logs-explorer/actions"
+    print_status "2. Check release creation: https://github.com/tanvoid0/logs-explorer/releases"
+    print_status "3. Verify all platform builds completed successfully"
+}
+
+# Function to run tests silently (for publish workflow)
+run_tests_silent() {
+    print_status "Installing dependencies..."
+    pnpm install >/dev/null 2>&1
+    
+    print_status "Running test suite..."
+    if pnpm test >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Function to run tests
 run_tests() {
     print_header "Running Tests"
@@ -267,6 +358,39 @@ run_tests() {
     pnpm test
     
     print_success "All tests passed!"
+}
+
+# Function to clean build artifacts
+clean_build() {
+    print_header "Cleaning Build Artifacts"
+    print_status "Removing build directories..."
+    
+    # Remove Tauri build artifacts
+    if [ -d "src-tauri/target" ]; then
+        rm -rf src-tauri/target
+        print_status "Removed src-tauri/target"
+    fi
+    
+    # Remove frontend build artifacts
+    if [ -d "build" ]; then
+        rm -rf build
+        print_status "Removed build directory"
+    fi
+    
+    if [ -d ".svelte-kit" ]; then
+        rm -rf .svelte-kit
+        print_status "Removed .svelte-kit directory"
+    fi
+    
+    # Remove node_modules (optional)
+    if [ "$1" = "--all" ]; then
+        if [ -d "node_modules" ]; then
+            rm -rf node_modules
+            print_status "Removed node_modules directory"
+        fi
+    fi
+    
+    print_success "Build artifacts cleaned successfully!"
 }
 
 # Function to build application
@@ -352,21 +476,7 @@ install_deb() {
     fi
 }
 
-# Function to clean build artifacts
-clean_build() {
-    print_header "Cleaning Build Artifacts"
-    
-    print_status "Cleaning Node.js artifacts..."
-    rm -rf node_modules
-    rm -rf dist
-    
-    print_status "Cleaning Rust artifacts..."
-    cd src-tauri
-    cargo clean
-    cd ..
-    
-    print_success "Build artifacts cleaned!"
-}
+
 
 # Function to show help
 show_help() {
@@ -375,7 +485,7 @@ show_help() {
     echo "Usage: $0 {command} [options]"
     echo ""
     echo "Commands:"
-    echo "  version:"
+        echo "  version:"
     echo "    show                    Show current versions"
     echo "    sync <version>          Sync both files to specified version"
     echo "    bump <patch|minor|major> Bump version by type"
@@ -385,19 +495,24 @@ show_help() {
     echo "    beta <type> [message]    Prepare beta release (develop branch only)"
     echo "    push <type>              Push with version bump (auto-detect branch)"
     echo ""
-      echo "  development:"
-  echo "    test                    Run test suite"
-  echo "    build                   Build application"
-  echo "    deb                     Build Debian package"
-  echo "    install                 Build and install Debian package to system"
-  echo "    clean                   Clean build artifacts"
+    echo "  publish:"
+    echo "    <type> [message]        Complete publish workflow (commit, test, bump, push)"
+    echo ""
+    echo "  development:"
+    echo "    test                    Run test suite"
+    echo "    build                   Build application"
+    echo "    deb                     Build Debian package"
+    echo "    install                 Build and install Debian package to system"
+    echo "    clean                   Clean build artifacts"
     echo ""
     echo "Examples:"
     echo "  $0 version show"
     echo "  $0 version bump patch"
     echo "  $0 release prepare patch 'Fix critical bug'"
     echo "  $0 release beta minor 'Add new features'"
-    echo "  $0 push patch"
+    echo "  $0 release push patch"
+    echo "  $0 publish major 'Major release with new features'"
+    echo "  $0 publish minor"
     echo "  $0 test"
     echo "  $0 build"
     echo "  $0 install"
@@ -446,6 +561,11 @@ case "${1:-help}" in
                 exit 1
                 ;;
         esac
+        ;;
+    
+    # Publishing workflow
+    publish)
+        publish "$2" "$3"
         ;;
     
     # Development commands

@@ -567,3 +567,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Note**: This project is actively developed. Please check the [releases page](https://github.com/tanvoid0/logs-explorer/releases) for the latest version and changelog.
 # Test commit to trigger workflow
+# Test change for publish demo
