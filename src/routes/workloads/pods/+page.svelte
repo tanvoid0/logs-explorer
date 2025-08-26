@@ -114,8 +114,8 @@
   }
 
   function handleViewLogs(pod: K8sPod) {
-    // Navigate to pod details page with logs tab
-    window.location.href = `/workloads/pods/${encodeURIComponent(pod.name)}?tab=logs`;
+    // Navigate to logs page with pod filter
+    window.location.href = `/logs?pod=${encodeURIComponent(pod.name)}`;
   }
 
   function handleExecuteCommand(pod: K8sPod) {
@@ -148,7 +148,7 @@
 
   <!-- Main Content -->
   <main class="flex-1 overflow-y-auto p-6">
-    <div class="max-w-7xl mx-auto">
+    <div class="w-full">
       {#if !$connectionState.isConnected}
         <!-- Not Connected State -->
         <div class="text-center py-12">

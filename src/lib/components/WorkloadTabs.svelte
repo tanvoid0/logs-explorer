@@ -5,11 +5,9 @@
   // Tab navigation
   const tabs = [
     { id: 'overview', label: 'Overview', route: '/workloads', icon: '☸️' },
-    { id: 'pods', label: 'Pods', route: '/workloads/pods', icon: '📦' },
     { id: 'deployments', label: 'Deployments', route: '/workloads/deployments', icon: '🚀' },
-    { id: 'services', label: 'Services', route: '/workloads/services', icon: '🔗' },
-    { id: 'configs', label: 'Configs', route: '/workloads/configs', icon: '⚙️' },
-    { id: 'logs', label: 'Logs', route: '/workloads/logs', icon: '📋' }
+    { id: 'jobs', label: 'Jobs', route: '/workloads/jobs', icon: '⚡' },
+    { id: 'configs', label: 'Configs', route: '/workloads/configs', icon: '⚙️' }
   ];
 
   function navigateToTab(tabRoute: string) {

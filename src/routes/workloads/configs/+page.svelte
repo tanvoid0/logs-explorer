@@ -248,9 +248,12 @@
       <div class="modal-content" onclick={(e) => e.stopPropagation()}>
         <div class="modal-header">
           <h2 class="modal-title">
-            {selectedConfig.type}: {selectedConfig.name}
+            {configMaps.includes(selectedConfig as K8sConfigMap) ? 'ConfigMap' : 'Secret'}: {selectedConfig.name}
           </h2>
-          <button class="close-btn" onclick={() => selectedConfig = null}>×</button>
+          <div class="flex items-center space-x-2">
+            <button class="edit-btn" onclick={() => startEditing()}>Edit</button>
+            <button class="close-btn" onclick={() => selectedConfig = null}>×</button>
+          </div>
         </div>
         
         <div class="modal-body">
@@ -267,7 +270,6 @@
           {:else}
             <ConfigDataViewer 
               data={selectedConfig.data}
-              on:edit={() => startEditing()}
             />
           {/if}
         </div>

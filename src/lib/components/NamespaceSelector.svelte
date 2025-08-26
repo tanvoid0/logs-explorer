@@ -11,9 +11,12 @@
 
   const dispatch = createEventDispatcher();
 
-  // Get starred and ordered namespaces
-  const starredNamespaces = $namespaceState.starred;
-  const namespaceOrder = $namespaceState.order;
+  // Get starred and ordered namespaces from store
+  $: starredNamespaces = $namespaceState.starred;
+  $: namespaceOrder = $namespaceState.order;
+  
+  // Use the store's selected namespace as the source of truth
+  $: currentSelectedNamespace = $namespaceState.selected;
 
   // State for custom dropdown
   let isOpen = false;
@@ -65,7 +68,8 @@
   })();
 
   function handleNamespaceChange(namespace: string) {
-            appStore.setSelectedNamespace(namespace);
+    console.log('NamespaceSelector: Changing namespace to:', namespace);
+    appStore.setSelectedNamespace(namespace);
     dispatch('namespaceChange', { namespace });
     isOpen = false;
     searchQuery = "";
@@ -93,9 +97,9 @@
   }
 
   function getSelectedNamespaceDisplay() {
-    if (!selectedNamespace) return "All Namespaces";
-    const ns = filteredNamespaces.find(n => n.name === selectedNamespace);
-    if (!ns) return selectedNamespace;
+    if (!currentSelectedNamespace) return "All Namespaces";
+    const ns = filteredNamespaces.find(n => n.name === currentSelectedNamespace);
+    if (!ns) return currentSelectedNamespace;
     return `${starredNamespaces.includes(ns.name) ? '⭐' : '⚙️'} ${ns.name}`;
   }
 

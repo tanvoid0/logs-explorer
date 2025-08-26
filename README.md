@@ -38,7 +38,7 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 - **Tests**: Status of tests on pull requests
 - **Platform**: Supported operating systems
 - **Node.js/Rust/Tauri/SvelteKit/pnpm**: Technology stack versions
-- **Current Version**: Latest stable version
+- **Current Version**: Latest stable version (v0.1.7)
 - **GitHub Release**: Latest GitHub release version
 - **Downloads**: Total downloads of the latest release
 - **Code Size/Repo Size**: Repository statistics
@@ -50,14 +50,46 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 
 - **Multi-Cluster Management**: Connect to multiple Kubernetes clusters
 - **Real-time Logs**: Stream and search logs from pods across namespaces with advanced filtering
-- **Resource Management**: View and manage pods, services, deployments, and more
-- **ConfigMaps & Secrets**: Secure management of configuration and secrets
+- **Resource Management**: View and manage pods, services, deployments, jobs, and more
+- **Jobs Management**: Group and manage Kubernetes Jobs by service labels with detailed job listings
+- **ConfigMaps & Secrets**: Secure management of configuration and secrets with tree editor
 - **Advanced Log Filtering**: Powerful search, severity filtering, and trace ID tracking
 - **Unified Logs Viewer**: Consistent logs interface across workloads and pod details
 - **Collapsible Log Entries**: Compact view with expandable details for better readability
 - **Copy-to-Clipboard**: Easy copying of log messages, fields, and configurations
+- **SDK Manager**: Detect and manage development tools and package managers
+- **Integrated Terminal**: Project-aware command execution with timeout protection
+- **Project Management**: Organize and manage development projects with IDE integration
 - **Dark/Light Theme**: Modern UI with theme support
 - **Cross-Platform**: Works on Windows, macOS, and Linux
+
+## 🎯 Key Features in Detail
+
+### Jobs Management
+The application provides comprehensive Kubernetes Jobs management with intelligent grouping:
+
+- **Service-Based Grouping**: Jobs are automatically grouped by the `app.kubernetes.io/name` label
+- **Aggregated Statistics**: View total, running, completed, and failed jobs per service
+- **Detailed Job Listings**: Search, filter, and sort jobs within each service
+- **Label Management**: View and manage all Kubernetes labels for better organization
+- **Real-time Updates**: Live status updates for job completion and failures
+
+### Terminal Integration
+Advanced terminal integration with project-aware execution:
+
+- **Working Directory Support**: Commands execute in the correct project directory
+- **Timeout Protection**: Automatic timeout for long-running commands (ping, top, etc.)
+- **Framework Support**: Maven, npm, and other framework-specific commands
+- **ANSI Color Support**: Proper rendering of colored terminal output
+- **IDE Integration**: Direct project opening with configured development environments
+
+### SDK Manager
+Comprehensive development tools detection and management:
+
+- **Multi-Ecosystem Support**: Detects tools across Java, JavaScript, Python, Go, and more
+- **Package Manager Detection**: Identifies npm, yarn, pnpm, maven, gradle, pip, etc.
+- **Version Information**: Shows installed versions and update status
+- **System Integration**: Works with system package managers (brew, apt, yum, etc.)
 
 ## 🔄 CI/CD Pipeline
 
@@ -304,9 +336,10 @@ logs-explorer/
 │       ├── +layout.svelte        # Root layout
 │       ├── +page.svelte          # Home page
 │       ├── clusters/             # Cluster management
-│       ├── workloads/            # Workload management
+│       ├── workloads/            # Workload management (pods, services, deployments, jobs)
 │       ├── logs/                 # Logs viewer
-│       ├── analytics/            # Metrics and analytics
+│       ├── projects/             # Project management
+│       ├── sdk-manager/          # Development tools management
 │       └── settings/             # Application settings
 ├── src-tauri/                    # Rust backend
 │   ├── src/
@@ -327,12 +360,15 @@ logs-explorer/
 **State Management**:
 - **Svelte Stores**: Reactive state management using Svelte's built-in stores
 - **App Store** (`stores/app-store.ts`): Global application state including namespace selection
-- **Metrics Store** (`stores/metrics-store.ts`): Metrics data management
+- **SDK Store** (`stores/sdk-store.ts`): Development tools and SDK management
+- **Live Data Store** (`stores/live-data-store.ts`): Real-time data management
 - **Toast Store** (`stores/toast-store.ts`): Toast notification management
 
 **API Layer**:
 - **Kubernetes API** (`api/k8s.ts`): TypeScript wrapper for Rust Tauri commands
-- **Browser K8s Service** (`services/browser-k8s-service.ts`): Alternative browser-based implementation
+- **Projects API** (`api/projects.ts`): Project management and terminal integration
+- **IDE Settings API** (`api/ide-settings.ts`): IDE configuration management
+- **SDK Manager Service** (`services/sdk-manager.ts`): Development tools detection
 
 **UI Components**:
 - **LogsViewerContent**: Unified logs viewer with sidebar filters and main display area
@@ -342,11 +378,15 @@ logs-explorer/
 - **LogsSearchPanel**: Filter panel for deployments, pods, severity, and trace IDs
 - **ResourceTables**: Data tables for Kubernetes resources
 - **ConfigTreeEditor**: Hierarchical configuration editing
+- **SimpleTerminal**: Project-aware terminal with timeout protection
+- **SDKManager**: Development tools detection and management
+- **Jobs Management**: Kubernetes Jobs with service-based grouping
 
 #### Backend Architecture
 
 **Rust Modules**:
 - **k8s.rs**: Kubernetes API integration using kube-rs
+- **database.rs**: SQLite database for IDE configurations and project management
 - **main.rs**: Tauri application setup and command registration
 - **lib.rs**: Module exports and application lifecycle
 
@@ -355,6 +395,8 @@ logs-explorer/
 - **Error Handling**: Comprehensive error handling with anyhow
 - **Resource Management**: Memory-efficient resource handling
 - **Security**: Secure handling of secrets and sensitive data
+- **Command Execution**: Secure shell command execution with timeout protection
+- **Database Integration**: SQLite for persistent configuration storage
 
 ### Data Flow
 
@@ -450,6 +492,8 @@ The project includes GitHub Actions workflows that:
 - [ ] Implement deployment scaling and rollback
 - [ ] Complete advanced search functionality in LogsViewerContent
 - [ ] Add log aggregation and correlation features
+- [ ] Implement real-time streaming for terminal output
+- [ ] Add GCP Cloud Logging integration
 
 ### Medium Priority
 - [ ] Add support for multiple kubeconfig contexts
@@ -468,7 +512,27 @@ The project includes GitHub Actions workflows that:
 
 ## 🆕 Recent Updates
 
-### Logs Viewer Improvements (Latest)
+### Jobs Management (Latest)
+- **Kubernetes Jobs Integration**: Complete Jobs management with grouping by service labels
+- **Service-Based Grouping**: Jobs grouped by `app.kubernetes.io/name` label for better organization
+- **Job Details View**: Detailed job listings with search, filtering, and sorting capabilities
+- **Aggregated Statistics**: Service-level statistics showing total, running, completed, and failed jobs
+
+### Terminal & Project Management
+- **Integrated Terminal**: Project-aware command execution with working directory support
+- **Timeout Protection**: Automatic timeout for long-running commands (ping, top, etc.)
+- **Maven Support**: Framework-specific commands for Java/Maven projects
+- **ANSI Color Support**: Proper rendering of colored terminal output
+- **IDE Integration**: Direct project opening with configured IDEs
+- **SDK Detection**: Automatic detection of installed development tools
+
+### ConfigMaps & Secrets Management
+- **Tree Editor**: Hierarchical editing of configuration data
+- **Secure Handling**: Proper base64 encoding/decoding for secrets
+- **CRUD Operations**: Full create, read, update, delete functionality
+- **Type Safety**: Separate handling for ConfigMaps and Secrets
+
+### Logs Viewer Improvements
 - **Unified Layout**: Consistent logs interface across workloads and pod details pages
 - **Enhanced Log Display**: Collapsible log entries with "Show more/less" functionality
 - **Copy Functionality**: Copy buttons for messages, fields, and entire log entries

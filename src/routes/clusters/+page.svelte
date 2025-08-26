@@ -51,8 +51,8 @@
 
   onMount(async () => {
     await loadData();
-    // Auto-refresh every 30 seconds
-    refreshInterval = setInterval(loadData, 30000);
+    // Live data is now handled by the liveDataStore
+    // No more polling needed
   });
 
   async function loadData() {
@@ -298,7 +298,7 @@
 <div class="flex-1 flex flex-col min-h-0">
   <!-- Main Content -->
   <main class="flex-1 overflow-y-auto p-6">
-    <div class="max-w-7xl mx-auto">
+    <div class="w-full">
 
 
       <!-- Tab Navigation -->

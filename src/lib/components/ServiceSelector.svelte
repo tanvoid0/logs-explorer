@@ -20,7 +20,7 @@
     }
     return services.filter((service: K8sService) => 
       service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.type.toLowerCase().includes(searchQuery.toLowerCase())
+      service.type_.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 

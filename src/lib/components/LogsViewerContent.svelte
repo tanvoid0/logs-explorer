@@ -38,6 +38,10 @@
   let searchQuery = $state("");
   let severityFilter = $state("");
   let traceIdFilter = $state("");
+  let startTime = $state<string | null>(null);
+  let endTime = $state<string | null>(null);
+  let pinnedStartLog = $state<string | null>(null);
+  let pinnedEndLog = $state<string | null>(null);
 
   // Data
   let namespaces = $state<K8sNamespace[]>([]);
@@ -110,6 +114,8 @@
         search: searchQuery || undefined,
         severity: severityFilter || undefined,
         traceId: traceIdFilter || undefined,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
       });
 
       logs = result;
@@ -163,6 +169,22 @@
   function handleTraceIdChange(event: CustomEvent<{traceId: string}>) {
     traceIdFilter = event.detail.traceId;
     loadLogs(1); // Reset to first page when filters change
+  }
+
+  function handleTimeChange(event: CustomEvent<{startTime: string | null, endTime: string | null}>) {
+    startTime = event.detail.startTime;
+    endTime = event.detail.endTime;
+    loadLogs(1); // Reset to first page when filters change
+  }
+
+  function handlePinStartTime() {
+    // This will be handled by the LogsDisplay component when a log is selected
+    dispatch('pinStartTime');
+  }
+
+  function handlePinEndTime() {
+    // This will be handled by the LogsDisplay component when a log is selected
+    dispatch('pinEndTime');
   }
 
   function handleNextPage() {
@@ -227,7 +249,7 @@
   }
 </script>
 
-<div class="max-w-6xl mx-auto px-4">
+    <div class="w-full px-4">
   <!-- Page Header -->
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{title}</h1>
@@ -415,6 +437,10 @@
             {searchQuery}
             {severityFilter}
             {traceIdFilter}
+            {startTime}
+            {endTime}
+            {pinnedStartLog}
+            {pinnedEndLog}
             {isLiveMode}
             {isStaticMode}
             logsLoading={logsLoading}
@@ -423,6 +449,9 @@
             on:podsChange={handlePodsChange}
             on:severityChange={handleSeverityChange}
             on:traceIdChange={handleTraceIdChange}
+            on:timeChange={handleTimeChange}
+            on:pinStartTime={handlePinStartTime}
+            on:pinEndTime={handlePinEndTime}
             on:modeChange={handleModeChange}
           />
         </div>

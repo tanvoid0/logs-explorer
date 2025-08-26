@@ -1,11 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { k8sAPI, type K8sNamespace, type K8sDeployment, type K8sLog, type K8sPod } from '$lib/api/k8s';
   import { appStore, namespaceState } from '$lib/stores/app-store';
   import { connectionState } from '$lib/stores/app-store';
   import { toastStore } from '$lib/stores/toast-store';
   import LogsDisplay from "$lib/components/LogsDisplay.svelte";
   import LogsSearchPanel from "$lib/components/LogsSearchPanel.svelte";
+
+  const dispatch = createEventDispatcher();
 
   // Props for configuring the logs viewer
   let { 
@@ -47,6 +50,10 @@
   let searchQuery = $state(defaultSearchQuery);
   let severityFilter = $state(defaultSeverityFilter);
   let traceIdFilter = $state(defaultTraceIdFilter);
+  let startTime = $state<string | null>(null);
+  let endTime = $state<string | null>(null);
+  let pinnedStartLog = $state<string | null>(null);
+  let pinnedEndLog = $state<string | null>(null);
   let isLiveMode = $state(false);
   let isStaticMode = $state(true);
   let logCount = $state(defaultLogCount);
@@ -114,6 +121,8 @@
         deployments?: string[];
         pods?: string[];
         tail?: number;
+        startTime?: string | null;
+        endTime?: string | null;
       } = {
         tail: logCount
       };
@@ -126,6 +135,14 @@
       // Add pod filter if pods are selected
       if (selectedPods.length > 0) {
         filterOptions.pods = selectedPods;
+      }
+
+      // Add time filters
+      if (startTime) {
+        filterOptions.startTime = startTime;
+      }
+      if (endTime) {
+        filterOptions.endTime = endTime;
       }
       
       const logData = await k8sAPI.getNamespaceLogs(currentNamespace, filterOptions);
@@ -203,6 +220,22 @@
     logs = sortLogs([...logs]);
   }
 
+  function handleTimeChange(event: CustomEvent<{startTime: string | null, endTime: string | null}>) {
+    startTime = event.detail.startTime;
+    endTime = event.detail.endTime;
+    loadLogs();
+  }
+
+  function handlePinStartTime() {
+    // This will be handled by the LogsDisplay component when a log is selected
+    dispatch('pinStartTime');
+  }
+
+  function handlePinEndTime() {
+    // This will be handled by the LogsDisplay component when a log is selected
+    dispatch('pinEndTime');
+  }
+
   function sortLogs(logsToSort: K8sLog[]) {
     return logsToSort.sort((a, b) => {
       const dateA = new Date(a.timestamp).getTime();
@@ -243,7 +276,7 @@
 
   <!-- Main Content -->
   <main class="flex-1 p-6 overflow-hidden">
-    <div class="max-w-7xl mx-auto h-full flex flex-col overflow-hidden">
+    <div class="w-full h-full flex flex-col overflow-hidden">
       {#if !$connectionState.isConnected}
         <div class="text-center py-12">
           <div class="text-slate-400 dark:text-slate-500 mb-4">
@@ -290,6 +323,10 @@
           {searchQuery}
           {severityFilter}
           {traceIdFilter}
+          {startTime}
+          {endTime}
+          {pinnedStartLog}
+          {pinnedEndLog}
           {isLiveMode}
           {isStaticMode}
           logsLoading={logsLoading}
@@ -299,6 +336,9 @@
           on:search={handleSearch}
           on:severityChange={handleSeverityChange}
           on:traceIdChange={handleTraceIdChange}
+          on:timeChange={handleTimeChange}
+          on:pinStartTime={handlePinStartTime}
+          on:pinEndTime={handlePinEndTime}
           on:modeChange={handleModeChange}
         />
 

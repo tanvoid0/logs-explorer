@@ -13,6 +13,8 @@
   export let severityFilter: string = "";
   export let hasNextPage: boolean = false;
   export let hasPreviousPage: boolean = false;
+  export let pinnedStartLog: string | null = null;
+  export let pinnedEndLog: string | null = null;
   
   // Filter logs based on severity
   $: filteredLogs = logs.filter(log => {
@@ -85,6 +87,14 @@
   
   function handlePreviousPage() {
     dispatch('previousPage');
+  }
+
+  function handlePinStartTime(event: CustomEvent<{timestamp: string}>) {
+    dispatch('pinStartTime', { timestamp: event.detail.timestamp });
+  }
+
+  function handlePinEndTime(event: CustomEvent<{timestamp: string}>) {
+    dispatch('pinEndTime', { timestamp: event.detail.timestamp });
   }
 </script>
 
@@ -286,7 +296,13 @@
           {:else}
             <div class="space-y-2">
               {#each filteredLogs as log, index (index)}
-                <LogEntry {log} {viewMode} on:severityClick={handleSeverityFilter} />
+                <LogEntry 
+                  {log} 
+                  {viewMode} 
+                  on:severityClick={handleSeverityFilter}
+                  on:pinStartTime={handlePinStartTime}
+                  on:pinEndTime={handlePinEndTime}
+                />
               {/each}
             </div>
           {/if}

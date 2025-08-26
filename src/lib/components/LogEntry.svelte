@@ -134,6 +134,14 @@
   function handleSeverityClick(severity: string) {
     dispatch('filterBySeverity', { severity });
   }
+
+  function handlePinStartTime() {
+    dispatch('pinStartTime', { timestamp: log.timestamp });
+  }
+
+  function handlePinEndTime() {
+    dispatch('pinEndTime', { timestamp: log.timestamp });
+  }
   
   // Extract deployment name from log
   function extractDeploymentName(): string | null {
@@ -207,6 +215,28 @@
             {extractDeploymentName()}
           </button>
         {/if}
+        
+        <!-- Pin Buttons (compact) -->
+        <div class="flex items-center space-x-1">
+          <button
+            onclick={handlePinStartTime}
+            class="p-0.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            title="Pin as start time"
+          >
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2"></path>
+            </svg>
+          </button>
+          <button
+            onclick={handlePinEndTime}
+            class="p-0.5 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 rounded hover:bg-green-50 dark:hover:bg-green-900/20"
+            title="Pin as end time"
+          >
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+            </svg>
+          </button>
+        </div>
       </div>
       
       <!-- Pod Info (compact) -->
@@ -235,6 +265,27 @@
           {new Date(structuredFields?.time || log.timestamp).toLocaleString()}
         </span>
         
+        <!-- Pin Buttons -->
+        <div class="flex items-center space-x-1">
+          <button
+            onclick={handlePinStartTime}
+            class="p-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            title="Pin as start time"
+          >
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2"></path>
+            </svg>
+          </button>
+          <button
+            onclick={handlePinEndTime}
+            class="p-1 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 rounded hover:bg-green-50 dark:hover:bg-green-900/20"
+            title="Pin as end time"
+          >
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+            </svg>
+          </button>
+        </div>
 
       </div>
       

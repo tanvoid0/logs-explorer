@@ -1,13 +1,17 @@
 use std::process::Command;
 use std::collections::HashMap;
+use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 use kube::{Client, Api, ResourceExt};
 use kube::api::{ListParams, ObjectList};
 use k8s_openapi::api::core::v1::{Pod, Service, Namespace, ConfigMap, Secret};
 use k8s_openapi::api::apps::v1::Deployment;
+use k8s_openapi::api::batch::v1::Job;
 use anyhow::Result;
 use base64::Engine;
 use regex::Regex;
+use uuid::Uuid;
+use lazy_static::lazy_static;
 
 // Advanced search structures
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -106,7 +110,6 @@ fn parse_simple_condition(query: &str) -> Result<SearchCondition, String> {
     
     // Check for negation
     if query.starts_with("NOT ") {
-        negated = true;
         let query = &query[4..];
         return parse_simple_condition(query).map(|mut condition| {
             condition.negated = true;
@@ -257,6 +260,13 @@ fn evaluate_query(log: &K8sLog, query: &SearchQuery) -> bool {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PodPort {
+    pub name: Option<String>,
+    pub container_port: i32,
+    pub protocol: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct K8sPod {
     pub name: String,
     pub namespace: String,
@@ -264,6 +274,7 @@ pub struct K8sPod {
     pub ready: String,
     pub restarts: i32,
     pub age: String,
+    pub ports: Option<Vec<PodPort>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -296,6 +307,7 @@ pub struct K8sDeployment {
     pub age: String,
     pub image: String,
     pub strategy: String,
+    pub ports: Option<Vec<PodPort>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -321,6 +333,51 @@ pub struct K8sLog {
     pub message: String,
     pub pod: String,
     pub container: String,
+}
+
+// Job information
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct K8sJob {
+    pub name: String,
+    pub namespace: String,
+    pub completions: i32,
+    pub successful: i32,
+    pub failed: i32,
+    pub status: String,
+    pub age: String,
+    pub parent_job: Option<String>,
+    pub labels: Option<HashMap<String, String>>,
+}
+
+// Job pod information
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct K8sJobPod {
+    pub name: String,
+    pub namespace: String,
+    pub status: String,
+    pub ready: String,
+    pub restarts: i32,
+    pub age: String,
+    pub job_name: String,
+    pub ports: Option<Vec<PodPort>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PortForward {
+    pub id: String,
+    pub namespace: String,
+    pub resource_name: String,
+    pub resource_type: String,
+    pub local_port: i32,
+    pub remote_port: i32,
+    pub status: String,
+    pub created_at: String,
+    pub url: Option<String>,
+}
+
+// Port forwarding session manager
+lazy_static! {
+    static ref PORT_FORWARD_SESSIONS: Mutex<HashMap<String, PortForward>> = Mutex::new(HashMap::new());
 }
 
 // Kubernetes API client instance
@@ -456,6 +513,16 @@ pub async fn k8s_get_pods(namespace: Option<String>, filters: Option<Vec<String>
             "Unknown".to_string()
         };
         
+        // Extract port information from pod spec
+        let ports = pod.spec.as_ref()
+            .and_then(|spec| spec.containers.first())
+            .and_then(|container| container.ports.as_ref())
+            .map(|ports| ports.iter().map(|port| PodPort {
+                name: port.name.clone(),
+                container_port: port.container_port,
+                protocol: port.protocol.as_ref().unwrap_or(&"TCP".to_string()).clone(),
+            }).collect());
+
         result.push(K8sPod {
             name,
             namespace: namespace.clone(),
@@ -463,6 +530,7 @@ pub async fn k8s_get_pods(namespace: Option<String>, filters: Option<Vec<String>
             ready,
             restarts,
             age,
+            ports,
         });
     }
     
@@ -633,6 +701,17 @@ pub async fn k8s_get_deployments(namespace: Option<String>) -> Result<Vec<K8sDep
             "Unknown".to_string()
         };
         
+        // Extract port information from deployment spec
+        let ports = deployment.spec.as_ref()
+            .and_then(|spec| spec.template.spec.as_ref())
+            .and_then(|spec| spec.containers.first())
+            .and_then(|container| container.ports.as_ref())
+            .map(|ports| ports.iter().map(|port| PodPort {
+                name: port.name.clone(),
+                container_port: port.container_port,
+                protocol: port.protocol.as_ref().unwrap_or(&"TCP".to_string()).clone(),
+            }).collect());
+
         result.push(K8sDeployment {
             name,
             namespace: namespace.clone(),
@@ -644,6 +723,7 @@ pub async fn k8s_get_deployments(namespace: Option<String>) -> Result<Vec<K8sDep
             age,
             image,
             strategy,
+            ports,
         });
     }
     
@@ -894,7 +974,7 @@ pub async fn k8s_get_namespace_logs(
                 Ok(query) => {
                     all_logs.retain(|log| evaluate_query(log, &query));
                 },
-                Err(e) => {
+                Err(_e) => {
                     // Fallback to simple search if parsing fails
                     let search_lower = search_query.to_lowercase();
                     all_logs.retain(|log| {
@@ -1020,6 +1100,274 @@ pub async fn k8s_scale_deployment(namespace: String, deployment: String, replica
     Ok(())
 }
 
+// Get jobs for a namespace
+#[tauri::command]
+pub async fn k8s_get_jobs(namespace: String) -> Result<Vec<K8sJob>, String> {
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
+    let api: Api<Job> = Api::namespaced(client, &namespace);
+    
+    let lp = ListParams::default();
+    let jobs: ObjectList<Job> = api.list(&lp).await
+        .map_err(|e| format!("Failed to list jobs: {}", e))?;
+    
+    let mut result = Vec::new();
+    for job in jobs {
+        let name = job.name_any();
+        let namespace = job.namespace().unwrap_or_default();
+        
+        // Get job status
+        let status = if let Some(ref status) = job.status {
+            if let Some(active) = status.active {
+                if active > 0 {
+                    "Running".to_string()
+                } else if let Some(succeeded) = status.succeeded {
+                    if succeeded > 0 {
+                        "Completed".to_string()
+                    } else {
+                        "Pending".to_string()
+                    }
+                } else if let Some(failed) = status.failed {
+                    if failed > 0 {
+                        "Failed".to_string()
+                    } else {
+                        "Pending".to_string()
+                    }
+                } else {
+                    "Pending".to_string()
+                }
+            } else if let Some(succeeded) = status.succeeded {
+                if succeeded > 0 {
+                    "Completed".to_string()
+                } else {
+                    "Pending".to_string()
+                }
+            } else if let Some(failed) = status.failed {
+                if failed > 0 {
+                    "Failed".to_string()
+                } else {
+                    "Pending".to_string()
+                }
+            } else {
+                "Pending".to_string()
+            }
+        } else {
+            "Pending".to_string()
+        };
+        
+        // Get completion counts
+        let completions = job.spec.as_ref()
+            .and_then(|spec| spec.completions)
+            .unwrap_or(1);
+        let successful = job.status.as_ref()
+            .and_then(|status| status.succeeded)
+            .unwrap_or(0);
+        let failed = job.status.as_ref()
+            .and_then(|status| status.failed)
+            .unwrap_or(0);
+        
+        // Calculate age from creation timestamp
+        let age = if let Some(creation_timestamp) = job.metadata.creation_timestamp {
+            let now = chrono::Utc::now();
+            let created = chrono::DateTime::parse_from_rfc3339(&creation_timestamp.0.to_rfc3339())
+                .unwrap_or(now.into());
+            let duration = now.signed_duration_since(created);
+            
+            if duration.num_days() > 0 {
+                format!("{}d", duration.num_days())
+            } else if duration.num_hours() > 0 {
+                format!("{}h", duration.num_hours())
+            } else if duration.num_minutes() > 0 {
+                format!("{}m", duration.num_minutes())
+            } else {
+                format!("{}s", duration.num_seconds())
+            }
+        } else {
+            "Unknown".to_string()
+        };
+        
+        // Determine parent job (for grouping) - use app.kubernetes.io/name label if available, otherwise use job name
+        let parent_job = job.metadata.labels.as_ref()
+            .and_then(|labels| labels.get("app.kubernetes.io/name"))
+            .cloned()
+            .or_else(|| Some(name.clone()));
+        
+        result.push(K8sJob {
+            name,
+            namespace,
+            completions,
+            successful,
+            failed,
+            status,
+            age,
+            parent_job,
+            labels: job.metadata.labels.as_ref().map(|labels| {
+                labels.iter().map(|(k, v)| (k.clone(), v.clone())).collect()
+            }),
+        });
+    }
+    
+    Ok(result)
+}
+
+// Get job pods for a specific job
+#[tauri::command]
+pub async fn k8s_get_job_pods(namespace: String, app_name: String) -> Result<Vec<K8sJobPod>, String> {
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
+    
+    // First, get all jobs with the specified app.kubernetes.io/name label
+    let job_api: Api<Job> = Api::namespaced(client.clone(), &namespace);
+    let job_lp = ListParams::default();
+    let jobs: ObjectList<Job> = job_api.list(&job_lp).await
+        .map_err(|e| format!("Failed to list jobs: {}", e))?;
+    
+    // Collect job names that have the specified app.kubernetes.io/name label
+    let mut target_job_names = Vec::new();
+    for job in jobs {
+        if let Some(job_app_name) = job.metadata.labels.as_ref().and_then(|labels| labels.get("app.kubernetes.io/name")) {
+            if job_app_name == &app_name {
+                target_job_names.push(job.name_any());
+            }
+        }
+    }
+    
+    if target_job_names.is_empty() {
+        println!("No jobs found with app.kubernetes.io/name={}", app_name);
+        return Ok(Vec::new());
+    }
+    
+    println!("Found {} jobs with app.kubernetes.io/name={}: {:?}", target_job_names.len(), app_name, target_job_names);
+    
+    // Now get all pods and filter by job-name label
+    let pod_api: Api<Pod> = Api::namespaced(client, &namespace);
+    let pod_lp = ListParams::default();
+    let pods: ObjectList<Pod> = pod_api.list(&pod_lp).await
+        .map_err(|e| format!("Failed to list pods: {}", e))?;
+    
+    println!("Total pods found in namespace: {}", pods.items.len());
+    
+    let mut result = Vec::new();
+    let mut debug_pod_labels = Vec::new();
+    
+    for pod in pods {
+        let pod_name = pod.name_any();
+        let pod_labels = pod.metadata.labels.as_ref().map(|labels| {
+            labels.iter().map(|(k, v)| format!("{}={}", k, v)).collect::<Vec<_>>().join(", ")
+        }).unwrap_or_else(|| "No labels".to_string());
+        
+        // Debug: Log first few pods and their labels
+        if debug_pod_labels.len() < 5 {
+            debug_pod_labels.push(format!("Pod: {}, Labels: {}", pod_name, pod_labels));
+        }
+        
+        // Check if this pod belongs to any of the target jobs by checking job-name label
+        if let Some(pod_job_name) = pod.metadata.labels.as_ref().and_then(|labels| labels.get("job-name")) {
+            if target_job_names.contains(pod_job_name) {
+                    let name = pod.name_any();
+                    let namespace = pod.namespace().unwrap_or_default();
+                
+                // Get pod status
+                let status = if let Some(ref status) = pod.status {
+                    if let Some(phase) = &status.phase {
+                        match phase.as_str() {
+                            "Running" => "Running".to_string(),
+                            "Pending" => "Pending".to_string(),
+                            "Succeeded" => "Completed".to_string(),
+                            "Failed" => "Failed".to_string(),
+                            _ => phase.clone(),
+                        }
+                    } else {
+                        "Unknown".to_string()
+                    }
+                } else {
+                    "Unknown".to_string()
+                };
+                
+                // Get ready status
+                let ready = if let Some(ref status) = pod.status {
+                    if let Some(conditions) = &status.conditions {
+                        let ready_condition = conditions.iter()
+                            .find(|condition| condition.type_ == "Ready");
+                        if let Some(condition) = ready_condition {
+                            if condition.status == "True" {
+                                "1/1".to_string()
+                            } else {
+                                "0/1".to_string()
+                            }
+                        } else {
+                            "0/1".to_string()
+                        }
+                    } else {
+                        "0/1".to_string()
+                    }
+                } else {
+                    "0/1".to_string()
+                };
+                
+                // Get restart count
+                let restarts = if let Some(ref status) = pod.status {
+                    if let Some(container_statuses) = &status.container_statuses {
+                        container_statuses.iter()
+                            .map(|cs| cs.restart_count)
+                            .sum()
+                    } else {
+                        0
+                    }
+                } else {
+                    0
+                };
+                
+                // Calculate age from creation timestamp
+                let age = if let Some(creation_timestamp) = pod.metadata.creation_timestamp {
+                    let now = chrono::Utc::now();
+                    let created = chrono::DateTime::parse_from_rfc3339(&creation_timestamp.0.to_rfc3339())
+                        .unwrap_or(now.into());
+                    let duration = now.signed_duration_since(created);
+                    
+                    if duration.num_days() > 0 {
+                        format!("{}d", duration.num_days())
+                    } else if duration.num_hours() > 0 {
+                        format!("{}h", duration.num_hours())
+                    } else if duration.num_minutes() > 0 {
+                        format!("{}m", duration.num_minutes())
+                    } else {
+                        format!("{}s", duration.num_seconds())
+                    }
+                } else {
+                    "Unknown".to_string()
+                };
+                
+                // Get ports if available
+                let ports = pod.spec.as_ref()
+                    .and_then(|spec| spec.containers.first())
+                    .and_then(|container| container.ports.as_ref())
+                    .map(|ports| ports.iter().map(|port| PodPort {
+                        name: port.name.clone(),
+                        container_port: port.container_port,
+                        protocol: port.protocol.as_ref().unwrap_or(&"TCP".to_string()).clone(),
+                    }).collect());
+                
+                result.push(K8sJobPod {
+                    name,
+                    namespace,
+                    status,
+                    ready,
+                    restarts,
+                    age,
+                    job_name: pod_job_name.clone(),
+                    ports,
+                });
+            }
+        }
+    }
+    
+    println!("Found {} pods for jobs with app.kubernetes.io/name={}", result.len(), app_name);
+    println!("Debug - First 5 pods and their labels:");
+    for debug_info in debug_pod_labels {
+        println!("  {}", debug_info);
+    }
+    Ok(result)
+}
+
 // Health check for Kubernetes connection
 #[tauri::command]
 pub async fn k8s_health_check() -> Result<bool, String> {
@@ -1041,4 +1389,164 @@ pub async fn k8s_health_check() -> Result<bool, String> {
 #[tauri::command]
 pub async fn init_k8s() -> Result<(), String> {
     init_k8s_client().await.map_err(|e| e.to_string())
+}
+
+// Port forwarding functions
+
+// Start port forwarding for a pod or deployment
+#[tauri::command]
+pub async fn k8s_start_port_forward(
+    namespace: String,
+    resource_name: String,
+    resource_type: String,
+    local_port: Option<i32>,
+    remote_port: i32,
+) -> Result<PortForward, String> {
+    let session_id = Uuid::new_v4().to_string();
+    let local_port = local_port.unwrap_or(7000); // Default to 7000
+    
+    // Check if the port is already in use
+    if let Ok(_) = std::net::TcpListener::bind(format!("127.0.0.1:{}", local_port)) {
+        // Port is available, close the listener
+    } else {
+        return Err(format!("Port {} is already in use", local_port));
+    }
+    
+    // Create port forward session
+    let port_forward = PortForward {
+        id: session_id.clone(),
+        namespace,
+        resource_name,
+        resource_type,
+        local_port,
+        remote_port,
+        status: "active".to_string(),
+        created_at: chrono::Utc::now().to_rfc3339(),
+        url: Some(format!("http://localhost:{}", local_port)),
+    };
+    
+    // Store the session
+    {
+        let mut sessions = PORT_FORWARD_SESSIONS.lock().unwrap();
+        sessions.insert(session_id.clone(), port_forward.clone());
+    }
+    
+    // Start the port forward process in a separate thread
+    let session_id_clone = session_id.clone();
+    let namespace_clone = port_forward.namespace.clone();
+    let resource_name_clone = port_forward.resource_name.clone();
+    let resource_type_clone = port_forward.resource_type.clone();
+    let local_port_clone = local_port;
+    let remote_port_clone = remote_port;
+    
+    tokio::spawn(async move {
+        let mut cmd = Command::new("kubectl");
+        cmd.arg("port-forward")
+            .arg("-n").arg(&namespace_clone);
+        
+        if resource_type_clone == "deployment" {
+            cmd.arg(format!("deployment/{}", resource_name_clone));
+        } else {
+            cmd.arg(format!("pod/{}", resource_name_clone));
+        }
+        
+        cmd.arg(format!("{}:{}", local_port_clone, remote_port_clone));
+        
+        // Run the command
+        match cmd.spawn() {
+            Ok(mut child) => {
+                // Wait for the process to finish
+                let _ = child.wait();
+                
+                // Update session status to stopped
+                let mut sessions = PORT_FORWARD_SESSIONS.lock().unwrap();
+                if let Some(session) = sessions.get_mut(&session_id_clone) {
+                    session.status = "stopped".to_string();
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to start port forward: {}", e);
+                
+                // Update session status to error
+                let mut sessions = PORT_FORWARD_SESSIONS.lock().unwrap();
+                if let Some(session) = sessions.get_mut(&session_id_clone) {
+                    session.status = "error".to_string();
+                }
+            }
+        }
+    });
+    
+    Ok(port_forward)
+}
+
+// Stop port forwarding
+#[tauri::command]
+pub async fn k8s_stop_port_forward(session_id: String) -> Result<(), String> {
+    let mut sessions = PORT_FORWARD_SESSIONS.lock().unwrap();
+    
+    if let Some(session) = sessions.get_mut(&session_id) {
+        session.status = "stopped".to_string();
+    }
+    
+    // Note: We can't directly kill the kubectl process from here
+    // The process will be cleaned up when the application exits
+    // In a production environment, you'd want to track the process ID and kill it
+    
+    Ok(())
+}
+
+// List active port forwarding sessions
+#[tauri::command]
+pub async fn k8s_list_port_forwards() -> Result<Vec<PortForward>, String> {
+    let sessions = PORT_FORWARD_SESSIONS.lock().unwrap();
+    Ok(sessions.values().cloned().collect())
+}
+
+// Get available ports for a pod or deployment
+#[tauri::command]
+pub async fn k8s_get_available_ports(
+    namespace: String,
+    resource_name: String,
+    resource_type: String,
+) -> Result<Vec<PodPort>, String> {
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
+    
+    match resource_type.as_str() {
+        "pod" => {
+            let api: Api<Pod> = Api::namespaced(client, &namespace);
+            let pod = api.get(&resource_name).await
+                .map_err(|e| format!("Failed to get pod {}: {}", resource_name, e))?;
+            
+            let ports = pod.spec.as_ref()
+                .and_then(|spec| spec.containers.first())
+                .and_then(|container| container.ports.as_ref())
+                .map(|ports| ports.iter().map(|port| PodPort {
+                    name: port.name.clone(),
+                    container_port: port.container_port,
+                    protocol: port.protocol.as_ref().unwrap_or(&"TCP".to_string()).clone(),
+                }).collect())
+                .unwrap_or_default();
+            
+            Ok(ports)
+        }
+        "deployment" => {
+            let api: Api<Deployment> = Api::namespaced(client, &namespace);
+            let deployment = api.get(&resource_name).await
+                .map_err(|e| format!("Failed to get deployment {}: {}", resource_name, e))?;
+            
+            let ports = deployment.spec.as_ref()
+                .and_then(|spec| spec.template.spec.as_ref())
+                .and_then(|spec| spec.containers.first())
+                .and_then(|container| container.ports.as_ref())
+                .map(|ports| ports.iter().map(|port| PodPort {
+                    name: port.name.clone(),
+                    container_port: port.container_port,
+                    protocol: port.protocol.as_ref().unwrap_or(&"TCP".to_string()).clone(),
+                }).collect())
+                .unwrap_or_default();
+            
+            Ok(ports)
+        }
+        _ => Err("Invalid resource type. Must be 'pod' or 'deployment'".to_string()),
+    }
 }

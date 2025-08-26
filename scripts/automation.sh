@@ -281,6 +281,77 @@ build_app() {
     print_success "Build completed successfully!"
 }
 
+# Function to build Debian package
+build_deb() {
+    print_header "Building Debian Package"
+    print_status "Installing dependencies..."
+    pnpm install
+    
+    print_status "Building Tauri Debian package..."
+    pnpm tauri build
+    
+    print_success "Debian package build completed successfully!"
+    print_status "Check src-tauri/target/release/bundle/deb/ for the .deb file"
+}
+
+# Function to build and install Debian package
+install_deb() {
+    print_header "Building and Installing Debian Package"
+    
+    # Check if running as root for installation
+    if [ "$EUID" -ne 0 ]; then
+        print_warning "Installation requires root privileges. You may be prompted for your password."
+    fi
+    
+    # Build the deb package first
+    build_deb
+    
+    # Find the deb file
+    local deb_dir="src-tauri/target/release/bundle/deb"
+    local deb_file=$(find "$deb_dir" -name "*.deb" -type f | head -n 1)
+    
+    if [ -z "$deb_file" ]; then
+        print_error "No .deb file found in $deb_dir"
+        exit 1
+    fi
+    
+    print_status "Found deb package: $deb_file"
+    print_status "Installing package to system..."
+    
+    # Install the deb package
+    print_status "Installing package with dpkg..."
+    if command -v sudo >/dev/null 2>&1; then
+        sudo dpkg -i "$deb_file"
+    else
+        dpkg -i "$deb_file"
+    fi
+    
+    # Check if installation was successful
+    if [ $? -eq 0 ]; then
+        print_success "Package installed successfully!"
+        print_status "You can now run 'logs-explorer' from the command line or find it in your applications menu."
+    else
+        print_warning "Package installation had issues, attempting to fix dependencies..."
+        
+        # Try to fix broken dependencies
+        if command -v sudo >/dev/null 2>&1; then
+            sudo apt-get install -f -y
+        else
+            apt-get install -f -y
+        fi
+        
+        # Check again if installation is now successful
+        if [ $? -eq 0 ]; then
+            print_success "Package installed successfully after fixing dependencies!"
+            print_status "You can now run 'logs-explorer' from the command line or find it in your applications menu."
+        else
+            print_error "Package installation failed even after fixing dependencies!"
+            print_status "Please check the error messages above and try manual installation."
+            exit 1
+        fi
+    fi
+}
+
 # Function to clean build artifacts
 clean_build() {
     print_header "Cleaning Build Artifacts"
@@ -314,10 +385,12 @@ show_help() {
     echo "    beta <type> [message]    Prepare beta release (develop branch only)"
     echo "    push <type>              Push with version bump (auto-detect branch)"
     echo ""
-    echo "  development:"
-    echo "    test                    Run test suite"
-    echo "    build                   Build application"
-    echo "    clean                   Clean build artifacts"
+      echo "  development:"
+  echo "    test                    Run test suite"
+  echo "    build                   Build application"
+  echo "    deb                     Build Debian package"
+  echo "    install                 Build and install Debian package to system"
+  echo "    clean                   Clean build artifacts"
     echo ""
     echo "Examples:"
     echo "  $0 version show"
@@ -327,6 +400,7 @@ show_help() {
     echo "  $0 push patch"
     echo "  $0 test"
     echo "  $0 build"
+    echo "  $0 install"
     echo ""
     echo "Version Types:"
     echo "  patch: 0.1.0 → 0.1.1 (bug fixes)"
@@ -380,6 +454,12 @@ case "${1:-help}" in
         ;;
     build)
         build_app
+        ;;
+    deb)
+        build_deb
+        ;;
+    install)
+        install_deb
         ;;
     clean)
         clean_build

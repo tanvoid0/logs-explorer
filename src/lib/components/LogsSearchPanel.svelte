@@ -5,6 +5,7 @@
   import DeploymentSelector from "$lib/components/DeploymentSelector.svelte";
   import PodSelector from "$lib/components/PodSelector.svelte";
   import SeveritySelector from "$lib/components/SeveritySelector.svelte";
+  import TimeFilter from "$lib/components/TimeFilter.svelte";
   import type { K8sNamespace, K8sDeployment, K8sPod } from "$lib/types/k8s";
   
   export let namespaces: K8sNamespace[] = [];
@@ -16,6 +17,10 @@
   export let searchQuery: string = "";
   export let severityFilter: string = "";
   export let traceIdFilter: string = "";
+  export let startTime: string | null = null;
+  export let endTime: string | null = null;
+  export let pinnedStartLog: string | null = null;
+  export let pinnedEndLog: string | null = null;
   export let isLiveMode: boolean = false;
   export let isStaticMode: boolean = true;
   export let logsLoading: boolean = false;
@@ -76,6 +81,20 @@
     isLiveMode = !isStaticMode;
     dispatch('modeChange', { isLiveMode, isStaticMode });
   }
+
+  function handleTimeChange(event: CustomEvent<{startTime: string | null, endTime: string | null}>) {
+    startTime = event.detail.startTime;
+    endTime = event.detail.endTime;
+    dispatch('timeChange', { startTime, endTime });
+  }
+
+  function handlePinStartTime() {
+    dispatch('pinStartTime');
+  }
+
+  function handlePinEndTime() {
+    dispatch('pinEndTime');
+  }
 </script>
 
 <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
@@ -132,6 +151,18 @@
             />
           </div>
         </div>
+
+        <!-- Time Filter -->
+        <TimeFilter
+          {startTime}
+          {endTime}
+          {pinnedStartLog}
+          {pinnedEndLog}
+          disabled={!isConnected}
+          on:timeChange={handleTimeChange}
+          on:pinStartTime={handlePinStartTime}
+          on:pinEndTime={handlePinEndTime}
+        />
       </div>
     {/if}
     

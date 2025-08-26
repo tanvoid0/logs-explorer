@@ -18,14 +18,16 @@
         return { title: "Dashboard", description: "Main dashboard and overview" };
       case "/overview":
         return { title: "Overview", description: "Kubernetes cluster overview and statistics" };
-      case "/analytics":
-        return { title: "Dashboard", description: "Logs, analytics and metrics" };
       case "/clusters":
         return { title: "Clusters", description: "Manage Kubernetes clusters and kubeconfigs" };
       case "/workloads":
         return { title: "Workloads", description: "Kubernetes workloads and resources" };
       case "/workloads/pods":
         return { title: "Pods", description: "Kubernetes pods management" };
+      case "/projects":
+        return { title: "Projects", description: "Manage local projects and development directories" };
+      case "/sdk-manager":
+        return { title: "SDK Manager", description: "Manage development tools and SDKs" };
       case "/settings":
         return { title: "Settings", description: "Application settings and configuration" };
       default:

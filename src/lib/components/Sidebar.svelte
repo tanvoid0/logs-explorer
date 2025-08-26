@@ -15,8 +15,10 @@
   // Navigation items
   const navigationItems = [
     { name: 'Overview', href: '/overview', icon: '📊' },
+    { name: 'Logs', href: '/logs', icon: '📋' },
     { name: 'Workloads', href: '/workloads', icon: '☸️' },
-    { name: 'Analytics', href: '/analytics', icon: '📈' },
+    { name: 'Projects', href: '/projects', icon: '📁' },
+    { name: 'SDK Manager', href: '/sdk-manager', icon: '🔧' },
     { name: 'Settings', href: '/settings', icon: '⚙️' }
   ];
 
@@ -43,6 +45,11 @@
         if (event.altKey && event.key === 'Home') {
           event.preventDefault();
           navigateTo('/overview');
+        }
+        // Alt + L for logs
+        if (event.altKey && event.key === 'l') {
+          event.preventDefault();
+          navigateTo('/logs');
         }
       };
 
@@ -76,7 +83,6 @@
       isLoadingNamespaces = true;
       console.log('Sidebar: Loading namespaces via appStore...');
       await appStore.loadNamespaces();
-      console.log('Sidebar: Namespaces loaded via appStore, available namespaces:', $namespaceState.available);
     } catch (error) {
       console.error('Sidebar: Failed to load namespaces:', error);
       toastStore.error('Failed to load namespaces');
@@ -123,10 +129,10 @@
 
   function handleNamespaceChange(event: CustomEvent<{namespace: string}>) {
     const namespace = event.detail.namespace;
-            appStore.setSelectedNamespace(namespace);
+    console.log('Sidebar: Received namespace change event:', namespace);
     
-    // Update the kubeconfig's default namespace
-    console.log('Sidebar: Namespace changed to:', namespace);
+    // The appStore.setSelectedNamespace is already called in the NamespaceSelector
+    // so we don't need to call it again here
     
     if (namespace) {
       toastStore.success(`Switched to namespace: ${namespace}`);

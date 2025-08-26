@@ -35,6 +35,8 @@
   let searchQuery = $state('');
   let severityFilter = $state('');
   let traceIdFilter = $state('');
+  let startTime = $state<string | null>(null);
+  let endTime = $state<string | null>(null);
   let isLiveMode = $state(false);
   let isStaticMode = $state(true);
   let logCount = $state(100);
@@ -135,7 +137,9 @@
       logsLoading = true;
       const logData = await k8sAPI.getLogs($namespaceState.selected, podName, {
         container: selectedContainer || undefined,
-        tail: logCount
+        tail: logCount,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined
       });
       logs = logData;
     } catch (error) {
@@ -199,6 +203,12 @@
 
   function handleTraceIdChange(event: CustomEvent<{traceId: string}>) {
     traceIdFilter = event.detail.traceId;
+  }
+
+  function handleTimeChange(event: CustomEvent<{startTime: string | null, endTime: string | null}>) {
+    startTime = event.detail.startTime;
+    endTime = event.detail.endTime;
+    loadPodLogs();
   }
 
   function handleDeploymentFilter(event: CustomEvent<{deploymentName: string}>) {
@@ -401,7 +411,7 @@
 
   <!-- Main Content -->
   <main class="flex-1 overflow-y-auto p-6">
-    <div class="max-w-7xl mx-auto">
+    <div class="w-full">
       {#if !$connectionState.isConnected}
         <div class="text-center py-12">
           <div class="text-slate-400 dark:text-slate-500 mb-4">
@@ -452,12 +462,6 @@
               class="py-2 px-1 border-b-2 font-medium text-sm {activeTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}"
             >
               Overview
-            </button>
-            <button
-              onclick={() => { activeTab = 'logs'; autoAddDeploymentFilter(); }}
-              class="py-2 px-1 border-b-2 font-medium text-sm {activeTab === 'logs' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}"
-            >
-              Logs
             </button>
             <button
               onclick={() => activeTab = 'yaml'}
@@ -521,7 +525,7 @@
             <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
               <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
               <div class="flex flex-wrap gap-3">
-                <Button onclick={() => { activeTab = 'logs'; autoAddDeploymentFilter(); }}>
+                <Button onclick={() => window.location.href = `/logs?pod=${encodeURIComponent(podName)}`}>
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
@@ -551,15 +555,6 @@
               </div>
             </div>
           </div>
-        {:else if activeTab === 'logs' && pod}
-          <!-- Logs Tab -->
-          <LogsViewerContent
-            title={`Pod Logs - ${pod.name}`}
-            description={`View logs for pod ${pod.name} in namespace ${pod.namespace}`}
-            defaultNamespace={pod.namespace}
-            defaultPods={[pod.name]}
-            showNamespaceLabel={false}
-          />
         {:else if activeTab === 'yaml' && pod}
           <!-- YAML Tab -->
           <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">

@@ -148,7 +148,7 @@
   }
 </script>
 
-<div class="max-w-7xl mx-auto">
+<div class="w-full">
   <!-- Header -->
   <div class="mb-8">
     <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Kubernetes Overview</h1>
