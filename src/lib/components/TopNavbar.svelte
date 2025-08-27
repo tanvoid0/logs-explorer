@@ -1,9 +1,20 @@
 <script lang="ts">
+  import { appStore, connectionState, preferences } from '$lib/stores/app-store';
+  import ConnectionStatus from './ConnectionStatus.svelte';
+
   // Props
   let { pageTitle = "", pageDescription = "" } = $props<{
     pageTitle?: string;
     pageDescription?: string;
   }>();
+
+  async function handleConnect() {
+    await appStore.connect();
+  }
+
+  async function handleDisconnect() {
+    await appStore.disconnect();
+  }
 </script>
 
 <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
@@ -25,8 +36,16 @@
         {/if}
       </div>
 
-      <!-- Right: Empty for now, can be used for other actions later -->
+      <!-- Right: Connection Status -->
       <div class="flex items-center space-x-4">
+        <ConnectionStatus 
+          connectionState={{
+            ...$connectionState,
+            autoConnectEnabled: $preferences.autoConnect
+          }}
+          onConnect={handleConnect}
+          onDisconnect={handleDisconnect}
+        />
       </div>
     </div>
   </div>

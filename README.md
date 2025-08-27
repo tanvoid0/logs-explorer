@@ -4,123 +4,44 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 
 ![App Logo](static/tauri.svg)
 
-## 📊 Status & Build Information
+## 📊 Status
 
 [![Release Build](https://github.com/tanvoid0/logs-explorer/workflows/Build%20and%20Release/badge.svg?branch=main&event=push)](https://github.com/tanvoid0/logs-explorer/actions/workflows/release.yml)
-[![Beta Build](https://github.com/tanvoid0/logs-explorer/workflows/Build%20and%20Release/badge.svg?branch=develop&event=push)](https://github.com/tanvoid0/logs-explorer/actions/workflows/release.yml)
-[![Tests](https://github.com/tanvoid0/logs-explorer/workflows/Build%20and%20Release/badge.svg?branch=main&event=pull_request)](https://github.com/tanvoid0/logs-explorer/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/tanvoid0/logs-explorer/releases)
-[![Node.js](https://img.shields.io/badge/Node.js-22.x-green.svg)](https://nodejs.org/)
-[![Rust](https://img.shields.io/badge/Rust-stable-orange.svg)](https://rust-lang.org/)
-[![Tauri](https://img.shields.io/badge/Tauri-Latest-purple.svg)](https://tauri.app/)
-[![SvelteKit](https://img.shields.io/badge/SvelteKit-Latest-red.svg)](https://kit.svelte.dev/)
-[![pnpm](https://img.shields.io/badge/pnpm-Latest-yellow.svg)](https://pnpm.io/)
 
 ### 📦 Latest Release
 [![Current Version](https://img.shields.io/github/v/release/tanvoid0/logs-explorer?label=Current%20Version&color=blue)](https://github.com/tanvoid0/logs-explorer/releases/latest)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/releases/latest)
-[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/tanvoid0/logs-explorer?include_prereleases&sort=semver)](https://github.com/tanvoid0/logs-explorer/releases)
-[![GitHub downloads](https://img.shields.io/github/downloads/tanvoid0/logs-explorer/latest/total)](https://github.com/tanvoid0/logs-explorer/releases/latest)
-
-### 🔧 Development Status
-[![Code Size](https://img.shields.io/github/languages/code-size/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer)
-[![Repo Size](https://img.shields.io/github/repo-size/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer)
-[![Issues](https://img.shields.io/github/issues/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/pulls)
-[![Contributors](https://img.shields.io/github/contributors/tanvoid0/logs-explorer)](https://github.com/tanvoid0/logs-explorer/graphs/contributors)
-[![Last Commit](https://img.shields.io/github/last-commit/tanvoid0/logs-explorer/main)](https://github.com/tanvoid0/logs-explorer/commits/main)
-
-### 📋 Badge Descriptions
-
-- **Release Build**: Status of builds on the main branch (production releases)
-- **Beta Build**: Status of builds on the develop branch (beta releases)
-- **Tests**: Status of tests on pull requests
-- **Platform**: Supported operating systems
-- **Node.js/Rust/Tauri/SvelteKit/pnpm**: Technology stack versions
-- **Current Version**: Latest stable version (v0.1.7)
-- **GitHub Release**: Latest GitHub release version
-- **Downloads**: Total downloads of the latest release
-- **Code Size/Repo Size**: Repository statistics
-- **Issues/PRs**: Open issues and pull requests
-- **Contributors**: Number of contributors
-- **Last Commit**: Most recent commit on main branch
 
 ## 🚀 Features
 
 - **Multi-Cluster Management**: Connect to multiple Kubernetes clusters
-- **Real-time Logs**: Stream and search logs from pods across namespaces with advanced filtering
-- **Resource Management**: View and manage pods, services, deployments, jobs, and more
-- **Jobs Management**: Group and manage Kubernetes Jobs by service labels with detailed job listings
-- **ConfigMaps & Secrets**: Secure management of configuration and secrets with tree editor
-- **Advanced Log Filtering**: Powerful search, severity filtering, and trace ID tracking
-- **Unified Logs Viewer**: Consistent logs interface across workloads and pod details
-- **Collapsible Log Entries**: Compact view with expandable details for better readability
-- **Copy-to-Clipboard**: Easy copying of log messages, fields, and configurations
-- **SDK Manager**: Detect and manage development tools and package managers
+- **Real-time Logs**: Stream and search logs with advanced filtering
+- **Resource Management**: View and manage pods, services, deployments, jobs
+- **Jobs Management**: Group and manage Kubernetes Jobs by service labels
+- **ConfigMaps & Secrets**: Secure management with tree editor
+- **SDK Manager**: Detect and manage development tools
 - **Integrated Terminal**: Project-aware command execution with timeout protection
-- **Project Management**: Organize and manage development projects with IDE integration
-- **Dark/Light Theme**: Modern UI with theme support
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Project Management**: Organize and manage development projects
+- **Cross-Platform**: Windows, macOS, and Linux support
 
-## 🎯 Key Features in Detail
+## 🔒 Security
 
-### Jobs Management
-The application provides comprehensive Kubernetes Jobs management with intelligent grouping:
+### Implemented Security Measures
+- **Input Validation**: Comprehensive path and command validation
+- **SQL Injection Prevention**: Parameterized queries throughout
+- **Command Injection Prevention**: Proper command argument handling
+- **File System Security**: Path traversal prevention and system directory protection
+- **Credential Security**: No hardcoded secrets, uses existing kubectl authentication
+- **Process Management**: Timeout protection and process cleanup
+- **Database Security**: SQLite with proper parameter binding
 
-- **Service-Based Grouping**: Jobs are automatically grouped by the `app.kubernetes.io/name` label
-- **Aggregated Statistics**: View total, running, completed, and failed jobs per service
-- **Detailed Job Listings**: Search, filter, and sort jobs within each service
-- **Label Management**: View and manage all Kubernetes labels for better organization
-- **Real-time Updates**: Live status updates for job completion and failures
-
-### Terminal Integration
-Advanced terminal integration with project-aware execution:
-
-- **Working Directory Support**: Commands execute in the correct project directory
-- **Timeout Protection**: Automatic timeout for long-running commands (ping, top, etc.)
-- **Framework Support**: Maven, npm, and other framework-specific commands
-- **ANSI Color Support**: Proper rendering of colored terminal output
-- **IDE Integration**: Direct project opening with configured development environments
-
-### SDK Manager
-Comprehensive development tools detection and management:
-
-- **Multi-Ecosystem Support**: Detects tools across Java, JavaScript, Python, Go, and more
-- **Package Manager Detection**: Identifies npm, yarn, pnpm, maven, gradle, pip, etc.
-- **Version Information**: Shows installed versions and update status
-- **System Integration**: Works with system package managers (brew, apt, yum, etc.)
-
-## 🔄 CI/CD Pipeline
-
-This project uses GitHub Actions for continuous integration and deployment:
-
-### Workflow Jobs
-
-1. **Test Job**: Runs on all branches and PRs
-   - Installs dependencies (Node.js, Rust, system packages)
-   - Runs test suite
-   - Uses comprehensive caching for faster builds
-
-2. **Build Jobs**: Run on main and develop branches
-   - **Linux Build**: Creates AppImage and .deb packages
-   - **macOS Build**: Creates .dmg packages (Intel + Apple Silicon)
-   - **Windows Build**: Creates .msi and .exe installers
-
-3. **Release Jobs**: Create GitHub releases
-   - **Production Release**: Creates full release from main branch
-   - **Beta Release**: Creates prerelease from develop branch
-
-### Caching Strategy
-
-- **pnpm Dependencies**: Caches `node_modules` and `~/.pnpm-store`
-- **Rust Dependencies**: Caches `~/.cargo/registry`, `~/.cargo/git`, and `target`
-- **System Dependencies**: Caches apt packages for faster installation
-
-### Build Times
-
-- **First Run**: ~10-15 minutes (no cache)
-- **Subsequent Runs**: ~5-8 minutes (with caching)
+### Security Features
+- **Namespace Enforcement**: Kubernetes namespace isolation
+- **Resource Filtering**: Label-based resource access control
+- **Secure Logging**: Sensitive data not logged
+- **Error Handling**: Comprehensive error handling without information disclosure
+- **Timeout Protection**: Automatic timeout for long-running commands
 
 ## 📦 Installation
 
@@ -136,7 +57,7 @@ This project uses GitHub Actions for continuous integration and deployment:
    - **Windows**: Run the `.msi` or `.exe` installer
    - **macOS**: Open the `.dmg` file and drag to Applications
    - **Linux**: 
-     - **AppImage**: Make executable and run: `chmod +x logs-explorer_x64.AppImage && ./logs-explorer_x64.AppImage`
+     - **AppImage**: `chmod +x logs-explorer_x64.AppImage && ./logs-explorer_x64.AppImage`
      - **Debian**: `sudo dpkg -i logs-explorer_x64.deb`
 
 ### Prerequisites
@@ -149,80 +70,6 @@ This project uses GitHub Actions for continuous integration and deployment:
   - **Linux**: Ubuntu 18.04+, CentOS 7+, or similar
 
 ## 🛠️ Development Setup
-
-### Automation & Version Management
-
-This project uses an automation script to manage versions, releases, and development workflows. The GitHub Actions workflow automatically uses the version from `package.json` for releases.
-
-```bash
-# Show current versions
-./scripts/automation.sh version show
-
-# Bump version (patch, minor, major)
-./scripts/automation.sh version bump patch   # 0.1.0 → 0.1.1
-./scripts/automation.sh version bump minor   # 0.1.0 → 0.2.0
-./scripts/automation.sh version bump major   # 0.1.0 → 1.0.0
-
-# Prepare and push release with version bump
-./scripts/automation.sh push patch           # Auto-detect branch and push
-./scripts/automation.sh release prepare patch 'Fix critical bug'
-./scripts/automation.sh release beta minor 'Add new features'
-
-# Development commands
-./scripts/automation.sh test                 # Run test suite
-./scripts/automation.sh build                # Build application
-./scripts/automation.sh clean                # Clean build artifacts
-```
-
-#### Release Versioning
-
-- **Production Releases**: Uses version from `package.json` (e.g., `v0.1.0`)
-- **Beta Releases**: Uses version with `-beta` suffix (e.g., `v0.1.0-beta`)
-- **Automatic Tagging**: GitHub Actions automatically creates Git tags matching the version
-- **Release Names**: Automatically named "Kubernetes Logs Explorer vX.Y.Z" or "Kubernetes Logs Explorer vX.Y.Z Beta"
-
-#### Automation Workflow
-
-1. **Development**: Work on features in feature branches
-2. **Beta Release**: 
-   ```bash
-   git checkout develop
-   ./scripts/automation.sh push patch  # Bumps version, commits, tags, and pushes
-   ```
-3. **Production Release**:
-   ```bash
-   git checkout main
-   ./scripts/automation.sh push minor  # Bumps version, commits, tags, and pushes
-   ```
-
-**Important**: The automation script increments the version **before** pushing, so GitHub Actions will use the new version for the release.
-
-The automation script handles:
-- ✅ Version bumping in both `package.json` and `Cargo.toml`
-- ✅ Git commit creation with version changes
-- ✅ Git tag creation matching the version
-- ✅ Branch validation (main/develop only)
-- ✅ Automatic pushing with tags
-- ✅ GitHub Actions trigger for release creation with correct version
-
-#### Complete Release Process
-
-1. **Version Increment**: Automation script bumps version in both files
-2. **Git Operations**: Creates commit and tag with new version
-3. **Push**: Pushes changes and tags to trigger GitHub Actions
-4. **Build**: GitHub Actions builds for all platforms (Linux, macOS, Windows)
-5. **Release**: GitHub Actions creates release with correct version tag
-6. **Artifacts**: Release includes all platform installers
-
-**Example Flow**:
-```bash
-# Current version: 0.1.0
-./scripts/automation.sh push patch
-# → Bumps to 0.1.1, commits, tags as v0.1.1, pushes
-# → GitHub Actions builds and creates release v0.1.1
-```
-
-**Important**: The workflow now triggers on tags, so releases are only created when tags are pushed, not on every push to main/develop.
 
 ### Prerequisites
 
@@ -247,11 +94,7 @@ sudo apt install -y libwebkit2gtk-4.0-dev \
 
 #### macOS
 ```bash
-# Install Xcode Command Line Tools
 xcode-select --install
-
-# Install Homebrew (if not installed)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
 #### Windows
@@ -268,19 +111,13 @@ xcode-select --install
    cd logs-explorer
    ```
 
-2. **Install Node.js dependencies**:
+2. **Install dependencies**:
    ```bash
    pnpm install
+   cd src-tauri && cargo build && cd ..
    ```
 
-3. **Install Rust dependencies**:
-   ```bash
-   cd src-tauri
-   cargo build
-   cd ..
-   ```
-
-4. **Run in development mode**:
+3. **Run in development mode**:
    ```bash
    pnpm tauri dev
    ```
@@ -307,96 +144,30 @@ pnpm format
 pnpm lint
 ```
 
-## 🏗️ Project Architecture
+## 🏗️ Architecture
 
 ### Technology Stack
 
 - **Frontend**: SvelteKit 2.0 + TypeScript + Tailwind CSS
 - **Backend**: Rust with Tauri 2.0
 - **Kubernetes**: kube-rs library for Kubernetes API integration
+- **Database**: SQLite for local configuration storage
 - **Build System**: Vite + Tauri CLI
 - **Package Manager**: pnpm
-
-### Project Structure
-
-```
-logs-explorer/
-├── src/                          # Frontend source code
-│   ├── app.html                  # Main HTML template
-│   ├── app.css                   # Global styles
-│   ├── lib/                      # Shared libraries
-│   │   ├── api/                  # API clients
-│   │   │   └── k8s.ts           # Kubernetes API wrapper
-│   │   ├── components/           # Reusable UI components
-│   │   ├── stores/               # Svelte stores (state management)
-│   │   ├── services/             # Business logic services
-│   │   ├── types/                # TypeScript type definitions
-│   │   └── utils/                # Utility functions
-│   └── routes/                   # SvelteKit routes (pages)
-│       ├── +layout.svelte        # Root layout
-│       ├── +page.svelte          # Home page
-│       ├── clusters/             # Cluster management
-│       ├── workloads/            # Workload management (pods, services, deployments, jobs)
-│       ├── logs/                 # Logs viewer
-│       ├── projects/             # Project management
-│       ├── sdk-manager/          # Development tools management
-│       └── settings/             # Application settings
-├── src-tauri/                    # Rust backend
-│   ├── src/
-│   │   ├── main.rs              # Application entry point
-│   │   ├── lib.rs               # Library exports
-│   │   └── k8s.rs               # Kubernetes API implementation
-│   ├── Cargo.toml               # Rust dependencies
-│   └── tauri.conf.json          # Tauri configuration
-├── static/                       # Static assets
-├── .github/                      # GitHub Actions workflows
-└── package.json                  # Node.js dependencies
-```
 
 ### Key Components
 
 #### Frontend Architecture
-
-**State Management**:
-- **Svelte Stores**: Reactive state management using Svelte's built-in stores
-- **App Store** (`stores/app-store.ts`): Global application state including namespace selection
-- **SDK Store** (`stores/sdk-store.ts`): Development tools and SDK management
-- **Live Data Store** (`stores/live-data-store.ts`): Real-time data management
-- **Toast Store** (`stores/toast-store.ts`): Toast notification management
-
-**API Layer**:
-- **Kubernetes API** (`api/k8s.ts`): TypeScript wrapper for Rust Tauri commands
-- **Projects API** (`api/projects.ts`): Project management and terminal integration
-- **IDE Settings API** (`api/ide-settings.ts`): IDE configuration management
-- **SDK Manager Service** (`services/sdk-manager.ts`): Development tools detection
-
-**UI Components**:
-- **LogsViewerContent**: Unified logs viewer with sidebar filters and main display area
-- **LogsDisplay**: Main logs display component with view modes (detailed, compact, raw, lean)
-- **LogEntry**: Individual log entry component with collapsible sections and copy functionality
-- **AdvancedSearchPanel**: Advanced search interface (under development)
-- **LogsSearchPanel**: Filter panel for deployments, pods, severity, and trace IDs
-- **ResourceTables**: Data tables for Kubernetes resources
-- **ConfigTreeEditor**: Hierarchical configuration editing
-- **SimpleTerminal**: Project-aware terminal with timeout protection
-- **SDKManager**: Development tools detection and management
-- **Jobs Management**: Kubernetes Jobs with service-based grouping
+- **State Management**: Svelte stores for reactive state
+- **API Layer**: TypeScript wrapper for Rust Tauri commands
+- **UI Components**: Modern, responsive design system
+- **Real-time Features**: Live updates and streaming
 
 #### Backend Architecture
-
-**Rust Modules**:
-- **k8s.rs**: Kubernetes API integration using kube-rs
-- **database.rs**: SQLite database for IDE configurations and project management
-- **main.rs**: Tauri application setup and command registration
-- **lib.rs**: Module exports and application lifecycle
-
-**Key Features**:
-- **Async Operations**: All Kubernetes operations are async
-- **Error Handling**: Comprehensive error handling with anyhow
-- **Resource Management**: Memory-efficient resource handling
-- **Security**: Secure handling of secrets and sensitive data
-- **Command Execution**: Secure shell command execution with timeout protection
-- **Database Integration**: SQLite for persistent configuration storage
+- **Rust Modules**: Kubernetes API, database, process management
+- **Security**: Input validation, command injection prevention
+- **Performance**: Async operations, efficient resource handling
+- **Error Handling**: Comprehensive error handling and recovery
 
 ### Data Flow
 
@@ -406,32 +177,19 @@ logs-explorer/
 4. **Kubernetes API**: Rust backend communicates with Kubernetes cluster
 5. **Response**: Data flows back through the chain to update UI
 
-### Security Considerations
-
-- **No Hardcoded Secrets**: All credentials come from user-provided kubeconfig
-- **Secure Logging**: Sensitive data is not logged
-- **File System Access**: Limited to user-selected kubeconfig files
-- **Network Security**: Uses existing kubectl authentication
-
 ## 🔧 Configuration
 
 ### Kubernetes Setup
 
 1. **Configure kubectl**:
    ```bash
-   # Set your kubeconfig
    export KUBECONFIG=~/.kube/config
-   
-   # Test connection
    kubectl cluster-info
    ```
 
 2. **Verify permissions**:
    ```bash
-   # Check if you can list namespaces
    kubectl get namespaces
-   
-   # Check if you can list pods
    kubectl get pods --all-namespaces
    ```
 
@@ -462,8 +220,6 @@ The project includes GitHub Actions workflows that:
 - **Test**: Run tests on every push/PR
 - **Build**: Build for all platforms on develop/main branches
 - **Release**: Create releases automatically
-  - **develop branch**: Creates pre-releases
-  - **main branch**: Creates stable releases
 
 ## 🤝 Contributing
 
@@ -481,70 +237,27 @@ The project includes GitHub Actions workflows that:
 - **Testing**: Add tests for new features
 - **Documentation**: Update docs for API changes
 - **Code Style**: Use Prettier and ESLint
+- **Security**: Follow security best practices
 
 ## 📝 TODO
 
 ### High Priority
-- [ ] Implement real metrics collection from Kubernetes metrics-server
-- [ ] Add chart rendering with Chart.js or similar
-- [ ] Implement kubeconfig file management
-- [ ] Add pod exec/terminal functionality
-- [ ] Implement deployment scaling and rollback
-- [ ] Complete advanced search functionality in LogsViewerContent
-- [ ] Add log aggregation and correlation features
-- [ ] Implement real-time streaming for terminal output
-- [ ] Add GCP Cloud Logging integration
+- [ ] GCP Cloud Logging integration
+- [ ] Command palette implementation
+- [ ] Real-time terminal output streaming
+- [ ] Virtual scrolling for large datasets
 
 ### Medium Priority
-- [ ] Add support for multiple kubeconfig contexts
-- [ ] Add resource usage monitoring
-- [ ] Implement backup and restore functionality
-- [ ] Add plugin system for extensions
-- [ ] Implement log export functionality
-- [ ] Add custom log parsing rules
+- [ ] Advanced analytics and metrics
+- [ ] Multi-cluster management
+- [ ] Plugin system
+- [ ] Performance optimization
 
 ### Low Priority
-- [ ] Add support for custom themes
-- [ ] Implement keyboard shortcuts
-- [ ] Add export functionality for logs and configs
-- [ ] Implement audit logging
-- [ ] Add support for custom resource definitions
-
-## 🆕 Recent Updates
-
-### Jobs Management (Latest)
-- **Kubernetes Jobs Integration**: Complete Jobs management with grouping by service labels
-- **Service-Based Grouping**: Jobs grouped by `app.kubernetes.io/name` label for better organization
-- **Job Details View**: Detailed job listings with search, filtering, and sorting capabilities
-- **Aggregated Statistics**: Service-level statistics showing total, running, completed, and failed jobs
-
-### Terminal & Project Management
-- **Integrated Terminal**: Project-aware command execution with working directory support
-- **Timeout Protection**: Automatic timeout for long-running commands (ping, top, etc.)
-- **Maven Support**: Framework-specific commands for Java/Maven projects
-- **ANSI Color Support**: Proper rendering of colored terminal output
-- **IDE Integration**: Direct project opening with configured IDEs
-- **SDK Detection**: Automatic detection of installed development tools
-
-### ConfigMaps & Secrets Management
-- **Tree Editor**: Hierarchical editing of configuration data
-- **Secure Handling**: Proper base64 encoding/decoding for secrets
-- **CRUD Operations**: Full create, read, update, delete functionality
-- **Type Safety**: Separate handling for ConfigMaps and Secrets
-
-### Logs Viewer Improvements
-- **Unified Layout**: Consistent logs interface across workloads and pod details pages
-- **Enhanced Log Display**: Collapsible log entries with "Show more/less" functionality
-- **Copy Functionality**: Copy buttons for messages, fields, and entire log entries
-- **Responsive Design**: Better text wrapping and overflow handling
-- **Advanced Filtering**: Severity filters, trace ID tracking, and deployment filtering
-- **Toast Notifications**: User feedback for copy operations and other actions
-- **Compact View Modes**: Multiple view modes (detailed, compact, raw, lean) for different use cases
-
-### UI/UX Enhancements
-- **Consistent Navigation**: Navigation rail for settings and improved tab layouts
-- **Better Responsiveness**: Improved mobile and desktop layouts
-- **Enhanced Accessibility**: Better keyboard navigation and screen reader support
+- [ ] Custom themes
+- [ ] Export functionality
+- [ ] Audit logging
+- [ ] Enterprise features
 
 ## 📄 License
 
@@ -566,5 +279,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Note**: This project is actively developed. Please check the [releases page](https://github.com/tanvoid0/logs-explorer/releases) for the latest version and changelog.
-# Test commit to trigger workflow
-# Test change for publish demo

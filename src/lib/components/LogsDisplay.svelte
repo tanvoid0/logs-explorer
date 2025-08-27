@@ -6,6 +6,7 @@
   
   export let logs: K8sLog[] = [];
   export let logsLoading: boolean = false;
+  export let logsLoadingMore: boolean = false;
   export let isConnected: boolean = false;
   export let logCount: number = 50;
   export let sortOrder: 'newest' | 'oldest' = 'newest';
@@ -87,6 +88,14 @@
   
   function handlePreviousPage() {
     dispatch('previousPage');
+  }
+
+  function handleLoadMoreNext() {
+    dispatch('loadMoreNext');
+  }
+
+  function handleLoadMorePrevious() {
+    dispatch('loadMorePrevious');
   }
 
   function handlePinStartTime(event: CustomEvent<{timestamp: string}>) {
@@ -243,6 +252,30 @@
     <!-- Logs Content -->
     <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 max-w-full overflow-hidden" bind:this={logsContainerRef}>
       <div class="p-3 max-w-full">
+        <!-- Load More Previous Button (at top) -->
+        {#if logs.length > 0 && hasPreviousPage}
+          <div class="flex justify-center mb-4">
+            <button
+              onclick={handleLoadMorePrevious}
+              disabled={!isConnected || logsLoadingMore}
+              class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if logsLoadingMore}
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+              {:else}
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                </svg>
+                Load More Previous
+              {/if}
+            </button>
+          </div>
+        {/if}
+
         <!-- Logs List -->
         <div class="min-h-0">
           {#if logsLoading}
@@ -307,6 +340,30 @@
             </div>
           {/if}
         </div>
+
+        <!-- Load More Next Button (at bottom) -->
+        {#if logs.length > 0 && hasNextPage}
+          <div class="flex justify-center mt-4">
+            <button
+              onclick={handleLoadMoreNext}
+              disabled={!isConnected || logsLoadingMore}
+              class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if logsLoadingMore}
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+              {:else}
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+                Load More Next
+              {/if}
+            </button>
+          </div>
+        {/if}
       </div>
     </div>
   </div>

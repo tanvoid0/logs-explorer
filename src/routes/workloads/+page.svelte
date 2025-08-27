@@ -11,6 +11,7 @@
   let pods = $state<K8sPod[]>([]);
   let services = $state<K8sService[]>([]);
   let isLoading = $state(false);
+  let hasLoadedData = $state(false);
 
   // Statistics
   let totalPods = $state(0);
@@ -22,25 +23,42 @@
   let loadBalancerServices = $state(0);
   let nodePortServices = $state(0);
 
-
+  // Track previous namespace to avoid unnecessary reloads
+  let previousNamespace = $state<string>('');
 
   onMount(async () => {
-    // Load initial data if connected
-    if ($connectionState.isConnected) {
+    // Only load data if we're connected and have a namespace
+    if ($connectionState.isConnected && $namespaceState.selected) {
       await loadData();
     }
   });
 
-  // Reactive effect to reload data when connection or namespace changes
+  // Optimized reactive effect - only reload when namespace actually changes
   $effect(() => {
-    if ($connectionState.isConnected && $namespaceState.selected) {
-      console.log('Workloads: Connection or namespace changed, reloading data');
+    const currentNamespace = $namespaceState.selected;
+    const isConnected = $connectionState.isConnected;
+    
+    // Only reload if:
+    // 1. We're connected
+    // 2. We have a namespace
+    // 3. The namespace has actually changed
+    // 4. We haven't loaded data for this namespace yet
+    if (isConnected && currentNamespace && currentNamespace !== previousNamespace) {
+      console.log(`Workloads: Namespace changed from "${previousNamespace}" to "${currentNamespace}", reloading data`);
+      previousNamespace = currentNamespace;
       loadData();
     }
   });
 
   async function loadData() {
     try {
+      // Ensure we're connected before attempting to load data
+      const isConnected = await appStore.ensureConnected();
+      if (!isConnected) {
+        console.log('Workloads: Not connected to Kubernetes, skipping data load');
+        return;
+      }
+
       isLoading = true;
       
       // Check connection status
@@ -53,10 +71,12 @@
         console.log(`Loading pods and services for namespace: ${$namespaceState.selected}`);
         pods = await k8sAPI.getPods($namespaceState.selected);
         services = await k8sAPI.getServices($namespaceState.selected);
+        hasLoadedData = true;
       } else {
         console.log('No namespace selected, clearing workloads data');
         pods = [];
         services = [];
+        hasLoadedData = false;
       }
       
       updateStats();
@@ -78,17 +98,11 @@
     clusterIPServices = services.filter(svc => svc.type_ === 'ClusterIP').length;
     loadBalancerServices = services.filter(svc => svc.type_ === 'LoadBalancer').length;
     nodePortServices = services.filter(svc => svc.type_ === 'NodePort').length;
-
-
   }
 
-
-
-
-
-  // Cleanup on component destroy
-  function cleanup() {
-    // No refreshInterval to clear as per new logic
+  // Manual refresh function
+  async function refreshData() {
+    await loadData();
   }
 </script>
 
@@ -98,6 +112,48 @@
   <!-- Main Content -->
   <main class="flex-1 overflow-y-auto p-6 min-h-0">
     <div class="w-full">
+      <!-- Connection Status and Refresh Button -->
+      {#if !$connectionState.isConnected}
+        <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <span class="text-yellow-800 dark:text-yellow-200">
+                Not connected to Kubernetes. Connect to view workload data.
+              </span>
+            </div>
+            <Button onclick={() => appStore.connect()}>
+              Connect
+            </Button>
+          </div>
+        </div>
+      {:else if $namespaceState.selected}
+        <div class="mb-6 flex items-center justify-between">
+          <div class="text-sm text-slate-600 dark:text-slate-400">
+            Showing data for namespace: <span class="font-medium text-slate-900 dark:text-white">{$namespaceState.selected}</span>
+          </div>
+          <Button 
+            variant="outline" 
+            onclick={refreshData}
+            disabled={isLoading}
+          >
+            {#if isLoading}
+              <svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            {:else}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            {/if}
+            Refresh
+          </Button>
+        </div>
+      {/if}
+
       <!-- Workload Types Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         <!-- Pods Summary -->
@@ -283,8 +339,6 @@
           </button>
         </div>
       </div>
-
-
     </div>
   </main>
 </div>

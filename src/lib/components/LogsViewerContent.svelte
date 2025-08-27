@@ -23,6 +23,7 @@
   // State
   let logs = $state<K8sLog[]>([]);
   let logsLoading = $state(false);
+  let logsLoadingMore = $state(false);
   let logCount = $state(50);
   let sortOrder = $state<'newest' | 'oldest'>('newest');
   let currentPage = $state(1);
@@ -99,11 +100,15 @@
     }
   }
 
-  async function loadLogs(page: number = 1) {
+  async function loadLogs(page: number = 1, append: boolean = false) {
     if (!currentNamespace || !isConnected) return;
 
-    logsLoading = true;
-    currentPage = page;
+    if (append) {
+      logsLoadingMore = true;
+    } else {
+      logsLoading = true;
+      currentPage = page;
+    }
 
     try {
       const result = await k8sAPI.getNamespaceLogs(currentNamespace, {
@@ -118,10 +123,18 @@
         endTime: endTime || undefined,
       });
 
-      logs = result;
+      if (append) {
+        // Append new logs to existing logs
+        logs = [...logs, ...result];
+        currentPage = page;
+      } else {
+        // Replace logs (initial load or filter change)
+        logs = result;
+        currentPage = page;
+      }
       
-      // Show toast if no logs found
-      if (result.length === 0) {
+      // Show toast if no logs found (only on initial load)
+      if (result.length === 0 && !append) {
         const filterInfo = [];
         if (selectedDeployments.length > 0) filterInfo.push(`deployments: ${selectedDeployments.join(', ')}`);
         if (selectedPods.length > 0) filterInfo.push(`pods: ${selectedPods.join(', ')}`);
@@ -138,10 +151,16 @@
       hasPreviousPage = page > 1;
     } catch (error) {
       console.error('Failed to load logs:', error);
-      logs = [];
+      if (!append) {
+        logs = [];
+      }
       toastStore.error(`Failed to load logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      logsLoading = false;
+      if (append) {
+        logsLoadingMore = false;
+      } else {
+        logsLoading = false;
+      }
     }
   }
 
@@ -175,6 +194,18 @@
     startTime = event.detail.startTime;
     endTime = event.detail.endTime;
     loadLogs(1); // Reset to first page when filters change
+  }
+
+  function handleLoadMoreNext() {
+    if (hasNextPage && !logsLoadingMore) {
+      loadLogs(currentPage + 1, true);
+    }
+  }
+
+  function handleLoadMorePrevious() {
+    if (hasPreviousPage && !logsLoadingMore) {
+      loadLogs(currentPage - 1, true);
+    }
   }
 
   function handlePinStartTime() {
@@ -464,6 +495,7 @@
           <LogsDisplay
             {logs}
             {logsLoading}
+            {logsLoadingMore}
             {isConnected}
             {logCount}
             {sortOrder}
@@ -476,6 +508,8 @@
             on:severityChange={handleSeverityChange}
             on:nextPage={handleNextPage}
             on:previousPage={handlePreviousPage}
+            on:loadMoreNext={handleLoadMoreNext}
+            on:loadMorePrevious={handleLoadMorePrevious}
             on:loadLogs={() => loadLogs(1)}
           />
         </div>

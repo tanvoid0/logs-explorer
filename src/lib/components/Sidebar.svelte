@@ -17,6 +17,7 @@
     { name: 'Overview', href: '/overview', icon: '📊' },
     { name: 'Logs', href: '/logs', icon: '📋' },
     { name: 'Workloads', href: '/workloads', icon: '☸️' },
+    { name: 'Tasks', href: '/tasks', icon: '✅' },
     { name: 'Projects', href: '/projects', icon: '📁' },
     { name: 'SDK Manager', href: '/sdk-manager', icon: '🔧' },
     { name: 'Settings', href: '/settings', icon: '⚙️' }
@@ -309,12 +310,32 @@
           </div>
         </div>
       {:else}
-        <div class="flex items-center space-x-2 bg-red-900/30 px-3 py-2 rounded-lg border border-red-700/50">
-          <div class="w-2 h-2 rounded-full bg-red-400"></div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-red-300">Disconnected</div>
-            <div class="text-xs text-red-400">No cluster connection</div>
+        <div class="space-y-2">
+          <div class="flex items-center space-x-2 bg-red-900/30 px-3 py-2 rounded-lg border border-red-700/50">
+            <div class="w-2 h-2 rounded-full bg-red-400"></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-red-300">Disconnected</div>
+              <div class="text-xs text-red-400">No cluster connection</div>
+            </div>
           </div>
+          <button 
+            onclick={handleRefresh}
+            disabled={isLoading}
+            class="w-full flex items-center justify-center px-3 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {#if isLoading}
+              <svg class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Connecting...
+            {:else}
+              <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Connect to Cluster
+            {/if}
+          </button>
         </div>
       {/if}
     </div>

@@ -493,7 +493,13 @@
                     <TableCell class="font-medium truncate">
                       <div class="flex items-center space-x-2">
                         <div class="w-2 h-2 rounded-full {isDeploymentRunning(deployment) ? 'bg-green-500' : deployment.status.toLowerCase() === 'updating' ? 'bg-yellow-500' : deployment.replicas === 0 ? 'bg-gray-400' : 'bg-red-500'}"></div>
-                        <span class="text-slate-900 dark:text-white">{deployment.name}</span>
+                        <button 
+                          onclick={() => handleViewDeployment(deployment.name)}
+                          class="text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline cursor-pointer text-left"
+                          title="Click to view deployment details"
+                        >
+                          {deployment.name}
+                        </button>
                       </div>
                     </TableCell>
                     <TableCell>

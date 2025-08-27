@@ -450,9 +450,12 @@ pub async fn k8s_get_namespaces() -> Result<Vec<K8sNamespace>, String> {
 // Get pods using Kubernetes API with filtering
 #[tauri::command]
 pub async fn k8s_get_pods(namespace: Option<String>, filters: Option<Vec<String>>) -> Result<Vec<K8sPod>, String> {
-    let client = get_k8s_client().map_err(|e| e.to_string())?;
-    
+    // Validate input parameters
     let namespace = namespace.ok_or("Namespace is required")?;
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Pod> = Api::namespaced(client, &namespace);
     
     let mut lp = ListParams::default();
@@ -540,9 +543,13 @@ pub async fn k8s_get_pods(namespace: Option<String>, filters: Option<Vec<String>
 // Get services using Kubernetes API with filtering
 #[tauri::command]
 pub async fn k8s_get_services(namespace: Option<String>, filters: Option<Vec<String>>) -> Result<Vec<K8sService>, String> {
-    let client = get_k8s_client().map_err(|e| e.to_string())?;
-    
+    // Validate input parameters
     let namespace = namespace.ok_or("Namespace is required")?;
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Service> = Api::namespaced(client, &namespace);
     
     let mut lp = ListParams::default();
@@ -629,9 +636,13 @@ pub async fn k8s_get_services(namespace: Option<String>, filters: Option<Vec<Str
 // Get deployments using Kubernetes API
 #[tauri::command]
 pub async fn k8s_get_deployments(namespace: Option<String>) -> Result<Vec<K8sDeployment>, String> {
-    let client = get_k8s_client().map_err(|e| e.to_string())?;
-    
+    // Validate input parameters
     let namespace = namespace.ok_or("Namespace is required")?;
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Deployment> = Api::namespaced(client, &namespace);
     
     let lp = ListParams::default();
@@ -733,9 +744,13 @@ pub async fn k8s_get_deployments(namespace: Option<String>) -> Result<Vec<K8sDep
 // Get ConfigMaps using Kubernetes API
 #[tauri::command]
 pub async fn k8s_get_configmaps(namespace: Option<String>) -> Result<Vec<K8sConfigMap>, String> {
-    let client = get_k8s_client().map_err(|e| e.to_string())?;
-    
+    // Validate input parameters
     let namespace = namespace.ok_or("Namespace is required")?;
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<ConfigMap> = Api::namespaced(client, &namespace);
     
     let lp = ListParams::default();
@@ -783,9 +798,13 @@ pub async fn k8s_get_configmaps(namespace: Option<String>) -> Result<Vec<K8sConf
 // Get Secrets using Kubernetes API
 #[tauri::command]
 pub async fn k8s_get_secrets(namespace: Option<String>) -> Result<Vec<K8sSecret>, String> {
-    let client = get_k8s_client().map_err(|e| e.to_string())?;
-    
+    // Validate input parameters
     let namespace = namespace.ok_or("Namespace is required")?;
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Secret> = Api::namespaced(client, &namespace);
     
     let lp = ListParams::default();
@@ -842,6 +861,27 @@ pub async fn k8s_get_secrets(namespace: Option<String>) -> Result<Vec<K8sSecret>
 // Get logs from a pod using kubectl (keeping this for now as it's more complex with API)
 #[tauri::command]
 pub async fn k8s_get_logs(namespace: String, pod: String, container: Option<String>, tail: Option<i32>) -> Result<Vec<K8sLog>, String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if pod.trim().is_empty() {
+        return Err("Pod name cannot be empty".to_string());
+    }
+    
+    if let Some(ref cont) = container {
+        if cont.trim().is_empty() {
+            return Err("Container name cannot be empty".to_string());
+        }
+    }
+    
+    if let Some(t) = tail {
+        if t < 1 || t > 10000 {
+            return Err("Tail must be between 1 and 10000".to_string());
+        }
+    }
+    
     let result = tokio::task::spawn_blocking(move || {
         let mut cmd = Command::new("kubectl");
         cmd.arg("logs")
@@ -897,6 +937,40 @@ pub async fn k8s_get_namespace_logs(
     severity: Option<String>,
     trace_id: Option<String>
 ) -> Result<Vec<K8sLog>, String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if let Some(t) = tail {
+        if t < 1 || t > 10000 {
+            return Err("Tail must be between 1 and 10000".to_string());
+        }
+    }
+    
+    if let Some(p) = page {
+        if p < 1 {
+            return Err("Page must be greater than 0".to_string());
+        }
+    }
+    
+    if let Some(ref s) = search {
+        if s.len() > 1000 {
+            return Err("Search query too long (maximum 1000 characters)".to_string());
+        }
+    }
+    
+    if let Some(ref s) = severity {
+        if s.len() > 50 {
+            return Err("Severity too long (maximum 50 characters)".to_string());
+        }
+    }
+    
+    if let Some(ref t) = trace_id {
+        if t.len() > 100 {
+            return Err("Trace ID too long (maximum 100 characters)".to_string());
+        }
+    }
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Pod> = Api::namespaced(client, &namespace);
     
@@ -1027,6 +1101,15 @@ pub async fn k8s_get_namespace_logs(
 // Get containers for a specific pod
 #[tauri::command]
 pub async fn k8s_get_pod_containers(namespace: String, pod: String) -> Result<Vec<String>, String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if pod.trim().is_empty() {
+        return Err("Pod name cannot be empty".to_string());
+    }
+    
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Pod> = Api::namespaced(client, &namespace);
     
@@ -1055,6 +1138,15 @@ pub async fn k8s_get_pod_containers(namespace: String, pod: String) -> Result<Ve
 // Delete a pod (this will trigger a restart if managed by a deployment)
 #[tauri::command]
 pub async fn k8s_delete_pod(namespace: String, pod: String) -> Result<(), String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if pod.trim().is_empty() {
+        return Err("Pod name cannot be empty".to_string());
+    }
+    
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Pod> = Api::namespaced(client, &namespace);
     
@@ -1068,6 +1160,15 @@ pub async fn k8s_delete_pod(namespace: String, pod: String) -> Result<(), String
 // Restart a pod by deleting it (deployment will recreate it)
 #[tauri::command]
 pub async fn k8s_restart_pod(namespace: String, pod: String) -> Result<(), String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if pod.trim().is_empty() {
+        return Err("Pod name cannot be empty".to_string());
+    }
+    
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Pod> = Api::namespaced(client, &namespace);
     
@@ -1081,6 +1182,19 @@ pub async fn k8s_restart_pod(namespace: String, pod: String) -> Result<(), Strin
 // Scale a deployment
 #[tauri::command]
 pub async fn k8s_scale_deployment(namespace: String, deployment: String, replicas: i32) -> Result<(), String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if deployment.trim().is_empty() {
+        return Err("Deployment name cannot be empty".to_string());
+    }
+    
+    if replicas < 0 || replicas > 1000 {
+        return Err("Replicas must be between 0 and 1000".to_string());
+    }
+    
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Deployment> = Api::namespaced(client, &namespace);
     
@@ -1103,6 +1217,10 @@ pub async fn k8s_scale_deployment(namespace: String, deployment: String, replica
 // Get jobs for a namespace
 #[tauri::command]
 pub async fn k8s_get_jobs(namespace: String) -> Result<Vec<K8sJob>, String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     let api: Api<Job> = Api::namespaced(client, &namespace);
     
@@ -1212,6 +1330,14 @@ pub async fn k8s_get_jobs(namespace: String) -> Result<Vec<K8sJob>, String> {
 // Get job pods for a specific job
 #[tauri::command]
 pub async fn k8s_get_job_pods(namespace: String, app_name: String) -> Result<Vec<K8sJobPod>, String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if app_name.trim().is_empty() {
+        return Err("App name cannot be empty".to_string());
+    }
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     
     // First, get all jobs with the specified app.kubernetes.io/name label
@@ -1402,8 +1528,30 @@ pub async fn k8s_start_port_forward(
     local_port: Option<i32>,
     remote_port: i32,
 ) -> Result<PortForward, String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if resource_name.trim().is_empty() {
+        return Err("Resource name cannot be empty".to_string());
+    }
+    
+    if resource_type != "pod" && resource_type != "deployment" {
+        return Err("Resource type must be 'pod' or 'deployment'".to_string());
+    }
+    
+    if remote_port < 1 || remote_port > 65535 {
+        return Err("Remote port must be between 1 and 65535".to_string());
+    }
+    
     let session_id = Uuid::new_v4().to_string();
     let local_port = local_port.unwrap_or(7000); // Default to 7000
+    
+    // Validate local port
+    if local_port < 1024 || local_port > 65535 {
+        return Err("Local port must be between 1024 and 65535".to_string());
+    }
     
     // Check if the port is already in use
     if let Ok(_) = std::net::TcpListener::bind(format!("127.0.0.1:{}", local_port)) {
@@ -1509,6 +1657,18 @@ pub async fn k8s_get_available_ports(
     resource_name: String,
     resource_type: String,
 ) -> Result<Vec<PodPort>, String> {
+    // Validate input parameters
+    if namespace.trim().is_empty() {
+        return Err("Namespace cannot be empty".to_string());
+    }
+    
+    if resource_name.trim().is_empty() {
+        return Err("Resource name cannot be empty".to_string());
+    }
+    
+    if resource_type != "pod" && resource_type != "deployment" {
+        return Err("Resource type must be 'pod' or 'deployment'".to_string());
+    }
     let client = get_k8s_client().map_err(|e| e.to_string())?;
     
     match resource_type.as_str() {

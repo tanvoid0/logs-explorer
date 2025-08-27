@@ -1,0 +1,70 @@
+name: "Node.js API Pipeline"
+description: "Build and test Node.js API applications"
+version: "1.0.0"
+framework: "node"
+tags: ["api", "node", "backend", "test"]
+metadata:
+  author: "Backend Team"
+  category: "test"
+  created: "2024-01-15T10:00:00Z"
+  updated: "2024-01-15T10:00:00Z"
+
+variables:
+  - name: "NODE_VERSION"
+    description: "Node.js version to use"
+    type: "string"
+    defaultValue: "18"
+    required: true
+  - name: "TEST_ENV"
+    description: "Test environment"
+    type: "select"
+    defaultValue: "test"
+    required: true
+    options: ["test", "integration", "e2e"]
+
+steps:
+  - id: "checkout"
+    name: "Checkout Code"
+    description: "Clone the repository"
+    type: "command"
+    command: "git clone ${PROJECT_REPO} ."
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 300
+
+  - id: "install-deps"
+    name: "Install Dependencies"
+    description: "Install Node.js dependencies"
+    type: "command"
+    command: "npm ci"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 600
+    dependsOn: ["checkout"]
+
+  - id: "lint"
+    name: "Run ESLint"
+    description: "Check code quality with ESLint"
+    type: "command"
+    command: "npm run lint"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 300
+    dependsOn: ["install-deps"]
+
+  - id: "test"
+    name: "Run Tests"
+    description: "Execute unit tests"
+    type: "command"
+    command: "npm test"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 600
+    dependsOn: ["install-deps"]
+    environment:
+      NODE_ENV: "${TEST_ENV}"
+
+  - id: "build"
+    name: "Build Application"
+    description: "Build the Node.js application"
+    type: "command"
+    command: "npm run build"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 300
+    dependsOn: ["lint", "test"]

@@ -3,12 +3,12 @@
   import { goto } from "$app/navigation";
   import Button from "$lib/components/ui/button.svelte";
   import { projectsAPI, type Project } from "$lib/api/projects";
-  import { k8sAPI } from "$lib/api/k8s";
   import { appStore, namespaceState } from "$lib/stores/app-store";
   import { toastStore } from "$lib/stores/toast-store";
   import Icon from "@iconify/svelte";
   import FrameworkSelector from "$lib/components/FrameworkSelector.svelte";
   import ProjectDeploymentSelector from "$lib/components/ProjectDeploymentSelector.svelte";
+  import { k8sAPI } from "$lib/api/k8s";
 
   // Project state
   let projects = $state<Project[]>([]);
@@ -29,14 +29,15 @@
   let pathValidationError = $state("");
   let validationTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  // Kubernetes state for deployments
+  // Kubernetes state for deployments - loaded only when needed
   let deployments = $state<any[]>([]);
   let isLoadingDeployments = $state(false);
+  let hasLoadedDeployments = $state(false);
 
   onMount(async () => {
     await loadProjectsData();
-    await loadDeploymentsData();
     await loadFrameworksData();
+    // Don't load deployments automatically - only when needed for project creation/editing
   });
 
   async function loadProjectsData() {
@@ -62,10 +63,21 @@
   }
 
   async function loadDeploymentsData() {
+    // Only load deployments if we haven't loaded them yet and we're connected
+    if (hasLoadedDeployments) {
+      return;
+    }
+
     try {
       isLoadingDeployments = true;
-      const currentNamespace = $namespaceState.selected || 'default';
-      deployments = await k8sAPI.getDeployments(currentNamespace);
+      const isConnected = await appStore.ensureConnected();
+      if (isConnected) {
+        const currentNamespace = $namespaceState.selected || 'default';
+        deployments = await k8sAPI.getDeployments(currentNamespace);
+        hasLoadedDeployments = true;
+      } else {
+        deployments = [];
+      }
     } catch (error) {
       console.error('Failed to load deployments:', error);
       deployments = [];
@@ -83,6 +95,8 @@
     editingProject = null;
     isPathValid = false;
     pathValidationError = "";
+    // Load deployments when opening the modal
+    loadDeploymentsData();
   }
 
   function openEditProjectModal(project: Project) {
@@ -93,6 +107,8 @@
     newProjectFramework = project.framework || null;
     newProjectDeployment = project.deployment || null;
     isPathValid = true;
+    // Load deployments when opening the modal
+    loadDeploymentsData();
   }
 
   async function validatePath() {
@@ -238,8 +254,6 @@
     }
   }
 
-
-
   function viewDeploymentDetails(deploymentName: string) {
     // Navigate to deployment details page
     window.location.href = `/workloads/deployments/${deploymentName}`;
@@ -287,8 +301,6 @@
       toastStore.error(`Failed to select directory: ${error}`);
     }
   }
-
-
 
   function formatDate(dateString: string | undefined): string {
     if (!dateString) return 'Unknown';

@@ -4,10 +4,15 @@
   import { k8sAPI, type K8sNamespace } from "$lib/api/k8s";
   import { appStore, connectionState, namespaceState, preferences } from '$lib/stores/app-store';
   import { ideSettingsAPI, type IdeConfig, type FrameworkIdeMapping } from "$lib/api/ide-settings";
+  import { automationActions, pipelines, isLoadingPipelines, pipelineError } from "$lib/stores/automation-store";
+  import { automationAPI } from "$lib/api/automation";
+  import PipelineEditor from "$lib/components/PipelineEditor.svelte";
+  import type { Pipeline } from "$lib/types/automation";
+  import { toastStore } from "$lib/stores/toast-store";
   import Icon from "@iconify/svelte";
 
   // Settings navigation
-  type SettingsSection = 'namespaces' | 'general' | 'connection' | 'ides' | 'framework-ides';
+  type SettingsSection = 'namespaces' | 'general' | 'connection' | 'ides' | 'framework-ides' | 'automation';
   
   let currentSection = $state<SettingsSection>('namespaces');
   
@@ -34,10 +39,17 @@
   let newFrameworkMappingFramework = $state("");
   let newFrameworkMappingIdeId = $state<number | null>(null);
 
+  // Automation settings
+  let showPipelineEditor = $state(false);
+  let editingPipeline = $state<Pipeline | null>(null);
+  let showYamlImportModal = $state(false);
+  let yamlContent = $state('');
+
   onMount(async () => {
     await loadNamespacesData();
     await loadIdesData();
     await loadFrameworkIdeMappingsData();
+    await loadAutomationData();
   });
 
   // Auto-detect IDEs when IDE settings tab is opened
@@ -83,6 +95,55 @@
       frameworkIdeMappings = [];
     } finally {
       isLoadingFrameworkMappings = false;
+    }
+  }
+
+  async function loadAutomationData() {
+    try {
+      await automationActions.loadPipelines();
+    } catch (error) {
+      console.error('Failed to load automation data:', error);
+    }
+  }
+
+  async function deletePipeline(pipelineId: string) {
+    if (confirm('Are you sure you want to delete this pipeline? This action cannot be undone.')) {
+      try {
+        await automationActions.deletePipeline(pipelineId);
+        toastStore.success('Pipeline deleted successfully');
+      } catch (error) {
+        console.error('Failed to delete pipeline:', error);
+        toastStore.error('Failed to delete pipeline');
+      }
+    }
+  }
+
+  function handlePipelineSave(pipeline: Pipeline) {
+    showPipelineEditor = false;
+    editingPipeline = null;
+    toastStore.success(`Pipeline "${pipeline.name}" saved successfully`);
+  }
+
+  function handlePipelineCancel() {
+    showPipelineEditor = false;
+    editingPipeline = null;
+  }
+
+  async function importYamlPipeline() {
+    if (!yamlContent.trim()) {
+      toastStore.error('Please enter YAML content');
+      return;
+    }
+
+    try {
+      const pipeline = await automationAPI.importPipeline(yamlContent);
+      await automationActions.createPipeline(pipeline);
+      showYamlImportModal = false;
+      yamlContent = '';
+      toastStore.success('Pipeline imported successfully');
+    } catch (error) {
+      console.error('Failed to import pipeline:', error);
+      toastStore.error('Failed to import pipeline: ' + (error instanceof Error ? error.message : String(error)));
     }
   }
 
@@ -390,6 +451,12 @@
       name: 'Framework IDE Mappings',
       description: 'Set default IDEs for specific frameworks',
       icon: '🔗'
+    },
+    {
+      id: 'automation' as SettingsSection,
+      name: 'Automation Pipelines',
+      description: 'Create and manage automation pipelines',
+      icon: '⚙️'
     }
   ];
 </script>
@@ -1068,6 +1135,145 @@
                 </div>
               </div>
             </div>
+          {:else if currentSection === 'automation'}
+            <!-- Automation Settings -->
+            <div class="space-y-8">
+              <div>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                  Automation Pipelines
+                </h2>
+                <p class="text-slate-600 dark:text-slate-400">
+                  Create and manage automation pipelines for your projects
+                </p>
+              </div>
+
+              <!-- Pipeline Management -->
+              <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-lg font-medium text-slate-900 dark:text-white">
+                        Pipeline Management
+                      </h3>
+                      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        Create, edit, and manage automation pipelines
+                      </p>
+                    </div>
+                    <div class="flex gap-2">
+                      <Button onclick={() => { editingPipeline = null; showPipelineEditor = true; }}>
+                        <Icon icon="mdi:plus" class="w-4 h-4 mr-2" />
+                        Create Pipeline
+                      </Button>
+                      <Button variant="outline" onclick={() => { showYamlImportModal = true; }}>
+                        <Icon icon="mdi:file-import" class="w-4 h-4 mr-2" />
+                        Import YAML
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-6">
+                  {#if isLoadingPipelines}
+                    <div class="text-center py-12">
+                      <div class="text-slate-400 dark:text-slate-500 mb-4">
+                        <svg class="mx-auto h-8 w-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                      <p class="text-slate-500 dark:text-slate-400">Loading pipelines...</p>
+                    </div>
+                  {:else if pipelineError}
+                    <div class="text-center py-12">
+                      <div class="text-red-400 dark:text-red-500 mb-4">
+                        <svg class="mx-auto h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                      </div>
+                      <p class="text-red-500 dark:text-red-400 mb-4">Failed to load pipelines</p>
+                      <Button onclick={loadAutomationData}>
+                        <Icon icon="mdi:refresh" class="w-4 h-4 mr-2" />
+                        Retry
+                      </Button>
+                    </div>
+                  {:else if $pipelines.length === 0}
+                    <div class="text-center py-12">
+                      <div class="text-slate-400 dark:text-slate-500 mb-4">
+                        <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                      </div>
+                      <p class="text-slate-500 dark:text-slate-400 mb-4">No automation pipelines configured</p>
+                      <Button onclick={() => { editingPipeline = null; showPipelineEditor = true; }}>
+                        <Icon icon="mdi:plus" class="w-4 h-4 mr-2" />
+                        Create Your First Pipeline
+                      </Button>
+                    </div>
+                  {:else}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {#each $pipelines as pipeline}
+                        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div class="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 class="font-medium text-slate-900 dark:text-white">{pipeline.name}</h4>
+                              <p class="text-sm text-slate-500 dark:text-slate-400">{pipeline.description || 'No description'}</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                              <button
+                                class="p-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                onclick={() => { editingPipeline = pipeline; showPipelineEditor = true; }}
+                                title="Edit Pipeline"
+                              >
+                                <Icon icon="mdi:pencil" class="w-4 h-4" />
+                              </button>
+                              <button
+                                class="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                onclick={() => deletePipeline(pipeline.id)}
+                                title="Delete Pipeline"
+                              >
+                                <Icon icon="mdi:delete" class="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3">
+                            <span>v{pipeline.version}</span>
+                            {#if pipeline.framework}
+                              <span>•</span>
+                              <span>{pipeline.framework}</span>
+                            {/if}
+                            {#if pipeline.metadata?.category}
+                              <span>•</span>
+                              <span>{pipeline.metadata.category}</span>
+                            {/if}
+                          </div>
+
+                          <div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                            <span>{pipeline.steps.length} steps</span>
+                            <span>{pipeline.variables.length} variables</span>
+                          </div>
+
+                          {#if pipeline.tags && pipeline.tags.length > 0}
+                            <div class="flex flex-wrap gap-1 mt-3">
+                              {#each pipeline.tags.slice(0, 3) as tag}
+                                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded">
+                                  {tag}
+                                </span>
+                              {/each}
+                              {#if pipeline.tags.length > 3}
+                                <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs rounded">
+                                  +{pipeline.tags.length - 3}
+                                </span>
+                              {/if}
+                            </div>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            </div>
           {/if}
         </div>
       </div>
@@ -1219,6 +1425,84 @@
             disabled={!newFrameworkMappingFramework.trim() || !newFrameworkMappingIdeId || ides.filter(ide => installedIdes.length === 0 || isIdeInstalled(ide.executable)).length === 0}
           >
             {editingFrameworkMapping ? 'Update' : 'Add'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Pipeline Editor Modal -->
+  {#if showPipelineEditor}
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-slate-800 rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden">
+        <PipelineEditor 
+          pipeline={editingPipeline}
+          onSave={handlePipelineSave}
+          onCancel={handlePipelineCancel}
+        />
+      </div>
+    </div>
+  {/if}
+
+  <!-- YAML Import Modal -->
+  {#if showYamlImportModal}
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-slate-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700">
+          <h3 class="text-lg font-medium text-slate-900 dark:text-white">
+            Import Pipeline from YAML
+          </h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Paste your pipeline YAML content below
+          </p>
+        </div>
+        
+        <div class="p-6">
+          <div class="mb-4">
+            <label for="yaml-content" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              YAML Content
+            </label>
+            <textarea
+              id="yaml-content"
+              bind:value={yamlContent}
+              placeholder="Paste your pipeline YAML here..."
+              class="w-full h-64 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+            ></textarea>
+          </div>
+          
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-4 mb-4">
+            <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Sample YAML Structure:</h4>
+            <pre class="text-xs text-blue-700 dark:text-blue-300 overflow-x-auto">name: "Pipeline Name"
+description: "Pipeline description"
+version: "1.0.0"
+framework: "react"
+tags: ["build", "deploy"]
+
+variables:
+  - name: "VARIABLE_NAME"
+    type: "string"
+    required: true
+
+steps:
+  - id: "step1"
+    name: "Step Name"
+    type: "command"
+    command: "npm install"</pre>
+          </div>
+        </div>
+        
+        <div class="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
+          <Button 
+            variant="outline"
+            onclick={() => { showYamlImportModal = false; yamlContent = ''; }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onclick={importYamlPipeline}
+            disabled={!yamlContent.trim()}
+          >
+            Import Pipeline
           </Button>
         </div>
       </div>

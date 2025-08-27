@@ -9,7 +9,9 @@
   import Icon from "@iconify/svelte";
   import FrameworkSelector from "$lib/components/FrameworkSelector.svelte";
   import ProjectDeploymentSelector from "$lib/components/ProjectDeploymentSelector.svelte";
-  import SimpleTerminal from "$lib/components/SimpleTerminal.svelte";
+  import CentralizedTerminal from "$lib/components/CentralizedTerminal.svelte";
+  import PipelineExecutor from "$lib/components/PipelineExecutor.svelte";
+  import TaskPage from "$lib/components/TaskPage.svelte";
 
   // Project state
   let project = $state<Project | null>(null);
@@ -29,6 +31,9 @@
   let deployments = $state<any[]>([]);
   let isLoadingDeployments = $state(false);
   let deploymentDetails = $state<any | null>(null);
+
+  // Tab state
+  let activeTab = $state('overview');
 
   // Get project ID from URL
   let projectId = $derived(parseInt($page.params.id || '0'));
@@ -360,9 +365,30 @@
       </div>
     </div>
   {:else if project}
-    <!-- Project Content -->
-    <div class="flex-1 overflow-y-auto p-6">
-      <div class="max-w-4xl mx-auto space-y-8">
+    <!-- Tab Navigation -->
+    <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <div class="px-6">
+        <nav class="flex space-x-8">
+          <button
+            onclick={() => activeTab = 'overview'}
+            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === 'overview' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'}"
+          >
+            Overview
+          </button>
+          <button
+            onclick={() => activeTab = 'tasks'}
+            class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === 'tasks' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'}"
+          >
+            Tasks
+          </button>
+        </nav>
+      </div>
+    </div>
+    <!-- Tab Content -->
+    {#if activeTab === 'overview'}
+      <!-- Project Content -->
+      <div class="flex-1 overflow-y-auto p-6">
+        <div class="w-full space-y-8">
         
         <!-- Project Overview Card -->
         <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
@@ -560,7 +586,7 @@
 
                  <!-- Terminal -->
          {#if project}
-           <SimpleTerminal projectPath={project.path} framework={project.framework} />
+           <CentralizedTerminal projectPath={project.path} workingDirectory={project.path} />
          {/if}
 
                     <!-- Quick Actions -->
@@ -593,8 +619,36 @@
                </div>
              </div>
            {/if}
+
+           <!-- Automation Pipelines Section -->
+           {#if project}
+             <div class="mt-8">
+               <PipelineExecutor 
+                 projectId={project.id || 0}
+                 projectName={project.name}
+                 projectPath={project.path}
+                 projectFramework={project.framework}
+                 projectNamespace="default"
+               />
+             </div>
+           {/if}
+        </div>
       </div>
-    </div>
+    {:else if activeTab === 'tasks'}
+      <!-- Tasks Tab Content -->
+      <div class="flex-1 overflow-y-auto">
+        <TaskPage 
+          title="Project Tasks"
+          subtitle="Manage tasks for {project.name}"
+          initialFilters={{
+            resourceLinkType: 'project',
+            resourceLinkId: project.id?.toString() || ''
+          }}
+          emptyStateMessage="No task groups for this project"
+          emptyStateDescription="Create your first task group to get started!"
+        />
+      </div>
+    {/if}
   {/if}
 
   <!-- Edit Project Modal -->

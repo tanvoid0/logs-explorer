@@ -10,6 +10,7 @@ export interface AppState {
     currentContext: string | null;
     lastConnected: string | null;
     error: string | null;
+    hasAttemptedConnection: boolean; // Track if we've tried to connect
   };
   
   // Namespace state
@@ -18,6 +19,7 @@ export interface AppState {
     available: string[];
     starred: string[];
     order: string[];
+    isLoaded: boolean; // Track if namespaces have been loaded
   };
   
   // User preferences
@@ -42,13 +44,15 @@ const defaultState: AppState = {
     isConnecting: false,
     currentContext: null,
     lastConnected: null,
-    error: null
+    error: null,
+    hasAttemptedConnection: false
   },
   namespace: {
     selected: '',
     available: [],
     starred: [],
-    order: []
+    order: [],
+    isLoaded: false
   },
   preferences: {
     autoConnect: true,
@@ -95,7 +99,8 @@ function createAppStore() {
       selected: loadFromStorage('selected-namespace', ''),
       available: [],
       starred: loadFromStorage('starred-namespaces', []),
-      order: loadFromStorage('namespace-order', [])
+      order: loadFromStorage('namespace-order', []),
+      isLoaded: false
     },
     preferences: {
       autoConnect: loadFromStorage('auto-connect', true),
@@ -114,7 +119,12 @@ function createAppStore() {
     async connect() {
       update(state => ({
         ...state,
-        connection: { ...state.connection, isConnecting: true, error: null }
+        connection: { 
+          ...state.connection, 
+          isConnecting: true, 
+          error: null,
+          hasAttemptedConnection: true
+        }
       }));
 
       try {
@@ -127,7 +137,8 @@ function createAppStore() {
               isConnecting: false,
               currentContext: 'default',
               lastConnected: new Date().toISOString(),
-              error: null
+              error: null,
+              hasAttemptedConnection: true
             }
           }));
           
@@ -145,7 +156,8 @@ function createAppStore() {
             ...state.connection,
             isConnected: false,
             isConnecting: false,
-            error: errorMessage
+            error: errorMessage,
+            hasAttemptedConnection: true
           }
         }));
         return false;
@@ -160,12 +172,14 @@ function createAppStore() {
           isConnecting: false,
           currentContext: null,
           lastConnected: null,
-          error: null
+          error: null,
+          hasAttemptedConnection: true
         },
         namespace: {
           ...state.namespace,
           selected: '',
-          available: []
+          available: [],
+          isLoaded: false
         }
       }));
     },
@@ -199,6 +213,13 @@ function createAppStore() {
 
     // Namespace actions
     async loadNamespaces() {
+      // Don't reload if already loaded and connected
+      let currentState: AppState;
+      subscribe(state => { currentState = state; })();
+      if (currentState.namespace.isLoaded && currentState.connection.isConnected) {
+        return;
+      }
+
       update(state => ({ ...state, ui: { ...state.ui, isLoading: true } }));
 
       try {
@@ -207,13 +228,17 @@ function createAppStore() {
         
         update(state => ({
           ...state,
-          namespace: { ...state.namespace, available },
+          namespace: { 
+            ...state.namespace, 
+            available,
+            isLoaded: true
+          },
           ui: { ...state.ui, isLoading: false }
         }));
 
         // Auto-select default namespace if none selected
-        const currentState = get({ subscribe });
-        if (!currentState.namespace.selected && available.length > 0) {
+        const updatedState = get({ subscribe });
+        if (!updatedState.namespace.selected && available.length > 0) {
           const defaultNamespace = available.find(ns => ns === 'default') || available[0];
           this.setSelectedNamespace(defaultNamespace);
         }
@@ -221,10 +246,32 @@ function createAppStore() {
         console.error('Failed to load namespaces:', error);
         update(state => ({
           ...state,
-          namespace: { ...state.namespace, available: [] },
+          namespace: { 
+            ...state.namespace, 
+            available: [],
+            isLoaded: false
+          },
           ui: { ...state.ui, isLoading: false }
         }));
       }
+    },
+
+    // Lazy connection - only connect when explicitly requested
+    async ensureConnected() {
+      let currentState: AppState;
+      subscribe(state => { currentState = state; })();
+      
+      // If already connected, return true
+      if (currentState.connection.isConnected) {
+        return true;
+      }
+      
+      // If we haven't attempted connection and auto-connect is enabled, try to connect
+      if (!currentState.connection.hasAttemptedConnection && currentState.preferences.autoConnect) {
+        return await this.connect();
+      }
+      
+      return false;
     },
 
     setSelectedNamespace(namespace: string) {
@@ -311,7 +358,12 @@ function createAppStore() {
     clearAllData() {
       update(state => ({
         ...state,
-        namespace: { ...state.namespace, selected: '', available: [] }
+        namespace: { 
+          ...state.namespace, 
+          selected: '', 
+          available: [],
+          isLoaded: false
+        }
       }));
       
       // Clear localStorage

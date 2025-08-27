@@ -9,6 +9,83 @@
     "shell:default"
   ],
   "allowlist": {
-    "all": true
+    "all": false,
+    "shell": {
+      "all": false,
+      "execute": {
+        "allow": [
+          "kubectl",
+          "code",
+          "idea",
+          "webstorm",
+          "pycharm",
+          "goland",
+          "clion",
+          "rider",
+          "phpstorm",
+          "studio",
+          "subl",
+          "vim",
+          "nvim",
+          "emacs",
+          "atom",
+          "brackets",
+          "notepad++",
+          "gedit",
+          "kate",
+          "mousepad",
+          "leafpad",
+          "explorer",
+          "open",
+          "xdg-open",
+          "nautilus",
+          "dolphin",
+          "thunar",
+          "pcmanfm",
+          "zenity",
+          "kdialog",
+          "powershell",
+          "osascript",
+          "pyenv",
+          "rvm",
+          "gvm",
+          "timeout",
+          "ping",
+          "top",
+          "htop",
+          "watch",
+          "tail",
+          "less",
+          "more"
+        ]
+      },
+      "sidecar": false,
+      "open": false
+    },
+    "fs": {
+      "all": false,
+      "readFile": {
+        "allow": ["**/*.json", "**/*.yaml", "**/*.yml", "**/*.txt", "**/*.log", "**/*.md", "**/*.toml", "**/*.lock"]
+      },
+      "readDir": {
+        "allow": ["**"]
+      },
+      "scope": ["$APPDATA", "$APPCONFIG", "$APPCACHE", "$APPLOCALDATA", "$APPLOG", "$APPDOCUMENTS", "$APPDESKTOP", "$APPDOWNLOADS", "$APPMUSIC", "$APPPICTURES", "$APPVIDEOS"]
+    },
+    "path": {
+      "all": false,
+      "resolve": {
+        "allow": ["**"]
+      }
+    },
+    "dialog": {
+      "all": false,
+      "open": {
+        "allow": ["**"]
+      },
+      "save": {
+        "allow": ["**"]
+      }
+    }
   }
 }

@@ -1,6 +1,12 @@
 mod k8s;
 mod database;
 
+use serde::{Deserialize, Serialize};
+use tauri::Emitter;
+use std::sync::Mutex;
+use std::collections::HashMap;
+use once_cell::sync::Lazy;
+
 // Kubernetes API commands
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -66,6 +72,11 @@ pub fn run() {
         kill_process,
         read_file,
         get_shell_info,
+        execute_command_live,
+        cancel_command,
+        cancel_process,
+        cancel_all_processes,
+        get_running_processes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -698,6 +709,18 @@ fn execute_command(command: String, args: Vec<String>) -> Result<String, String>
     use std::process::Command;
     use std::env;
     
+    // Validate command to prevent command injection
+    if command.contains(";") || command.contains("&") || command.contains("|") || command.contains("`") || command.contains("$(") {
+        return Err("Invalid command: contains shell operators".to_string());
+    }
+    
+    // Validate args to prevent command injection
+    for arg in &args {
+        if arg.contains(";") || arg.contains("&") || arg.contains("|") || arg.contains("`") || arg.contains("$(") {
+            return Err("Invalid argument: contains shell operators".to_string());
+        }
+    }
+    
     // Determine the shell to use
     let shell = env::var("SHELL").unwrap_or_else(|_| {
         if cfg!(target_os = "windows") {
@@ -708,25 +731,21 @@ fn execute_command(command: String, args: Vec<String>) -> Result<String, String>
     });
     
     let output = if cfg!(target_os = "windows") {
-        // On Windows, use cmd with /c
-        let full_command = if args.is_empty() {
-            command.clone()
-        } else {
-            format!("{} {}", command, args.join(" "))
-        };
-        Command::new("cmd")
-            .args(&["/c", &full_command])
-            .output()
+        // On Windows, use cmd with /c - pass command and args separately
+        let mut cmd = Command::new("cmd");
+        cmd.args(&["/c", &command]);
+        if !args.is_empty() {
+            cmd.args(&args);
+        }
+        cmd.output()
     } else {
         // On Unix-like systems, use the user's shell with login and interactive flags
-        let full_command = if args.is_empty() {
-            command.clone()
-        } else {
-            format!("{} {}", command, args.join(" "))
-        };
-        Command::new(&shell)
-            .args(&["-i", "-c", &full_command])
-            .env("TERM", "xterm-256color")
+        let mut cmd = Command::new(&shell);
+        cmd.args(&["-i", "-c", &command]);
+        if !args.is_empty() {
+            cmd.args(&args);
+        }
+        cmd.env("TERM", "xterm-256color")
             .output()
     }.map_err(|e| format!("Failed to execute command '{}': {}", command, e))?;
     
@@ -770,33 +789,48 @@ use std::sync::mpsc;
         }
     });
     
-    let full_command = if args.is_empty() {
-        command.clone()
-    } else {
-        format!("{} {}", command, args.join(" "))
-    };
+    // Validate command to prevent command injection
+    if command.contains(";") || command.contains("&") || command.contains("|") || command.contains("`") || command.contains("$(") {
+        return Err("Invalid command: contains shell operators".to_string());
+    }
+    
+    // Validate args to prevent command injection
+    for arg in &args {
+        if arg.contains(";") || arg.contains("&") || arg.contains("|") || arg.contains("`") || arg.contains("$(") {
+            return Err("Invalid argument: contains shell operators".to_string());
+        }
+    }
     
     // For long-running commands, add a timeout or limit
-    let final_command = if is_long_running {
+    let (final_command, final_args) = if is_long_running {
         if command == "ping" {
             // Limit ping to 3 pings
-            format!("{} -c 3 {}", command, args.join(" "))
+            let mut new_args = vec!["-c".to_string(), "3".to_string()];
+            new_args.extend(args);
+            (command.clone(), new_args)
         } else if command == "tail" {
             // Limit tail to show last 50 lines
-            format!("{} -n 50 {}", command, args.join(" "))
+            let mut new_args = vec!["-n".to_string(), "50".to_string()];
+            new_args.extend(args);
+            (command.clone(), new_args)
         } else {
             // For other long-running commands, add a timeout
-            format!("timeout 10s {}", full_command)
+            let mut new_args = vec!["timeout".to_string(), "10s".to_string(), command.clone()];
+            new_args.extend(args);
+            ("timeout".to_string(), new_args)
         }
     } else {
-        full_command
+        (command.clone(), args)
     };
     
     let output = if cfg!(target_os = "windows") {
         // On Windows, use cmd with /c
-        Command::new("cmd")
-            .args(&["/c", &final_command])
-            .current_dir(&working_directory)
+        let mut cmd = Command::new("cmd");
+        cmd.args(&["/c", &final_command]);
+        if !final_args.is_empty() {
+            cmd.args(&final_args);
+        }
+        cmd.current_dir(&working_directory)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
@@ -843,9 +877,12 @@ use std::sync::mpsc;
             })
     } else {
         // On Unix-like systems, use the user's shell with login and interactive flags
-        Command::new(&shell)
-            .args(&["-i", "-c", &final_command])
-            .current_dir(&working_directory)
+        let mut cmd = Command::new(&shell);
+        cmd.args(&["-i", "-c", &final_command]);
+        if !final_args.is_empty() {
+            cmd.args(&final_args);
+        }
+        cmd.current_dir(&working_directory)
             .env("TERM", "xterm-256color")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -907,6 +944,312 @@ use std::sync::mpsc;
 }
 
 #[tauri::command]
+async fn execute_command_live(command: String, args: Vec<String>, working_directory: Option<String>, process_id: String, window: tauri::Window) -> Result<CommandResult, String> {
+    use std::process::{Command, Stdio};
+    use std::io::{BufRead, BufReader};
+    use std::env;
+    
+    println!("=== EXECUTE COMMAND LIVE ===");
+    println!("Command: {}", command);
+    println!("Args: {:?}", args);
+    println!("Working directory: {:?}", working_directory);
+    println!("Process ID: {}", process_id);
+    
+    // Validate command to prevent command injection
+    if command.contains(";") || command.contains("&") || command.contains("|") || command.contains("`") || command.contains("$(") {
+        return Err("Invalid command: contains shell operators".to_string());
+    }
+    
+    // Validate args to prevent command injection
+    for arg in &args {
+        if arg.contains(";") || arg.contains("&") || arg.contains("|") || arg.contains("`") || arg.contains("$(") {
+            return Err("Invalid argument: contains shell operators".to_string());
+        }
+    }
+    
+    // Parse the command
+    let (cmd, cmd_args) = parse_command(&command);
+    
+    if cmd.is_empty() {
+        return Ok(CommandResult {
+            success: true,
+            output: "".to_string(),
+            command_type: "empty".to_string(),
+            is_native: false,
+            exit_code: None,
+            error_message: None,
+        });
+    }
+    
+    // Determine the shell to use
+    let shell = env::var("SHELL").unwrap_or_else(|_| {
+        if cfg!(target_os = "windows") {
+            "cmd".to_string()
+        } else {
+            "/bin/bash".to_string()
+        }
+    });
+    
+    // Use the actual command and args instead of string concatenation
+    let final_command = if !cmd_args.is_empty() {
+        cmd
+    } else {
+        command.clone()
+    };
+    
+    let final_args = if !cmd_args.is_empty() {
+        cmd_args
+    } else {
+        args
+    };
+    
+    println!("Final command: {}", final_command);
+    println!("Final args: {:?}", final_args);
+    
+    // Spawn the process
+    let mut child = if cfg!(target_os = "windows") {
+        let mut cmd = Command::new("cmd");
+        cmd.args(&["/c", &final_command]);
+        if !final_args.is_empty() {
+            cmd.args(&final_args);
+        }
+        
+        if let Some(ref cwd) = working_directory {
+            cmd.current_dir(cwd);
+        }
+        
+        cmd.stdout(Stdio::piped())
+           .stderr(Stdio::piped())
+           .spawn()
+    } else {
+        let mut cmd = Command::new(&shell);
+        cmd.args(&["-i", "-c", &final_command]);
+        if !final_args.is_empty() {
+            cmd.args(&final_args);
+        }
+        
+        if let Some(ref cwd) = working_directory {
+            cmd.current_dir(cwd);
+        }
+        
+        cmd.env("TERM", "xterm-256color")
+           .stdout(Stdio::piped())
+           .stderr(Stdio::piped())
+           .spawn()
+    }.map_err(|e| {
+        println!("Failed to spawn command: {}", e);
+        e.to_string()
+    })?;
+
+    // Store the process with process_id instead of pid
+    RUNNING_PROCESSES.lock().unwrap().insert(process_id.clone(), child);
+
+    let mut output = String::new();
+    
+    // Get the child process from storage
+    let mut processes = RUNNING_PROCESSES.lock().unwrap();
+    let child = processes.get_mut(&process_id).ok_or("Process not found")?;
+    
+    // Read stdout in real-time
+    if let Some(stdout) = child.stdout.take() {
+        let reader = BufReader::new(stdout);
+        
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                output.push_str(&line);
+                output.push('\n');
+                println!("STDOUT Live output for {}: {}", process_id, line);
+                
+                // Emit real-time output to frontend with process_id
+                let payload = serde_json::json!({
+                    "processId": process_id,
+                    "line": line
+                });
+                
+                if let Err(e) = window.emit("command_output", payload) {
+                    println!("Failed to emit stdout for {}: {}", process_id, e);
+                } else {
+                    println!("Emitted stdout for {}: {}", process_id, line);
+                }
+            }
+        }
+    }
+
+    // Read stderr in real-time
+    if let Some(stderr) = child.stderr.take() {
+        let reader = BufReader::new(stderr);
+        
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                println!("STDERR Live output for {}: {}", process_id, line);
+                
+                // Emit stderr to frontend with process_id
+                let payload = serde_json::json!({
+                    "processId": process_id,
+                    "line": line
+                });
+                
+                if let Err(e) = window.emit("command_output", payload) {
+                    println!("Failed to emit stderr for {}: {}", process_id, e);
+                } else {
+                    println!("Emitted stderr for {}: {}", process_id, line);
+                }
+            }
+        }
+    }
+
+    // Wait for the process to finish
+    let status = match child.wait() {
+        Ok(status) => status,
+        Err(e) => {
+            // If we can't wait for the process, try to kill it and return error
+            let _ = child.kill();
+            return Err(format!("Process error: {}", e));
+        }
+    };
+    
+    // Remove the process from storage
+    processes.remove(&process_id);
+    
+    if status.success() {
+        Ok(CommandResult {
+            success: true,
+            output: output.trim().to_string(),
+            command_type: "native".to_string(),
+            is_native: true,
+            exit_code: status.code(),
+            error_message: None,
+        })
+    } else {
+        let exit_code = status.code();
+        Ok(CommandResult {
+            success: false,
+            output: format!("Command failed with exit code: {}", status),
+            command_type: "native".to_string(),
+            is_native: true,
+            exit_code,
+            error_message: Some(format!("Command failed with exit code: {}", status)),
+        })
+    }
+}
+
+fn parse_command(command: &str) -> (String, Vec<String>) {
+    let parts: Vec<&str> = command.split_whitespace().collect();
+    if parts.is_empty() {
+        return (String::new(), Vec::new());
+    }
+    
+    let cmd = parts[0].to_string();
+    let args: Vec<String> = parts[1..].iter().map(|s| s.to_string()).collect();
+    
+    (cmd, args)
+}
+
+#[tauri::command]
+fn cancel_command() -> Result<(), String> {
+    // Try to get the lock without blocking
+    let processes_guard = RUNNING_PROCESSES.try_lock()
+        .map_err(|_| "Failed to acquire lock - processes may be busy".to_string())?;
+    let mut processes = processes_guard;
+    
+    if processes.is_empty() {
+        println!("No running processes to cancel");
+        return Ok(());
+    }
+    
+    println!("Cancelling {} running processes", processes.len());
+    
+    // Kill all running processes
+    for (process_id, child) in processes.iter_mut() {
+        println!("Cancelling process: {}", process_id);
+        if let Err(e) = child.kill() {
+            println!("Failed to kill process {}: {}", process_id, e);
+        }
+    }
+    
+    // Clear all processes
+    processes.clear();
+    
+    println!("All processes cancelled successfully");
+    Ok(())
+}
+
+#[tauri::command]
+fn cancel_process(process_id: String) -> Result<(), String> {
+    println!("🔍 BACKEND: Attempting to cancel process: {}", process_id);
+    
+    // Try to get the lock without blocking
+    let processes_guard = RUNNING_PROCESSES.try_lock()
+        .map_err(|_| "Failed to acquire lock - processes may be busy".to_string())?;
+    let mut processes = processes_guard;
+    
+    // Debug: Print all running processes
+    println!("🔍 BACKEND: Current running processes:");
+    for (pid, _) in processes.iter() {
+        println!("  - Process ID: {}", pid);
+    }
+    
+    if let Some(mut child) = processes.remove(&process_id) {
+        println!("🔍 BACKEND: Found process to cancel: {}", process_id);
+        
+        // Try to kill the process with multiple attempts
+        let mut kill_success = false;
+        
+        // First attempt: try to kill normally
+        if let Err(e) = child.kill() {
+            println!("🔍 BACKEND: First kill attempt failed for {}: {}", process_id, e);
+            
+            // Second attempt: try to wait a bit and kill again
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            if let Err(e2) = child.kill() {
+                println!("🔍 BACKEND: Second kill attempt failed for {}: {}", process_id, e2);
+                return Err(format!("Failed to kill process after multiple attempts: {}", e));
+            } else {
+                kill_success = true;
+            }
+        } else {
+            kill_success = true;
+        }
+        
+        if kill_success {
+            println!("🔍 BACKEND: Process {} cancelled successfully", process_id);
+            Ok(())
+        } else {
+            println!("🔍 BACKEND: Failed to kill process {} after all attempts", process_id);
+            Err(format!("Failed to kill process: {}", process_id))
+        }
+    } else {
+        println!("🔍 BACKEND: Process {} not found in running processes", process_id);
+        Err(format!("Process {} not found", process_id))
+    }
+}
+
+#[tauri::command]
+fn cancel_all_processes() -> Result<(), String> {
+    cancel_command()
+}
+
+#[tauri::command]
+fn get_running_processes() -> Result<Vec<String>, String> {
+    let processes_guard = RUNNING_PROCESSES.try_lock()
+        .map_err(|_| "Failed to acquire lock - processes may be busy".to_string())?;
+    let processes = processes_guard;
+    
+    let process_ids: Vec<String> = processes.keys().cloned().collect();
+    Ok(process_ids)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CommandResult {
+    success: bool,
+    output: String,
+    command_type: String,
+    is_native: bool,
+    exit_code: Option<i32>,
+    error_message: Option<String>,
+}
+
+#[tauri::command]
 fn detect_sdk_manager(manager: String) -> Result<bool, String> {
     use std::process::Command;
     use std::env;
@@ -953,20 +1296,33 @@ fn detect_sdk_manager(manager: String) -> Result<bool, String> {
 }
 
 // Process Management for Terminal
-use std::collections::HashMap;
-use std::sync::Mutex;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Child, Stdio};
 
-// Global storage for running processes
-lazy_static::lazy_static! {
-    static ref RUNNING_PROCESSES: Mutex<HashMap<u32, Child>> = Mutex::new(HashMap::new());
-}
+// Global storage for running processes with process IDs
+static RUNNING_PROCESSES: Lazy<Mutex<HashMap<String, std::process::Child>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 #[tauri::command]
 fn start_process(command: String, cwd: String, args: Vec<String>) -> Result<serde_json::Value, String> {
     use std::process::Stdio;
     use std::env;
+    
+    // Validate command to prevent command injection
+    if command.contains(";") || command.contains("&") || command.contains("|") || command.contains("`") || command.contains("$(") {
+        return Err("Invalid command: contains shell operators".to_string());
+    }
+    
+    // Validate args to prevent command injection
+    for arg in &args {
+        if arg.contains(";") || arg.contains("&") || arg.contains("|") || arg.contains("`") || arg.contains("$(") {
+            return Err("Invalid argument: contains shell operators".to_string());
+        }
+    }
+    
+    // Validate working directory
+    if cwd.contains(";") || cwd.contains("&") || cwd.contains("|") || cwd.contains("`") || cwd.contains("$(") {
+        return Err("Invalid working directory: contains shell operators".to_string());
+    }
     
     // Determine the shell to use
     let shell = env::var("SHELL").unwrap_or_else(|_| {
@@ -980,14 +1336,19 @@ fn start_process(command: String, cwd: String, args: Vec<String>) -> Result<serd
     let mut cmd = if cfg!(target_os = "windows") {
         // On Windows, use cmd with /c
         let mut cmd = Command::new("cmd");
-        cmd.args(&["/c", &command])
-           .args(&args);
+        cmd.args(&["/c", &command]);
+        if !args.is_empty() {
+            cmd.args(&args);
+        }
         cmd
     } else {
         // On Unix-like systems, use the user's shell with login and interactive flags
         let mut cmd = Command::new(&shell);
-        cmd.args(&["-i", "-c", &format!("cd '{}' && {}", cwd, command)])
-           .env("TERM", "xterm-256color"); // Set terminal type
+        cmd.args(&["-i", "-c", &command]);
+        if !args.is_empty() {
+            cmd.args(&args);
+        }
+        cmd.env("TERM", "xterm-256color"); // Set terminal type
         cmd
     };
     
@@ -998,22 +1359,22 @@ fn start_process(command: String, cwd: String, args: Vec<String>) -> Result<serd
     let mut child = cmd.spawn()
         .map_err(|e| format!("Failed to start process '{}': {}", command, e))?;
     
-    let pid = child.id();
+    let process_id = format!("process_{}", child.id());
     
     // Store the process
-    RUNNING_PROCESSES.lock().unwrap().insert(pid, child);
+    RUNNING_PROCESSES.lock().unwrap().insert(process_id.clone(), child);
     
     Ok(serde_json::json!({
-        "pid": pid,
+        "process_id": process_id,
         "success": true
     }))
 }
 
 #[tauri::command]
-fn read_process_output(pid: u32) -> Result<String, String> {
+fn read_process_output(process_id: String) -> Result<String, String> {
     let mut processes = RUNNING_PROCESSES.lock().unwrap();
     
-    if let Some(child) = processes.get_mut(&pid) {
+    if let Some(child) = processes.get_mut(&process_id) {
         if let Some(stdout) = child.stdout.take() {
             let reader = BufReader::new(stdout);
             let mut output = String::new();
@@ -1033,20 +1394,20 @@ fn read_process_output(pid: u32) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn is_process_running(pid: u32) -> Result<bool, String> {
+fn is_process_running(process_id: String) -> Result<bool, String> {
     let mut processes = RUNNING_PROCESSES.lock().unwrap();
     
-    if let Some(child) = processes.get_mut(&pid) {
+    if let Some(child) = processes.get_mut(&process_id) {
         match child.try_wait() {
             Ok(Some(_)) => {
                 // Process has finished, remove it
-                processes.remove(&pid);
+                processes.remove(&process_id);
                 Ok(false)
             },
             Ok(None) => Ok(true),
             Err(_) => {
                 // Process has finished, remove it
-                processes.remove(&pid);
+                processes.remove(&process_id);
                 Ok(false)
             }
         }
@@ -1056,17 +1417,17 @@ fn is_process_running(pid: u32) -> Result<bool, String> {
 }
 
 #[tauri::command]
-fn get_process_exit_code(pid: u32) -> Result<i32, String> {
+fn get_process_exit_code(process_id: String) -> Result<i32, String> {
     let mut processes = RUNNING_PROCESSES.lock().unwrap();
     
-    if let Some(child) = processes.get_mut(&pid) {
+    if let Some(child) = processes.get_mut(&process_id) {
         match child.wait() {
             Ok(status) => {
-                processes.remove(&pid);
+                processes.remove(&process_id);
                 Ok(status.code().unwrap_or(-1))
             },
             Err(e) => {
-                processes.remove(&pid);
+                processes.remove(&process_id);
                 Err(format!("Failed to get exit code: {}", e))
             }
         }
@@ -1076,10 +1437,10 @@ fn get_process_exit_code(pid: u32) -> Result<i32, String> {
 }
 
 #[tauri::command]
-fn kill_process(pid: u32) -> Result<(), String> {
+fn kill_process(process_id: String) -> Result<(), String> {
     let mut processes = RUNNING_PROCESSES.lock().unwrap();
     
-    if let Some(mut child) = processes.remove(&pid) {
+    if let Some(mut child) = processes.remove(&process_id) {
         if let Err(e) = child.kill() {
             return Err(format!("Failed to kill process: {}", e));
         }
@@ -1091,6 +1452,36 @@ fn kill_process(pid: u32) -> Result<(), String> {
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
     use std::fs;
+    use std::path::Path;
+    
+    // Validate path to prevent path traversal
+    let path_obj = Path::new(&path);
+    
+    // Check for path traversal attempts
+    if path.contains("..") || path.contains("~") {
+        return Err("Invalid path: contains path traversal characters".to_string());
+    }
+    
+    // Ensure path is absolute and within allowed directories
+    if !path_obj.is_absolute() {
+        return Err("Path must be absolute".to_string());
+    }
+    
+    // Check if path exists and is a file
+    if !path_obj.exists() {
+        return Err(format!("File does not exist: {}", path));
+    }
+    
+    if !path_obj.is_file() {
+        return Err(format!("Path is not a file: {}", path));
+    }
+    
+    // Check file size to prevent reading large files
+    if let Ok(metadata) = fs::metadata(&path) {
+        if metadata.len() > 10 * 1024 * 1024 { // 10MB limit
+            return Err("File too large (maximum 10MB)".to_string());
+        }
+    }
     
     fs::read_to_string(&path)
         .map_err(|e| format!("Failed to read file '{}': {}", path, e))

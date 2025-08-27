@@ -1,0 +1,79 @@
+name: "Python Data Pipeline"
+description: "Data processing and analysis pipeline for Python applications"
+version: "1.0.0"
+framework: "python"
+tags: ["data", "python", "analysis", "ml"]
+metadata:
+  author: "Data Science Team"
+  category: "data"
+  created: "2024-01-15T10:00:00Z"
+  updated: "2024-01-15T10:00:00Z"
+
+variables:
+  - name: "PYTHON_VERSION"
+    description: "Python version to use"
+    type: "string"
+    defaultValue: "3.11"
+    required: true
+  - name: "ENVIRONMENT"
+    description: "Environment to run in"
+    type: "select"
+    defaultValue: "development"
+    required: true
+    options: ["development", "staging", "production"]
+
+steps:
+  - id: "setup-env"
+    name: "Setup Python Environment"
+    description: "Create and activate virtual environment"
+    type: "command"
+    command: "python -m venv venv && source venv/bin/activate"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 300
+
+  - id: "install-deps"
+    name: "Install Dependencies"
+    description: "Install Python dependencies"
+    type: "command"
+    command: "pip install -r requirements.txt"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 600
+    dependsOn: ["setup-env"]
+
+  - id: "lint"
+    name: "Run Linting"
+    description: "Check code quality with flake8"
+    type: "command"
+    command: "flake8 ."
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 300
+    dependsOn: ["install-deps"]
+
+  - id: "test"
+    name: "Run Tests"
+    description: "Execute unit tests with pytest"
+    type: "command"
+    command: "pytest tests/"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 900
+    dependsOn: ["install-deps"]
+
+  - id: "data-process"
+    name: "Process Data"
+    description: "Run data processing scripts"
+    type: "command"
+    command: "python scripts/process_data.py"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 1800
+    dependsOn: ["test"]
+    environment:
+      ENVIRONMENT: "${ENVIRONMENT}"
+
+  - id: "generate-report"
+    name: "Generate Report"
+    description: "Generate analysis report"
+    type: "command"
+    command: "python scripts/generate_report.py"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 600
+    dependsOn: ["data-process"]

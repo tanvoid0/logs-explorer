@@ -1,0 +1,110 @@
+name: "React Build and Deploy Pipeline"
+description: "Automated build and deployment pipeline for React applications"
+version: "1.0.0"
+framework: "react"
+tags: ["build", "deploy", "react", "frontend"]
+metadata:
+  author: "DevOps Team"
+  category: "build"
+  created: "2024-01-15T10:00:00Z"
+  updated: "2024-01-15T10:00:00Z"
+
+variables:
+  - name: "NODE_VERSION"
+    description: "Node.js version to use"
+    type: "string"
+    defaultValue: "18"
+    required: true
+  - name: "BUILD_ENV"
+    description: "Build environment"
+    type: "select"
+    defaultValue: "production"
+    required: true
+    options: ["development", "staging", "production"]
+  - name: "DEPLOY_TARGET"
+    description: "Deployment target environment"
+    type: "string"
+    defaultValue: "staging"
+    required: true
+
+steps:
+  - id: "checkout"
+    name: "Checkout Code"
+    description: "Clone the repository"
+    type: "command"
+    command: "git clone ${PROJECT_REPO} ."
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 300
+    expectedExitCode: 0
+
+  - id: "install-deps"
+    name: "Install Dependencies"
+    description: "Install Node.js dependencies"
+    type: "command"
+    command: "npm ci"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 600
+    dependsOn: ["checkout"]
+    environment:
+      NODE_VERSION: "${NODE_VERSION}"
+
+  - id: "lint"
+    name: "Run Linting"
+    description: "Run ESLint to check code quality"
+    type: "command"
+    command: "npm run lint"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 300
+    dependsOn: ["install-deps"]
+    retries: 2
+    retryDelay: 30
+
+  - id: "test"
+    name: "Run Tests"
+    description: "Execute unit and integration tests"
+    type: "command"
+    command: "npm test"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 600
+    dependsOn: ["install-deps"]
+    parallel: true
+
+  - id: "build"
+    name: "Build Application"
+    description: "Build the React application for production"
+    type: "command"
+    command: "npm run build"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 900
+    dependsOn: ["lint", "test"]
+    environment:
+      NODE_ENV: "${BUILD_ENV}"
+      REACT_APP_ENV: "${BUILD_ENV}"
+
+  - id: "validate-build"
+    name: "Validate Build Output"
+    description: "Check if build artifacts exist"
+    type: "validation"
+    validation:
+      type: "file_exists"
+      value: "build/index.html"
+      message: "Build output not found"
+    dependsOn: ["build"]
+
+  - id: "deploy"
+    name: "Deploy to Target"
+    description: "Deploy the built application"
+    type: "command"
+    command: "aws s3 sync build/ s3://${DEPLOY_TARGET}-bucket --delete"
+    workingDirectory: "${PROJECT_PATH}"
+    timeout: 1200
+    dependsOn: ["validate-build"]
+    environment:
+      AWS_DEFAULT_REGION: "us-east-1"
+
+  - id: "notify-success"
+    name: "Notify Success"
+    description: "Send success notification"
+    type: "notification"
+    condition: "DEPLOY_TARGET == 'production'"
+    dependsOn: ["deploy"]

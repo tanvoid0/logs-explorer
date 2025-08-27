@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { k8sAPI, type K8sNamespace, type K8sPod, type K8sService } from "$lib/api/k8s";
-  import { appStore, namespaceState } from "$lib/stores/app-store";
+  import { appStore, connectionState, namespaceState } from "$lib/stores/app-store";
   import { toastStore } from "$lib/stores/toast-store";
 
   // Dynamic data
@@ -10,8 +10,8 @@
   let namespaces = $state<K8sNamespace[]>([]);
   let pods = $state<K8sPod[]>([]);
   let services = $state<K8sService[]>([]);
-  let isLoading = $state(true);
-  let refreshInterval: ReturnType<typeof setInterval> | null = null;
+  let isLoading = $state(false);
+  let hasLoadedData = $state(false);
 
   // Computed statistics - showing relevant cluster metrics
   let totalNamespaces = $derived(namespaces.length);
@@ -28,43 +28,62 @@
   }>>([]);
 
   onMount(async () => {
-    await loadData();
-    // Disabled auto-refresh to prevent unnecessary load on all namespaces
-    // refreshInterval = setInterval(loadData, 30000);
+    // Don't automatically load data - let user manually refresh when needed
+    updateConnectionStatus();
   });
+
+  // Reactive effect to update connection status when it changes
+  $effect(() => {
+    updateConnectionStatus();
+  });
+
+  function updateConnectionStatus() {
+    isConnected = $connectionState.isConnected;
+    currentContext = $connectionState.currentContext || "";
+    
+    if (isConnected && !hasLoadedData) {
+      // Only load data if we're connected and haven't loaded yet
+      loadData();
+    } else if (!isConnected) {
+      // Clear data when disconnected
+      namespaces = [];
+      pods = [];
+      services = [];
+      recentActivity = [];
+      hasLoadedData = false;
+    }
+  }
 
   async function loadData() {
     try {
+      // Ensure we're connected before attempting to load data
+      const connected = await appStore.ensureConnected();
+      if (!connected) {
+        console.log('Overview: Not connected to Kubernetes, skipping data load');
+        return;
+      }
+
       isLoading = true;
       
       // Check connection status
       isConnected = await k8sAPI.healthCheck();
-      currentContext = "default"; // TODO: Implement context management
+      currentContext = $connectionState.currentContext || "default";
       
-      // If not connected, try to connect first
       if (!isConnected) {
-        toastStore.info("Attempting to connect to Kubernetes...");
-        const success = await k8sAPI.init();
-        if (success) {
-          isConnected = true;
-          currentContext = "default";
-          toastStore.success("Successfully connected to Kubernetes!");
-        } else {
-          toastStore.error("Failed to connect to Kubernetes. Please check your kubeconfig.");
-          // Clear data when disconnected
-          namespaces = [];
-          pods = [];
-          services = [];
-          recentActivity = [];
-          return;
-        }
+        toastStore.error("Failed to connect to Kubernetes. Please check your kubeconfig.");
+        // Clear data when disconnected
+        namespaces = [];
+        pods = [];
+        services = [];
+        recentActivity = [];
+        hasLoadedData = false;
+        return;
       }
       
-      // Load real data
+      // Load only namespace list - don't load pods/services automatically
+      // This prevents the performance issue of loading ALL namespace data
       namespaces = await k8sAPI.getNamespaces();
       
-      // Only load namespace list - don't load pods/services automatically
-      // This prevents the performance issue of loading ALL namespace data
       console.log(`Loaded ${namespaces.length} namespaces (pods/services not loaded automatically)`);
       
       // Initialize empty arrays - will be populated on-demand
@@ -74,10 +93,11 @@
       // Update recent activity
       updateRecentActivity();
       
-      toastStore.dataLoadSuccess('overview data', pods.length + services.length);
+      hasLoadedData = true;
+      toastStore.success('Overview data loaded successfully');
     } catch (error) {
       console.error("Failed to load overview data:", error);
-      toastStore.dataLoadError('overview data', error instanceof Error ? error.message : 'Unknown error');
+      toastStore.error('Failed to load overview data');
       // Add error to recent activity
       addActivity('error', 'Failed to load cluster data', 'error');
     } finally {
@@ -97,9 +117,6 @@
     if (namespaces.length > 0) {
       addActivity('namespace', `Loaded ${namespaces.length} namespaces`, 'info');
     }
-    
-    // Skip workload activity since we're not loading pods/services automatically
-    // This prevents showing "Found 0 pods and 0 services" message
     
     // Add cluster status activity
     if (isConnected) {

@@ -6,8 +6,7 @@
   import ToastContainer from "$lib/components/ToastContainer.svelte";
   import { page } from "$app/stores";
   import { derived } from "svelte/store";
-  import { appStore, connectionState } from "$lib/stores/app-store";
-  import { toastStore } from "$lib/stores/toast-store";
+  import { appStore } from "$lib/stores/app-store";
 
   // Derive page title and description from current route
   const pageInfo = derived(page, ($page) => {
@@ -24,6 +23,8 @@
         return { title: "Workloads", description: "Kubernetes workloads and resources" };
       case "/workloads/pods":
         return { title: "Pods", description: "Kubernetes pods management" };
+      case "/tasks":
+        return { title: "Task Manager", description: "Organize tasks with groups and subtasks" };
       case "/projects":
         return { title: "Projects", description: "Manage local projects and development directories" };
       case "/sdk-manager":
@@ -35,42 +36,12 @@
     }
   });
 
-  // Auto-connect to Kubernetes on app startup (if enabled)
-  let hasAttemptedConnection = false;
-  
   onMount(async () => {
     console.log('App starting up...');
-    
-    // Wait a moment for the store to initialize
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Prevent multiple connection attempts
-    if (hasAttemptedConnection) {
-      console.log('Connection already attempted, skipping...');
-      return;
-    }
-    
-    // Check if auto-connect is enabled and we're not already connected
-    if (!$connectionState.isConnected && !$connectionState.isConnecting) {
-      hasAttemptedConnection = true;
-      console.log('Auto-connect enabled, attempting to connect to Kubernetes...');
-      
-      try {
-        // Attempt to connect automatically
-        const success = await appStore.connect();
-        if (success) {
-          console.log('Successfully connected to Kubernetes on startup');
-          toastStore.success('Connected to Kubernetes cluster');
-        } else {
-          console.log('Failed to connect to Kubernetes on startup');
-          toastStore.info('Not connected to Kubernetes. Use the connection button to connect.');
-        }
-      } catch (error) {
-        console.error('Error during startup connection attempt:', error);
-        toastStore.info('Not connected to Kubernetes. Use the connection button to connect.');
-      }
-    } else {
-      console.log('Auto-connect disabled or already connected, not attempting to connect');
+    // Attempt to connect to cluster on app startup (only if autoConnect is enabled)
+    const state = $appStore;
+    if (state.preferences.autoConnect && !state.connection.hasAttemptedConnection) {
+      await appStore.connect();
     }
   });
 </script>

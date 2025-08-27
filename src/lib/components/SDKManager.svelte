@@ -10,9 +10,11 @@
   let selectedManager: string | null = null;
   let installVersion = '';
   let showInstallDialog = false;
+  let hasInitialized = false;
 
   onMount(() => {
-    sdkStore.refreshAll();
+    // Don't automatically refresh - let user manually refresh when needed
+    hasInitialized = true;
   });
 
   function getSDKIcon(sdkName: string): string {
