@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { terminalStore, activeProcess, runningProcesses, processHistory } from '$lib/stores/terminal-store';
+  import Button from '$lib/components/ui/button.svelte';
   import type { TerminalProcess } from '$lib/stores/terminal-store';
   import AnsiToHtml from 'ansi-to-html';
   import { toastStore } from '$lib/stores/toast-store';
@@ -261,20 +262,22 @@
     
     <div class="terminal-controls">
       {#if isRunning}
-        <button 
-          class="stop-btn" 
+        <Button 
+          variant="destructive"
+          size="sm"
           onclick={() => setTimeout(() => cancelCurrentProcess(), 0)}
           title="Stop Command (Ctrl+C)"
+          class="stop-btn"
         >
           ⏹️ Stop (Ctrl+C)
-        </button>
+        </Button>
       {/if}
-      <button class="clear-btn" onclick={clearOutput} title="Clear Output">
+      <Button variant="ghost" size="sm" onclick={clearOutput} title="Clear Output">
         🗑️ Clear
-      </button>
-      <button class="debug-btn" onclick={debugProcesses} title="Debug Processes">
+      </Button>
+      <Button variant="ghost" size="sm" onclick={debugProcesses} title="Debug Processes" class="debug-btn">
         🐛 Debug
-      </button>
+      </Button>
     </div>
   </div>
 
@@ -282,10 +285,11 @@
   <div class="process-tabs">
     {#if $processHistory.length > 0}
       {#each $processHistory as process}
-        <button 
-          class="process-tab {process.id === selectedProcessId ? 'active' : ''} {process.status}"
+        <Button 
+          variant="ghost"
           onclick={() => selectProcess(process.id)}
           title="{process.command} - {process.status}"
+          class="process-tab {process.id === selectedProcessId ? 'active' : ''} {process.status}"
         >
           <span class="tab-icon">
             {#if process.status === 'idle'}
@@ -307,16 +311,15 @@
               {process.command}
             {/if}
           </span>
-          <span 
-            class="remove-tab"
-            onclick={(e) => { e.stopPropagation(); removeProcess(process.id); }}
-            title="Remove from history"
-            role="button"
-            tabindex="0"
-          >
-            ×
-          </span>
-        </button>
+                      <button 
+              class="remove-tab"
+              onclick={(e) => { e.stopPropagation(); removeProcess(process.id); }}
+              title="Remove from history"
+              type="button"
+            >
+              ×
+            </button>
+          </Button>
       {/each}
     {/if}
     

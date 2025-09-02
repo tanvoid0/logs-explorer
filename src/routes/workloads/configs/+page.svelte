@@ -244,15 +244,23 @@
 
   <!-- Config Details Modal -->
   {#if selectedConfig}
-    <div class="modal-overlay" onclick={() => selectedConfig = null}>
-      <div class="modal-content" onclick={(e) => e.stopPropagation()}>
+    <div 
+      class="modal-overlay" 
+      onclick={() => selectedConfig = null}
+      onkeydown={(e) => e.key === 'Escape' && (selectedConfig = null)}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="config-modal-title"
+      tabindex="-1"
+    >
+      <div class="modal-content" onclick={(e) => e.stopPropagation()} role="document">
         <div class="modal-header">
-          <h2 class="modal-title">
+          <h2 id="config-modal-title" class="modal-title">
             {configMaps.includes(selectedConfig as K8sConfigMap) ? 'ConfigMap' : 'Secret'}: {selectedConfig.name}
           </h2>
           <div class="flex items-center space-x-2">
-            <button class="edit-btn" onclick={() => startEditing()}>Edit</button>
-            <button class="close-btn" onclick={() => selectedConfig = null}>×</button>
+                        <Button variant="outline" onclick={() => startEditing()}>Edit</Button>
+            <Button variant="ghost" onclick={() => selectedConfig = null}>×</Button>
           </div>
         </div>
         
@@ -299,10 +307,7 @@
     padding: 1.5rem;
   }
 
-  .dark .header {
-    background-color: rgb(31 41 55);
-    border-bottom-color: rgb(55 65 81);
-  }
+
 
   .header-content {
     display: flex;
@@ -318,17 +323,13 @@
     margin-bottom: 0.25rem;
   }
 
-  .dark .title-section h1 {
-    color: white;
-  }
+
 
   .title-section p {
     color: rgb(75 85 99);
   }
 
-  .dark .title-section p {
-    color: rgb(156 163 175);
-  }
+
 
   .connection-status {
     display: flex;
@@ -343,10 +344,7 @@
     gap: 1rem;
   }
 
-  .dark .filters {
-    background-color: rgb(31 41 55);
-    border-bottom-color: rgb(55 65 81);
-  }
+
 
   .filter-group {
     flex: 1;
@@ -371,15 +369,7 @@
     border-color: transparent;
   }
 
-  .dark .search-input {
-    border-color: rgb(75 85 99);
-    background-color: rgb(55 65 81);
-    color: white;
-  }
 
-  .dark .search-input::placeholder {
-    color: rgb(156 163 175);
-  }
 
   .type-filter {
     width: 100%;
@@ -396,11 +386,7 @@
     border-color: transparent;
   }
 
-  .dark .type-filter {
-    border-color: rgb(75 85 99);
-    background-color: rgb(55 65 81);
-    color: white;
-  }
+
 
   .content {
     flex: 1;
@@ -417,9 +403,7 @@
     color: rgb(75 85 99);
   }
 
-  .dark .loading {
-    color: rgb(156 163 175);
-  }
+
 
   .spinner {
     width: 2rem;
@@ -460,17 +444,13 @@
     margin-bottom: 0.5rem;
   }
 
-  .dark .empty-state h3 {
-    color: white;
-  }
+
 
   .empty-state p {
     color: rgb(75 85 99);
   }
 
-  .dark .empty-state p {
-    color: rgb(156 163 175);
-  }
+
 
   .configs-grid {
     display: grid;
@@ -503,10 +483,7 @@
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
 
-  .dark .config-card {
-    background-color: rgb(31 41 55);
-    border-color: rgb(55 65 81);
-  }
+
 
   .config-card.selected {
     box-shadow: 0 0 0 2px rgb(59 130 246);
@@ -532,20 +509,14 @@
     color: rgb(30 64 175);
   }
 
-  .dark .config-type-badge.configmap {
-    background-color: rgb(30 58 138);
-    color: rgb(191 219 254);
-  }
+
 
   .config-type-badge.secret {
     background-color: rgb(254 226 226);
     color: rgb(153 27 27);
   }
 
-  .dark .config-type-badge.secret {
-    background-color: rgb(127 29 29);
-    color: rgb(254 202 202);
-  }
+
 
   .config-name {
     font-size: 1.125rem;
@@ -554,9 +525,7 @@
     color: rgb(17 24 39);
   }
 
-  .dark .config-name {
-    color: white;
-  }
+
 
   .config-details {
     display: flex;
@@ -571,26 +540,14 @@
     color: rgb(75 85 99);
   }
 
-  .dark .config-details p {
-    color: rgb(156 163 175);
-  }
+
 
   .config-actions {
     display: flex;
     justify-content: flex-end;
   }
 
-  .view-btn {
-    padding: 0.5rem 1rem;
-    background-color: rgb(37 99 235);
-    color: white;
-    border-radius: 0.375rem;
-    transition: background-color 0.2s;
-  }
 
-  .view-btn:hover {
-    background-color: rgb(29 78 216);
-  }
 
   .modal-overlay {
     position: fixed;
@@ -613,9 +570,7 @@
     overflow: hidden;
   }
 
-  .dark .modal-content {
-    background-color: rgb(31 41 55);
-  }
+
 
   .modal-header {
     display: flex;
@@ -625,9 +580,7 @@
     border-bottom: 1px solid rgb(229 231 235);
   }
 
-  .dark .modal-header {
-    border-bottom-color: rgb(55 65 81);
-  }
+
 
   .modal-title {
     font-size: 1.25rem;
@@ -636,24 +589,11 @@
     color: rgb(17 24 39);
   }
 
-  .dark .modal-title {
-    color: white;
-  }
 
-  .close-btn {
-    color: rgb(156 163 175);
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: 700;
-  }
 
-  .close-btn:hover {
-    color: rgb(75 85 99);
-  }
 
-  .dark .close-btn:hover {
-    color: rgb(209 213 219);
-  }
+
+
 
   .modal-body {
     padding: 1.5rem;

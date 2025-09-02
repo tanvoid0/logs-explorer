@@ -232,8 +232,7 @@
   <!-- Terminal Manager Toggle -->
   <div class="flex items-center justify-between">
     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Terminal</h3>
-    <Button 
-      variant="outline" 
+    <Button variant="outline" 
       onclick={() => showTerminalManager = !showTerminalManager}
     >
       <Icon icon="mdi:terminal" class="w-4 h-4 mr-2" />
@@ -249,8 +248,7 @@
       </h4>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {#each getFrameworkCommands() as command}
-          <Button 
-            variant="outline" 
+          <Button variant="outline" 
             onclick={() => runFrameworkCommand(command.title, command.command)}
             class="h-auto p-3 flex flex-col items-center text-sm"
           >
@@ -269,8 +267,7 @@
         </h4>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {#each packageJsonScripts as script}
-            <Button 
-              variant="outline" 
+            <Button variant="outline" 
               onclick={() => runFrameworkCommand(script.title, script.command)}
               class="h-auto p-3 flex flex-col items-center text-sm"
             >

@@ -1,12 +1,21 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
+  import { Card, CardContent } from "$lib/components/ui/card/index.js";
 
-  export let startTime: string | null = null;
-  export let endTime: string | null = null;
-  export let disabled: boolean = false;
-  export let pinnedStartLog: string | null = null;
-  export let pinnedEndLog: string | null = null;
+  let { 
+    startTime = $bindable(null), 
+    endTime = $bindable(null), 
+    disabled = false, 
+    pinnedStartLog = null, 
+    pinnedEndLog = null 
+  } = $props<{
+    startTime?: string | null;
+    endTime?: string | null;
+    disabled?: boolean;
+    pinnedStartLog?: string | null;
+    pinnedEndLog?: string | null;
+  }>();
 
   const dispatch = createEventDispatcher();
 
@@ -129,7 +138,7 @@
       <Button
         variant={isPresetActive(preset.value) ? "default" : "outline"}
         size="sm"
-        on:click={() => setTimePreset(preset.value)}
+        onclick={() => setTimePreset(preset.value)}
         disabled={disabled}
         title={preset.description}
         class="text-xs"
@@ -141,7 +150,7 @@
     <Button
       variant="outline"
       size="sm"
-      on:click={clearTimeFilter}
+      onclick={clearTimeFilter}
       disabled={disabled}
       title="Clear time filter"
       class="text-xs"
@@ -200,7 +209,7 @@
     <Button
       variant="outline"
       size="sm"
-      on:click={pinStartTime}
+      onclick={pinStartTime}
       disabled={disabled}
       title="Pin start time from selected log"
       class="text-xs flex-1"
@@ -214,7 +223,7 @@
     <Button
       variant="outline"
       size="sm"
-      on:click={pinEndTime}
+      onclick={pinEndTime}
       disabled={disabled}
       title="Pin end time from selected log"
       class="text-xs flex-1"
@@ -228,27 +237,35 @@
 
   <!-- Active Filter Display -->
   {#if startTime || endTime}
-    <div class="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-700 p-2 rounded-md">
-      <div class="font-medium mb-1">Active Time Filter:</div>
-      {#if getActivePreset()}
-        <div>Preset: {getActivePreset()}</div>
-      {:else}
-        <div>Start: {startTime ? new Date(startTime).toLocaleString() : 'None'}</div>
-        <div>End: {endTime ? new Date(endTime).toLocaleString() : 'Now'}</div>
-      {/if}
-    </div>
+    <Card className="bg-slate-50 dark:bg-slate-700">
+      <CardContent className="p-2">
+        <div class="text-xs text-slate-600 dark:text-slate-400">
+          <div class="font-medium mb-1">Active Time Filter:</div>
+          {#if getActivePreset()}
+            <div>Preset: {getActivePreset()}</div>
+          {:else}
+            <div>Start: {startTime ? new Date(startTime).toLocaleString() : 'None'}</div>
+            <div>End: {endTime ? new Date(endTime).toLocaleString() : 'Now'}</div>
+          {/if}
+        </div>
+      </CardContent>
+    </Card>
   {/if}
 
   <!-- Pinned Logs Display -->
   {#if pinnedStartLog || pinnedEndLog}
-    <div class="text-xs text-slate-600 dark:text-slate-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md border border-blue-200 dark:border-blue-700">
-      <div class="font-medium mb-1 text-blue-800 dark:text-blue-200">Pinned Logs:</div>
-      {#if pinnedStartLog}
-        <div class="text-blue-700 dark:text-blue-300">Start: {new Date(pinnedStartLog).toLocaleString()}</div>
-      {/if}
-      {#if pinnedEndLog}
-        <div class="text-blue-700 dark:text-blue-300">End: {new Date(pinnedEndLog).toLocaleString()}</div>
-      {/if}
-    </div>
+    <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
+      <CardContent className="p-2">
+        <div class="text-xs text-slate-600 dark:text-slate-400">
+          <div class="font-medium mb-1 text-blue-800 dark:text-blue-200">Pinned Logs:</div>
+          {#if pinnedStartLog}
+            <div class="text-blue-700 dark:text-blue-300">Start: {new Date(pinnedStartLog).toLocaleString()}</div>
+          {/if}
+          {#if pinnedEndLog}
+            <div class="text-blue-700 dark:text-blue-300">End: {new Date(pinnedEndLog).toLocaleString()}</div>
+          {/if}
+        </div>
+      </CardContent>
+    </Card>
   {/if}
 </div>

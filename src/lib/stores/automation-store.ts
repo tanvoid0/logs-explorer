@@ -150,11 +150,17 @@ export const automationActions = {
           }
         } : p)
       );
+      let currentPipelines: Pipeline[] = [];
+      pipelines.subscribe(value => currentPipelines = value)();
+      
+      const pipeline = currentPipelines.find(p => p.id === id);
+      if (!pipeline) throw new Error(`Pipeline with id ${id} not found`);
+      
       return { 
-        ...pipelines.get().find(p => p.id === id)!, 
+        ...pipeline, 
         ...updates, 
         metadata: {
-          ...pipelines.get().find(p => p.id === id)!.metadata,
+          ...pipeline.metadata,
           updated: new Date().toISOString()
         }
       };

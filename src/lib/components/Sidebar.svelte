@@ -10,7 +10,7 @@
   import { toastStore } from "$lib/stores/toast-store";
   
   // Loading state
-  let isLoading = false;
+  let isLoading = $state(false);
 
   // Navigation items
   const navigationItems = [
@@ -235,6 +235,7 @@
         disabled={!canGoBack}
         class="flex items-center justify-center w-8 h-8 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         title="Go Back"
+        aria-label="Go Back"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -246,6 +247,7 @@
         disabled={!canGoForward}
         class="flex items-center justify-center w-8 h-8 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         title="Go Forward"
+        aria-label="Go Forward"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -258,6 +260,7 @@
         onclick={() => navigateTo('/overview')}
         class="flex items-center justify-center w-8 h-8 rounded-md bg-slate-700 hover:bg-slate-600 transition-colors"
         title="Go to Overview"
+        aria-label="Go to Overview"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

@@ -5,11 +5,11 @@
   import { sdkStore, sdkManagers, installedSDKs, availableManagers, installedSDKsByType, recentOperations, isLoading, error } from '$lib/stores/sdk-store';
   import type { SDKManager, SDKDetectionResult, SDKManagerOperation } from '$lib/types/sdk';
 
-  let activeTab = 'overview';
-  let selectedSDK: string | null = null;
-  let selectedManager: string | null = null;
-  let installVersion = '';
-  let showInstallDialog = false;
+  let activeTab = $state('overview');
+  let selectedSDK = $state<string | null>(null);
+  let selectedManager = $state<string | null>(null);
+  let installVersion = $state('');
+  let showInstallDialog = $state(false);
   let hasInitialized = false;
 
   onMount(() => {
@@ -180,7 +180,7 @@
       <div class="flex gap-2">
         <Button 
           variant="outline" 
-          on:click={() => sdkStore.refreshAll()}
+          onclick={() => sdkStore.refreshAll()}
           disabled={$isLoading}
         >
           <Icon icon="mdi:refresh" class="w-4 h-4 mr-2" />
@@ -188,14 +188,14 @@
         </Button>
         <Button 
           variant="outline" 
-          on:click={() => sdkStore.clearOperations()}
+          onclick={() => sdkStore.clearOperations()}
         >
           <Icon icon="mdi:delete" class="w-4 h-4 mr-2" />
           Clear History
         </Button>
         <Button 
           variant="outline" 
-          on:click={() => console.log('DEBUG: Button clicked!')}
+          onclick={() => console.log('DEBUG: Button clicked!')}
           class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40"
         >
           <Icon icon="mdi:test-tube" class="w-4 h-4 mr-2" />
@@ -203,7 +203,7 @@
         </Button>
         <Button 
           variant="outline" 
-          on:click={checkEnvironment}
+          onclick={checkEnvironment}
           class="bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/40"
         >
           <Icon icon="mdi:bug" class="w-4 h-4 mr-2" />
@@ -221,7 +221,7 @@
           <Icon icon="mdi:alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" />
           <span class="text-red-800 dark:text-red-200">{$error}</span>
         </div>
-        <Button variant="ghost" size="sm" on:click={() => sdkStore.clearError()}>
+        <Button variant="ghost" size="sm" onclick={() => sdkStore.clearError()}>
           <Icon icon="mdi:close" class="w-4 h-4" />
         </Button>
       </div>
@@ -244,7 +244,7 @@
           class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === tab 
             ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'}"
-          on:click={() => activeTab = tab}
+          onclick={() => activeTab = tab}
         >
           {tab.charAt(0).toUpperCase() + tab.slice(1)}
         </button>
@@ -277,7 +277,7 @@
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  on:click={() => sdkStore.openManagerDocs(manager.name)}
+                  onclick={() => sdkStore.openManagerDocs(manager.name)}
                 >
                   <Icon icon="mdi:open-in-new" class="w-4 h-4" />
                 </Button>
@@ -307,14 +307,14 @@
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    on:click={() => openInstallDialog(sdk.sdk)}
+                    onclick={() => openInstallDialog(sdk.sdk)}
                   >
                     <Icon icon="mdi:plus" class="w-4 h-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    on:click={() => handleUninstallSDK(sdk.sdk)}
+                    onclick={() => handleUninstallSDK(sdk.sdk)}
                   >
                     <Icon icon="mdi:delete" class="w-4 h-4" />
                   </Button>
@@ -352,7 +352,7 @@
                   {#if manager.isAvailable}
                     <Button 
                       variant="outline"
-                      on:click={() => sdkStore.openManagerDocs(manager.name)}
+                      onclick={() => sdkStore.openManagerDocs(manager.name)}
                     >
                       <Icon icon="mdi:book-open" class="w-4 h-4 mr-2" />
                       Docs
@@ -396,14 +396,14 @@
                       <div class="flex items-center gap-2">
                         <Button 
                           variant="outline"
-                          on:click={() => openInstallDialog(sdk.sdk)}
+                          onclick={() => openInstallDialog(sdk.sdk)}
                         >
                           <Icon icon="mdi:plus" class="w-4 h-4 mr-2" />
                           Install Version
                         </Button>
                         <Button 
                           variant="outline"
-                          on:click={() => handleUninstallSDK(sdk.sdk)}
+                          onclick={() => handleUninstallSDK(sdk.sdk)}
                         >
                           <Icon icon="mdi:delete" class="w-4 h-4 mr-2" />
                           Uninstall
@@ -485,7 +485,7 @@
           <div class="flex gap-2 justify-end">
             <Button 
               variant="outline" 
-              on:click={() => {
+              onclick={() => {
                 showInstallDialog = false;
                 installVersion = '';
                 selectedSDK = null;
@@ -494,7 +494,7 @@
               Cancel
             </Button>
             <Button 
-              on:click={handleInstallSDK}
+              onclick={handleInstallSDK}
               disabled={$isLoading}
             >
               {#if $isLoading}

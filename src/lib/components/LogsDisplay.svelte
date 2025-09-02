@@ -4,21 +4,38 @@
   import LogEntry from "$lib/components/LogEntry.svelte";
   import type { K8sLog } from "$lib/types/k8s";
   
-  export let logs: K8sLog[] = [];
-  export let logsLoading: boolean = false;
-  export let logsLoadingMore: boolean = false;
-  export let isConnected: boolean = false;
-  export let logCount: number = 50;
-  export let sortOrder: 'newest' | 'oldest' = 'newest';
-  export let traceIdFilter: string = "";
-  export let severityFilter: string = "";
-  export let hasNextPage: boolean = false;
-  export let hasPreviousPage: boolean = false;
-  export let pinnedStartLog: string | null = null;
-  export let pinnedEndLog: string | null = null;
+  const {
+    logs = [],
+    logsLoading = false,
+    logsLoadingMore = false,
+    isConnected = false,
+    logCount = 50,
+    sortOrder = 'newest',
+    traceIdFilter = "",
+    severityFilter = "",
+    hasNextPage = false,
+    hasPreviousPage = false,
+    pinnedStartLog = null,
+    pinnedEndLog = null,
+    namespace = ""
+  } = $props<{
+    logs?: K8sLog[];
+    logsLoading?: boolean;
+    logsLoadingMore?: boolean;
+    isConnected?: boolean;
+    logCount?: number;
+    sortOrder?: 'newest' | 'oldest';
+    traceIdFilter?: string;
+    severityFilter?: string;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+    pinnedStartLog?: string | null;
+    pinnedEndLog?: string | null;
+    namespace?: string;
+  }>();
   
   // Filter logs based on severity
-  $: filteredLogs = logs.filter(log => {
+  let filteredLogs = $derived(logs.filter((log: K8sLog) => {
     if (!severityFilter) return true;
     
     const logLevel = log.level?.toUpperCase();
@@ -38,7 +55,7 @@
     
     // Show logs with severity >= filter severity
     return logSeverity >= filterSeverity;
-  });
+  }));
   
   const dispatch = createEventDispatcher();
   

@@ -195,11 +195,5 @@ class LiveDataStore {
 export const liveDataStore = new LiveDataStore();
 
 // Auto-start watching when namespace changes
-$effect(() => {
-  const namespace = $namespaceState.selected;
-  if (namespace) {
-    liveDataStore.startWatching(namespace);
-  } else {
-    liveDataStore.stopAll();
-  }
-});
+// Note: This effect will be set up by components that use this store
+// Components should call startWatching/stopAll when namespace changes

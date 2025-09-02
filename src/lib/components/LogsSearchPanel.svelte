@@ -8,23 +8,43 @@
   import TimeFilter from "$lib/components/TimeFilter.svelte";
   import type { K8sNamespace, K8sDeployment, K8sPod } from "$lib/types/k8s";
   
-  export let namespaces: K8sNamespace[] = [];
-  export let deployments: K8sDeployment[] = [];
-  export let pods: K8sPod[] = [];
-  export let selectedNamespace: string = "";
-  export let selectedDeployments: string[] = [];
-  export let selectedPods: string[] = [];
-  export let searchQuery: string = "";
-  export let severityFilter: string = "";
-  export let traceIdFilter: string = "";
-  export let startTime: string | null = null;
-  export let endTime: string | null = null;
-  export let pinnedStartLog: string | null = null;
-  export let pinnedEndLog: string | null = null;
-  export let isLiveMode: boolean = false;
-  export let isStaticMode: boolean = true;
-  export let logsLoading: boolean = false;
-  export let isConnected: boolean = false;
+  let { 
+    namespaces = [], 
+    deployments = [], 
+    pods = [], 
+    selectedNamespace = $bindable(""), 
+    selectedDeployments = $bindable([]), 
+    selectedPods = $bindable([]), 
+    searchQuery = $bindable(""), 
+    severityFilter = $bindable(""), 
+    traceIdFilter = $bindable(""), 
+    startTime = $bindable(null), 
+    endTime = $bindable(null), 
+    pinnedStartLog = null, 
+    pinnedEndLog = null, 
+    isLiveMode = $bindable(false), 
+    isStaticMode = $bindable(true), 
+    logsLoading = false, 
+    isConnected = false 
+  } = $props<{
+    namespaces?: K8sNamespace[];
+    deployments?: K8sDeployment[];
+    pods?: K8sPod[];
+    selectedNamespace?: string;
+    selectedDeployments?: string[];
+    selectedPods?: string[];
+    searchQuery?: string;
+    severityFilter?: string;
+    traceIdFilter?: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    pinnedStartLog?: string | null;
+    pinnedEndLog?: string | null;
+    isLiveMode?: boolean;
+    isStaticMode?: boolean;
+    logsLoading?: boolean;
+    isConnected?: boolean;
+  }>();
   
   const dispatch = createEventDispatcher();
   
@@ -61,7 +81,7 @@
   }
 
   function clearDeploymentFilter(deploymentName: string) {
-    selectedDeployments = selectedDeployments.filter(d => d !== deploymentName);
+    selectedDeployments = selectedDeployments.filter((d: string) => d !== deploymentName);
     dispatch('deploymentsChange', { deployments: selectedDeployments });
   }
 

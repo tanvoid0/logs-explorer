@@ -2,10 +2,11 @@
   import { taskFilters, taskStats } from '$lib/stores/task-store';
   import type { TaskStatus } from '$lib/types/task';
   import Icon from '@iconify/svelte';
+  import Button from '$lib/components/ui/button.svelte';
 
-  let searchTerm = '';
-  let selectedStatuses: TaskStatus[] = [];
-  let selectedPriorities: string[] = [];
+  let searchTerm = $state('');
+  let selectedStatuses = $state<TaskStatus[]>([]);
+  let selectedPriorities = $state<string[]>([]);
 
   const statusOptions: { value: TaskStatus; label: string; color: string }[] = [
     { value: 'pending', label: 'Pending', color: 'bg-gray-100 text-gray-800' },
@@ -54,15 +55,17 @@
   }
 
   // Watch for changes and update filters
-  $: if (searchTerm !== undefined) updateFilters();
+  $effect(() => {
+    if (searchTerm !== undefined) updateFilters();
+  });
 </script>
 
 <div class="task-filters bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
   <div class="flex items-center justify-between mb-4">
     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Filters</h3>
     <button
-      on:click={clearFilters}
-      class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+      onclick={clearFilters}
+      class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors px-3 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
     >
       Clear all
     </button>
@@ -70,12 +73,13 @@
 
   <!-- Search -->
   <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+    <label for="task-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
       Search Tasks
     </label>
     <div class="relative">
       <Icon icon="mdi:magnify" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
       <input
+        id="task-search"
         type="text"
         bind:value={searchTerm}
         class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -86,14 +90,16 @@
 
   <!-- Status Filters -->
   <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+    <label id="status-label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
       Status
     </label>
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2" role="group" aria-labelledby="status-label">
       {#each statusOptions as option}
         <button
-          on:click={() => toggleStatus(option.value)}
+          id="status-{option.value}"
+          onclick={() => toggleStatus(option.value)}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors {selectedStatuses.includes(option.value) ? option.color + ' ring-2 ring-blue-500' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
+          aria-pressed={selectedStatuses.includes(option.value)}
         >
           {option.label}
           <span class="ml-1 text-xs opacity-75">
@@ -106,14 +112,16 @@
 
   <!-- Priority Filters -->
   <div class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+    <label id="priority-label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
       Priority
     </label>
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2" role="group" aria-labelledby="priority-label">
       {#each priorityOptions as option}
         <button
-          on:click={() => togglePriority(option.value)}
+          id="priority-{option.value}"
+          onclick={() => togglePriority(option.value)}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors {selectedPriorities.includes(option.value) ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-500' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
+          aria-pressed={selectedPriorities.includes(option.value)}
         >
           <Icon 
             icon={option.value === 'low' ? 'mdi:flag-outline' : option.value === 'medium' ? 'mdi:flag' : 'mdi:flag-variant'} 

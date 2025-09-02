@@ -216,10 +216,10 @@
 <div class="pipeline-executor">
   <div class="executor-header">
     <h3>Automation Pipelines</h3>
-    <Button variant="outline" size="sm" on:click={loadPipelines} disabled={isLoading}>
-      <Icon icon="mdi:refresh" class="w-4 h-4 mr-2" />
-      Refresh
-    </Button>
+            <Button variant="outline" size="sm" onclick={loadPipelines} disabled={isLoading}>
+          <Icon icon="mdi:refresh" class="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
   </div>
 
   {#if isLoading && availablePipelines.length === 0}
@@ -232,7 +232,7 @@
       <Icon icon="mdi:playlist-remove" class="w-12 h-12 text-gray-400" />
       <h4>No pipelines available</h4>
       <p>No automation pipelines are configured for this project framework.</p>
-      <Button variant="outline" on:click={() => window.location.href = '/settings'}>
+      <Button variant="outline" onclick={() => window.location.href = '/settings'}>
         <Icon icon="mdi:cog" class="w-4 h-4 mr-2" />
         Go to Settings
       </Button>
@@ -283,7 +283,7 @@
           {/if}
 
           <div class="pipeline-actions">
-            <Button on:click={() => openExecutionModal(pipeline)}>
+            <Button onclick={() => openExecutionModal(pipeline)}>
               <Icon icon="mdi:play" class="w-4 h-4 mr-2" />
               Run Pipeline
             </Button>
@@ -295,13 +295,13 @@
 
   <!-- Execution Modal -->
   {#if showExecutionModal && selectedPipeline}
-    <div class="modal-overlay" on:click={() => showExecutionModal = false}>
-      <div class="modal-content" on:click|stopPropagation>
+    <div class="modal-overlay" role="dialog" aria-modal="true">
+      <div class="modal-content" role="document">
         <div class="modal-header">
           <h3>Run Pipeline: {selectedPipeline.name}</h3>
-          <button class="modal-close" on:click={() => showExecutionModal = false}>
-            <Icon icon="mdi:close" class="w-5 h-5" />
-          </button>
+                      <Button variant="ghost" size="sm" onclick={() => showExecutionModal = false}>
+              <Icon icon="mdi:close" class="w-5 h-5" />
+            </Button>
         </div>
 
         <div class="modal-body">
@@ -327,6 +327,7 @@
                       <label class="checkbox-label">
                         <input
                           type="checkbox"
+                          id={`${variable.name}-checkbox`}
                           bind:checked={variableValues[variable.name]}
                         />
                         {variable.name}
@@ -397,10 +398,10 @@
         </div>
 
         <div class="modal-footer">
-          <Button variant="outline" on:click={() => showExecutionModal = false}>
+          <Button variant="outline" onclick={() => showExecutionModal = false}>
             Cancel
           </Button>
-          <Button on:click={executePipeline} disabled={isLoading}>
+          <Button onclick={executePipeline} disabled={isLoading}>
             <Icon icon="mdi:play" class="w-4 h-4 mr-2" />
             {isLoading ? 'Starting...' : 'Run Pipeline'}
           </Button>
@@ -411,13 +412,13 @@
 
   <!-- Progress Modal -->
   {#if showProgressModal && currentExecution && progress}
-    <div class="modal-overlay">
-      <div class="modal-content progress-modal" on:click|stopPropagation>
+    <div class="modal-overlay" role="dialog" aria-modal="true">
+              <div class="modal-content progress-modal" role="document">
         <div class="modal-header">
           <h3>Pipeline Execution Progress</h3>
-          <button class="modal-close" on:click={closeProgressModal}>
-            <Icon icon="mdi:close" class="w-5 h-5" />
-          </button>
+                      <Button variant="ghost" size="sm" onclick={closeProgressModal}>
+              <Icon icon="mdi:close" class="w-5 h-5" />
+            </Button>
         </div>
 
         <div class="modal-body">
@@ -470,12 +471,12 @@
 
         <div class="modal-footer">
           {#if progress.status === 'running'}
-            <Button variant="outline" on:click={cancelExecution}>
+            <Button variant="outline" onclick={cancelExecution}>
               <Icon icon="mdi:cancel" class="w-4 h-4 mr-2" />
               Cancel Execution
             </Button>
           {:else}
-            <Button on:click={closeProgressModal}>
+            <Button onclick={closeProgressModal}>
               Close
             </Button>
           {/if}

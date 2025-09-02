@@ -4,6 +4,8 @@
   import Toast from "$lib/components/Toast.svelte";
   import NamespaceSelector from "$lib/components/NamespaceSelector.svelte";
   import { appStore, namespaceState } from '$lib/stores/app-store';
+  import Button from "$lib/components/ui/button.svelte";
+  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
 
   // Dynamic data
   let isConnected = $state(false);
@@ -384,9 +386,9 @@
                      Reconnect
                    {/if}
               </button>
-              <button class="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+              <Button variant="outline" size="sm">
                 Settings
-              </button>
+              </Button>
             </div>
           </div>
           {:else}
@@ -406,10 +408,10 @@
             </div>
             
                          <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-               <button 
+               <Button 
                  onclick={connectToCluster}
                  disabled={isConnecting}
-                 class="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                 class="w-full"
                >
                  {#if isConnecting}
                    <svg class="animate-spin h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24">
@@ -420,176 +422,194 @@
                  {:else}
                    Connect to Cluster
                  {/if}
-               </button>
+               </Button>
              </div>
           {/if}
         </div>
 
         <!-- Cluster Metrics -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Cluster Metrics</h3>
+        <Card>
+          <CardHeader>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                <CardTitle>Cluster Metrics</CardTitle>
+              </div>
+              <span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">
+                Live
+              </span>
             </div>
-            <span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">
-              Live
-            </span>
-          </div>
+          </CardHeader>
           
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-600 dark:text-slate-400">Total Pods:</span>
-              <span class="text-sm font-medium text-slate-900 dark:text-white">
-                {isLoading ? '...' : totalPods}
-              </span>
+          <CardContent>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Total Pods:</span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white">
+                  {isLoading ? '...' : totalPods}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Running:</span>
+                <span class="text-sm text-green-600 dark:text-green-400">
+                  {isLoading ? '...' : runningPods}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Failed:</span>
+                <span class="text-sm text-red-600 dark:text-red-400">
+                  {isLoading ? '...' : failedPods}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Load Balancers:</span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white">
+                  {isLoading ? '...' : loadBalancers}
+                </span>
+              </div>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-600 dark:text-slate-400">Running:</span>
-              <span class="text-sm text-green-600 dark:text-green-400">
-                {isLoading ? '...' : runningPods}
-              </span>
+            
+            <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div class="flex space-x-2">
+                <Button class="flex-1">
+                  View Metrics
+                </Button>
+                <Button variant="outline" size="sm">
+                  Configure
+                </Button>
+              </div>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-600 dark:text-slate-400">Failed:</span>
-              <span class="text-sm text-red-600 dark:text-red-400">
-                {isLoading ? '...' : failedPods}
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-600 dark:text-slate-400">Load Balancers:</span>
-              <span class="text-sm font-medium text-slate-900 dark:text-white">
-                {isLoading ? '...' : loadBalancers}
-              </span>
-            </div>
-          </div>
-          
-          <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-            <div class="flex space-x-2">
-              <button class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                View Metrics
-              </button>
-              <button class="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                Configure
-            </button>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <!-- Cluster Monitoring -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <div class="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Cluster Monitoring</h3>
+        <Card>
+          <CardHeader>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                <CardTitle>Cluster Monitoring</CardTitle>
+              </div>
+              <span class="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 px-2 py-1 rounded">
+                Monitoring
+              </span>
             </div>
-            <span class="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 px-2 py-1 rounded">
-              Monitoring
-            </span>
-          </div>
+          </CardHeader>
           
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-600 dark:text-slate-400">Metrics:</span>
-              <span class="text-sm font-medium text-slate-900 dark:text-white">
-                {isConnected ? 'Enabled' : 'Disabled'}
-              </span>
+          <CardContent>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Metrics:</span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white">
+                  {isConnected ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Alerts:</span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white">
+                  {failedPods > 0 ? failedPods : 0} active
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Dashboards:</span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white">
+                  {isConnected ? '3' : '0'} configured
+                </span>
+              </div>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-600 dark:text-slate-400">Alerts:</span>
-              <span class="text-sm font-medium text-slate-900 dark:text-white">
-                {failedPods > 0 ? failedPods : 0} active
-              </span>
+            
+            <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div class="flex space-x-2">
+                <Button class="flex-1">
+                  View Metrics
+                </Button>
+                <Button variant="outline" size="sm">
+                  Configure
+                </Button>
+              </div>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-600 dark:text-slate-400">Dashboards:</span>
-              <span class="text-sm font-medium text-slate-900 dark:text-white">
-                {isConnected ? '3' : '0'} configured
-              </span>
-            </div>
-          </div>
-          
-          <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-            <div class="flex space-x-2">
-              <button class="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                View Metrics
-              </button>
-              <button class="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                Configure
-              </button>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       <!-- Cluster Management -->
       <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Add New Cluster</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Cluster Type
-              </label>
-              <select 
-                bind:value={selectedClusterType}
-                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-              >
-                <option>GKE (Google Kubernetes Engine)</option>
-                <option>EKS (Amazon Elastic Kubernetes Service)</option>
-                <option>AKS (Azure Kubernetes Service)</option>
-                <option>Local Cluster</option>
-                <option>Custom Cluster</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Kubeconfig File
-              </label>
-              <input 
-                type="file" 
-                accept=".yaml,.yml,.config,.kubeconfig"
-                onchange={handleFileSelect}
-                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-              >
-              {#if kubeconfigFile}
-                <p class="text-sm text-green-600 dark:text-green-400 mt-1">
-                  Selected: {kubeconfigFile.name}
-                </p>
-              {/if}
-            </div>
-            <button 
-              onclick={addCluster}
-              disabled={isAddingCluster || !kubeconfigFile}
-              class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {#if isAddingCluster}
-                <svg class="animate-spin h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Adding...
-              {:else}
-              Add Cluster
-              {/if}
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cluster Health</h3>
-          <div class="space-y-4">
-            {#each Object.entries(clusterHealth) as [component, status]}
-              {@const health = getHealthStatus(status)}
-              <div class="flex items-center justify-between p-3 rounded-lg {health.bg}">
-                <span class="text-sm font-medium text-slate-900 dark:text-white capitalize">
-                  {component.replace(/([A-Z])/g, ' $1').trim()}
-                </span>
-                <span class="{health.class}">● {health.text}</span>
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Cluster</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div class="space-y-4">
+              <div>
+                <label for="cluster-type-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Cluster Type
+                </label>
+                <select 
+                  id="cluster-type-select"
+                  bind:value={selectedClusterType}
+                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                >
+                  <option>GKE (Google Kubernetes Engine)</option>
+                  <option>EKS (Amazon Elastic Kubernetes Service)</option>
+                  <option>AKS (Azure Kubernetes Service)</option>
+                  <option>Local Cluster</option>
+                  <option>Custom Cluster</option>
+                </select>
               </div>
-            {/each}
-          </div>
-        </div>
+              <div>
+                <label for="kubeconfig-file" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Kubeconfig File
+                </label>
+                <input 
+                  id="kubeconfig-file"
+                  type="file" 
+                  accept=".yaml,.yml,.config,.kubeconfig"
+                  onchange={handleFileSelect}
+                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                >
+                {#if kubeconfigFile}
+                  <p class="text-sm text-green-600 dark:text-green-400 mt-1">
+                    Selected: {kubeconfigFile.name}
+                  </p>
+                {/if}
+              </div>
+              <Button 
+                onclick={addCluster}
+                disabled={isAddingCluster || !kubeconfigFile}
+                class="w-full"
+              >
+                {#if isAddingCluster}
+                  <svg class="animate-spin h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding...
+                {:else}
+                Add Cluster
+                {/if}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Cluster Health</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div class="space-y-4">
+              {#each Object.entries(clusterHealth) as [component, status]}
+                {@const health = getHealthStatus(status)}
+                <div class="flex items-center justify-between p-3 rounded-lg {health.bg}">
+                  <span class="text-sm font-medium text-slate-900 dark:text-white capitalize">
+                    {component.replace(/([A-Z])/g, ' $1').trim()}
+                  </span>
+                  <span class="{health.class}">● {health.text}</span>
+                </div>
+              {/each}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <!-- Cluster Resources Summary -->

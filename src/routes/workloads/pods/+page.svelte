@@ -261,8 +261,7 @@
               <!-- Actions -->
               <div class="flex items-center gap-2">
                 {#if searchQuery || statusFilter}
-                  <Button 
-                    onclick={clearFilters}
+                  <Button onclick={clearFilters}
                     variant="outline"
                     class="text-sm"
                   >
@@ -333,21 +332,21 @@
             </div>
           {:else}
             <div class="overflow-x-auto">
-              <Table class="w-full min-w-full">
+              <Table className="w-full min-w-full">
                 <TableHeader>
-                  <TableRow class="bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <TableHead class="w-1/3 font-semibold text-slate-700 dark:text-slate-300">Name</TableHead>
-                    <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
-                    <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Ready</TableHead>
-                    <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Restarts</TableHead>
-                    <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Age</TableHead>
-                    <TableHead class="w-1/6 font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
+                  <TableRow className="bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <TableHead className="w-1/3 font-semibold text-slate-700 dark:text-slate-300">Name</TableHead>
+                    <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
+                    <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Ready</TableHead>
+                    <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Restarts</TableHead>
+                    <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Age</TableHead>
+                    <TableHead className="w-1/6 font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {#each filteredPods as pod (pod.name)}
-                    <TableRow class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700">
-                      <TableCell class="font-medium truncate">
+                    <TableRow className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700">
+                      <TableCell className="font-medium truncate">
                         <div class="flex items-center space-x-2">
                           <div class="w-2 h-2 rounded-full {pod.status.toLowerCase() === 'running' ? 'bg-green-500' : pod.status.toLowerCase() === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}"></div>
                           <span class="text-slate-900 dark:text-white">{pod.name}</span>
@@ -358,19 +357,21 @@
                           {pod.status}
                         </span>
                       </TableCell>
-                      <TableCell class="text-slate-600 dark:text-slate-400">
+                      <TableCell className="text-slate-600 dark:text-slate-400">
                         <span class="font-mono text-sm">{pod.ready}</span>
                       </TableCell>
-                      <TableCell class="text-slate-600 dark:text-slate-400">
+                      <TableCell className="text-slate-600 dark:text-slate-400">
                         <span class="font-mono text-sm">{pod.restarts}</span>
                       </TableCell>
-                      <TableCell class="text-slate-600 dark:text-slate-400">
+                      <TableCell className="text-slate-600 dark:text-slate-400">
                         <span class="font-mono text-sm">{pod.age}</span>
                       </TableCell>
                       <TableCell>
                         <div class="flex items-center space-x-1">
-                          <button 
+                          <Button 
                             onclick={() => handleViewPod(pod)}
+                            variant="ghost"
+                            size="sm"
                             class="p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 hover:scale-105"
                             title="View Pod Details"
                           >
@@ -378,11 +379,12 @@
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
-                          </button>
+                          </Button>
                           <button 
                             onclick={() => handleViewLogs(pod)}
                             class="p-2 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200 hover:scale-105"
                             title="View Pod Logs"
+                            aria-label="View Pod Logs"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -392,6 +394,7 @@
                             onclick={() => handleCopyPodName(pod)}
                             class="p-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-all duration-200 hover:scale-105"
                             title="Copy Pod Name"
+                            aria-label="Copy Pod Name"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>

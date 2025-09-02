@@ -257,8 +257,7 @@
     <div class="px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
-          <Button 
-            onclick={() => window.history.back()}
+          <Button onclick={() => window.history.back()}
             variant="outline"
             size="sm"
           >
@@ -281,8 +280,7 @@
         </div>
         
         <div class="flex items-center space-x-2">
-          <Button 
-            onclick={loadDeploymentDetails}
+          <Button onclick={loadDeploymentDetails}
             disabled={isLoading}
             variant="outline"
           >
@@ -300,8 +298,7 @@
             {/if}
           </Button>
           
-          <Button 
-            onclick={() => restartDeployment()}
+          <Button onclick={() => restartDeployment()}
             variant="outline"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,8 +307,7 @@
             Restart
           </Button>
           
-          <Button 
-            onclick={() => showScaleDialog = true}
+          <Button onclick={() => showScaleDialog = true}
             variant="outline"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,8 +316,7 @@
             Scale
           </Button>
           
-          <Button 
-            onclick={() => showDeleteConfirm = true}
+          <Button onclick={() => showDeleteConfirm = true}
             variant="destructive"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -406,7 +401,7 @@
               <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Deployment Status</h3>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Status</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Status</div>
                   <div class="mt-1">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {getStatusColor(deployment.status)}">
                       {deployment.status}
@@ -414,23 +409,23 @@
                   </div>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Replicas</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Replicas</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{deployment.ready}/{deployment.replicas}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Available</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Available</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{deployment.available}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Updated</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Updated</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{deployment.updated}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Age</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Age</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{deployment.age}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Strategy</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Strategy</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{deployment.strategy}</p>
                 </div>
               </div>
@@ -443,8 +438,7 @@
                                  <div class="flex-1">
                    <p class="text-sm font-mono text-slate-900 dark:text-white break-all">{deployment?.image || ''}</p>
                  </div>
-                                 <Button 
-                   onclick={() => copyToClipboard(deployment?.image || '')}
+                                 <Button onclick={() => copyToClipboard(deployment?.image || '')}
                    variant="outline"
                    size="sm"
                  >
@@ -512,22 +506,22 @@
                  </div>
                {:else}
                  <div class="overflow-x-auto">
-                   <Table class="w-full min-w-full">
+                   <Table className="w-full min-w-full">
                      <TableHeader>
-                       <TableRow class="bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                         <TableHead class="w-1/3 font-semibold text-slate-700 dark:text-slate-300">Name</TableHead>
-                         <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
-                         <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Ready</TableHead>
-                         <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Restarts</TableHead>
-                         <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Age</TableHead>
-                         <TableHead class="w-1/6 font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
+                       <TableRow className="bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                         <TableHead className="w-1/3 font-semibold text-slate-700 dark:text-slate-300">Name</TableHead>
+                         <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
+                         <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Ready</TableHead>
+                         <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Restarts</TableHead>
+                         <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Age</TableHead>
+                         <TableHead className="w-1/6 font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
                        </TableRow>
                      </TableHeader>
                      <TableBody>
                        {#each pods as pod (pod.name)}
-                         <TableRow class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700">
+                         <TableRow className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700">
                            {@const effectiveStatus = getPodEffectiveStatus(pod)}
-                           <TableCell class="font-medium truncate">
+                           <TableCell className="font-medium truncate">
                              <div class="flex items-center space-x-2">
                                <div class="w-2 h-2 rounded-full {effectiveStatus.indicatorColor}"></div>
                                <span class="text-slate-900 dark:text-white">{pod.name}</span>
@@ -538,13 +532,13 @@
                                {effectiveStatus.status}
                              </span>
                            </TableCell>
-                           <TableCell class="text-slate-600 dark:text-slate-400">
+                           <TableCell className="text-slate-600 dark:text-slate-400">
                              <span class="font-mono text-sm">{pod.ready}</span>
                            </TableCell>
-                           <TableCell class="text-slate-600 dark:text-slate-400">
+                           <TableCell className="text-slate-600 dark:text-slate-400">
                              <span class="font-mono text-sm">{pod.restarts}</span>
                            </TableCell>
-                           <TableCell class="text-slate-600 dark:text-slate-400">
+                           <TableCell className="text-slate-600 dark:text-slate-400">
                              <span class="font-mono text-sm">{pod.age}</span>
                            </TableCell>
                            <TableCell>
@@ -553,6 +547,7 @@
                                  onclick={() => handleViewPod(pod)}
                                  class="p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 hover:scale-105"
                                  title="View Pod Details"
+                                 aria-label="View Pod Details"
                                >
                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -563,6 +558,7 @@
                                  onclick={() => handleViewLogs(pod)}
                                  class="p-2 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200 hover:scale-105"
                                  title="View Pod Logs"
+                                 aria-label="View Pod Logs"
                                >
                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -572,9 +568,10 @@
                                  onclick={() => handleCopyPodName(pod)}
                                  class="p-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-all duration-200 hover:scale-105"
                                  title="Copy Pod Name"
+                                 aria-label="Copy Pod Name"
                                >
                                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 0 002 2z"></path>
                                  </svg>
                                </button>
                              </div>
@@ -668,10 +665,11 @@ status:
         Scale Deployment
       </h3>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+        <label for="scale-replicas" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Number of Replicas
         </label>
         <input
+          id="scale-replicas"
           type="number"
           bind:value={scaleReplicas}
           min="0"

@@ -1,0 +1,193 @@
+[
+  {
+    "timestamp": "2025-09-01T12:49:44.923Z",
+    "level": "INFO",
+    "message": "This is an info message",
+    "context": {
+      "test": "basic-logging"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.923Z",
+    "level": "DEBUG",
+    "message": "This is a debug message",
+    "context": {
+      "test": "basic-logging"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.923Z",
+    "level": "WARN",
+    "message": "This is a warning message",
+    "context": {
+      "test": "basic-logging"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.923Z",
+    "level": "ERROR",
+    "message": "This is an error message",
+    "error": {
+      "name": "Error",
+      "message": "Test error",
+      "stack": "Error: Test error\n    at testLogging (file:///media/tan/ExternalDrive/project/production/logs-explorer/scripts/test-logging.js:146:46)\n    at file:///media/tan/ExternalDrive/project/production/logs-explorer/scripts/test-logging.js:231:1\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:647:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)"
+    },
+    "context": {
+      "test": "basic-logging"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "INFO",
+    "message": "Starting operation: test-operation",
+    "context": {
+      "userId": "test-user",
+      "projectId": "test-project",
+      "traceId": "trace-1756730984924-sowmjkks5",
+      "operation": "test-operation"
+    },
+    "traceId": "trace-1756730984924-sowmjkks5"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "INFO",
+    "message": "Operation step 1",
+    "context": {
+      "step": 1,
+      "traceId": "trace-1756730984924-sowmjkks5"
+    },
+    "traceId": "trace-1756730984924-sowmjkks5"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "DEBUG",
+    "message": "Operation step 2",
+    "context": {
+      "step": 2,
+      "traceId": "trace-1756730984924-sowmjkks5"
+    },
+    "traceId": "trace-1756730984924-sowmjkks5"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "WARN",
+    "message": "Operation step 3",
+    "context": {
+      "step": 3,
+      "traceId": "trace-1756730984924-sowmjkks5"
+    },
+    "traceId": "trace-1756730984924-sowmjkks5"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "INFO",
+    "message": "Operation completed",
+    "context": {
+      "result": "success",
+      "traceId": "trace-1756730984924-sowmjkks5"
+    },
+    "traceId": "trace-1756730984924-sowmjkks5"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "INFO",
+    "message": "Task created",
+    "context": {
+      "test": "task-logging",
+      "taskId": "test-task-1",
+      "taskTitle": "Test Task",
+      "taskStatus": "pending",
+      "taskPriority": "medium",
+      "groupId": "test-group"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "INFO",
+    "message": "Task updated",
+    "context": {
+      "test": "task-logging",
+      "taskId": "test-task-1",
+      "oldStatus": "pending",
+      "newStatus": "completed",
+      "oldPriority": "medium",
+      "newPriority": "medium"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "INFO",
+    "message": "Task deleted",
+    "context": {
+      "test": "task-logging",
+      "taskId": "test-task-1",
+      "taskTitle": "Test Task",
+      "taskStatus": "pending",
+      "groupId": "test-group"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "INFO",
+    "message": "Generic info message",
+    "context": {
+      "operation": "test",
+      "userId": "user-123",
+      "timestamp": "2025-09-01T12:49:44.924Z"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "DEBUG",
+    "message": "Generic debug message",
+    "context": {
+      "operation": "test",
+      "data": {
+        "key": "value",
+        "number": 42
+      }
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "WARN",
+    "message": "Generic warning message",
+    "context": {
+      "operation": "test",
+      "warning": "Something might be wrong"
+    },
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "ERROR",
+    "message": "Generic error message",
+    "error": null,
+    "context": {},
+    "traceId": "test-trace"
+  },
+  {
+    "timestamp": "2025-09-01T12:49:44.924Z",
+    "level": "ERROR",
+    "message": "Test error occurred",
+    "error": {
+      "name": "Error",
+      "message": "This is a test error with stack trace",
+      "stack": "Error: This is a test error with stack trace\n    at testLogging (test-logging.js:45:15)\n    at async main (test-logging.js:60:10)"
+    },
+    "context": {
+      "test": "error-logging",
+      "context": "error-test"
+    },
+    "traceId": "test-trace"
+  }
+]

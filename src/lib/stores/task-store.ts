@@ -9,10 +9,16 @@ export const taskFilters = writable<TaskFilters>({});
 // Database persistence (localStorage for now, can be extended to real database)
 const STORAGE_KEY = 'task-manager-data';
 
+// Flag to prevent recursive storage operations
+let isSaving = false;
+// Flag to prevent multiple initializations
+let isInitialized = false;
+
 // Load data from storage
 function loadFromStorage() {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && !isInitialized) {
     try {
+      isInitialized = true;
       console.log('Loading task data from storage...');
       const stored = localStorage.getItem(STORAGE_KEY);
       console.log('Stored data:', stored);
@@ -20,6 +26,9 @@ function loadFromStorage() {
       if (stored) {
         const data = JSON.parse(stored);
         console.log('Parsed data:', data);
+        
+        // Temporarily disable saving to prevent recursive operations
+        isSaving = true;
         
         if (data.taskGroups) {
           // Convert date strings back to Date objects
@@ -45,21 +54,29 @@ function loadFromStorage() {
           console.log('Setting tasks:', taskList);
           tasks.set(taskList);
         }
+        
+        // Re-enable saving after a short delay
+        setTimeout(() => {
+          isSaving = false;
+        }, 100);
       } else {
         console.log('No stored data found');
       }
     } catch (error) {
       console.error('Failed to load task data from storage:', error);
+      isSaving = false;
+      isInitialized = false;
     }
   } else {
-    console.log('Window not available, skipping storage load');
+    console.log('Window not available or already initialized, skipping storage load');
   }
 }
 
 // Save data to storage
 function saveToStorage() {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && !isSaving) {
     try {
+      isSaving = true;
       const currentGroups = get(taskGroups);
       const currentTasks = get(tasks);
       const data = {
@@ -71,19 +88,28 @@ function saveToStorage() {
       console.log('Data saved successfully');
     } catch (error) {
       console.error('Failed to save task data to storage:', error);
+    } finally {
+      // Re-enable saving after a short delay to prevent rapid successive saves
+      setTimeout(() => {
+        isSaving = false;
+      }, 100);
     }
   }
 }
 
 // Subscribe to changes and save to storage
 taskGroups.subscribe(() => {
-  console.log('Task groups changed, saving to storage...');
-  saveToStorage();
+  if (!isSaving) {
+    console.log('Task groups changed, saving to storage...');
+    saveToStorage();
+  }
 });
 
 tasks.subscribe(() => {
-  console.log('Tasks changed, saving to storage...');
-  saveToStorage();
+  if (!isSaving) {
+    console.log('Tasks changed, saving to storage...');
+    saveToStorage();
+  }
 });
 
 // Helper function to generate unique IDs
@@ -262,63 +288,59 @@ export const taskActions = {
   }
 };
 
+// Helper function for filtering tasks recursively
+function filterTasksRecursive(taskList: Task[], filters: TaskFilters): Task[] {
+  let filtered = taskList;
+
+  if (filters.status && filters.status.length > 0) {
+    filtered = filtered.filter(task => {
+      const matchesStatus = filters.status!.includes(task.status);
+      const subtasksMatch = task.subtasks.length > 0 
+        ? filterTasksRecursive(task.subtasks, filters).length > 0 
+        : true;
+      return matchesStatus || subtasksMatch;
+    }).map(task => ({
+      ...task,
+      subtasks: filterTasksRecursive(task.subtasks, filters)
+    }));
+  }
+
+  if (filters.priority && filters.priority.length > 0) {
+    filtered = filtered.filter(task => {
+      const matchesPriority = filters.priority!.includes(task.priority);
+      const subtasksMatch = task.subtasks.length > 0 
+        ? filterTasksRecursive(task.subtasks, filters).length > 0 
+        : true;
+      return matchesPriority || subtasksMatch;
+    }).map(task => ({
+      ...task,
+      subtasks: filterTasksRecursive(task.subtasks, filters)
+    }));
+  }
+
+  if (filters.search) {
+    const searchTerm = filters.search.toLowerCase();
+    filtered = filtered.filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(searchTerm) ||
+                           (task.description && task.description.toLowerCase().includes(searchTerm));
+      const subtasksMatch = task.subtasks.length > 0 
+        ? filterTasksRecursive(task.subtasks, filters).length > 0 
+        : true;
+      return matchesSearch || subtasksMatch;
+    }).map(task => ({
+      ...task,
+      subtasks: filterTasksRecursive(task.subtasks, filters)
+    }));
+  }
+
+  return filtered;
+}
+
 // Derived stores
 export const filteredTasks = derived(
   [tasks, taskFilters],
   ([$tasks, $filters]) => {
-    let filtered = $tasks;
-
-    if ($filters.status && $filters.status.length > 0) {
-      const filterTaskByStatus = (taskList: Task[]): Task[] => {
-        return taskList.filter(task => {
-          const matchesStatus = $filters.status!.includes(task.status);
-          const subtasksMatch = task.subtasks.length > 0 
-            ? filterTaskByStatus(task.subtasks).length > 0 
-            : true;
-          return matchesStatus || subtasksMatch;
-        }).map(task => ({
-          ...task,
-          subtasks: filterTaskByStatus(task.subtasks)
-        }));
-      };
-      filtered = filterTaskByStatus(filtered);
-    }
-
-    if ($filters.priority && $filters.priority.length > 0) {
-      const filterTaskByPriority = (taskList: Task[]): Task[] => {
-        return taskList.filter(task => {
-          const matchesPriority = $filters.priority!.includes(task.priority);
-          const subtasksMatch = task.subtasks.length > 0 
-            ? filterTaskByPriority(task.subtasks).length > 0 
-            : true;
-          return matchesPriority || subtasksMatch;
-        }).map(task => ({
-          ...task,
-          subtasks: filterTaskByPriority(task.subtasks)
-        }));
-      };
-      filtered = filterTaskByPriority(filtered);
-    }
-
-    if ($filters.search) {
-      const searchTerm = $filters.search.toLowerCase();
-      const filterTaskBySearch = (taskList: Task[]): Task[] => {
-        return taskList.filter(task => {
-          const matchesSearch = task.title.toLowerCase().includes(searchTerm) ||
-                               (task.description && task.description.toLowerCase().includes(searchTerm));
-          const subtasksMatch = task.subtasks.length > 0 
-            ? filterTaskBySearch(task.subtasks).length > 0 
-            : true;
-          return matchesSearch || subtasksMatch;
-        }).map(task => ({
-          ...task,
-          subtasks: filterTaskBySearch(task.subtasks)
-        }));
-      };
-      filtered = filterTaskBySearch(filtered);
-    }
-
-    return filtered;
+    return filterTasksRecursive($tasks, $filters);
   }
 );
 
@@ -347,19 +369,25 @@ export const taskStats = derived(tasks, ($tasks) => {
 
 // Initialize storage loading when the module is loaded
 if (typeof window !== 'undefined') {
-  // Load data immediately if we're in the browser
-  loadFromStorage();
+  // Don't auto-load on module load, wait for explicit initialization
+  console.log('Task store module loaded, waiting for explicit initialization');
 } else {
   // If we're in SSR, wait for the browser to be ready
   if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', loadFromStorage);
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, but waiting for explicit initialization');
+    });
   }
 }
 
 // Export a manual initialization function for components to call
 export const initializeTaskStore = () => {
-  console.log('Manual initialization of task store');
-  loadFromStorage();
+  if (!isInitialized) {
+    console.log('Manual initialization of task store');
+    loadFromStorage();
+  } else {
+    console.log('Task store already initialized, skipping');
+  }
 };
 
 // Export a function to check if data is loaded

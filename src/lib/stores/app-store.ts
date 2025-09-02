@@ -216,7 +216,7 @@ function createAppStore() {
       // Don't reload if already loaded and connected
       let currentState: AppState;
       subscribe(state => { currentState = state; })();
-      if (currentState.namespace.isLoaded && currentState.connection.isConnected) {
+      if (currentState!.namespace.isLoaded && currentState!.connection.isConnected) {
         return;
       }
 
@@ -237,7 +237,7 @@ function createAppStore() {
         }));
 
         // Auto-select default namespace if none selected
-        const updatedState = get({ subscribe });
+        const updatedState = get(appStore);
         if (!updatedState.namespace.selected && available.length > 0) {
           const defaultNamespace = available.find(ns => ns === 'default') || available[0];
           this.setSelectedNamespace(defaultNamespace);
@@ -258,8 +258,7 @@ function createAppStore() {
 
     // Lazy connection - only connect when explicitly requested
     async ensureConnected() {
-      let currentState: AppState;
-      subscribe(state => { currentState = state; })();
+      const currentState = get(appStore);
       
       // If already connected, return true
       if (currentState.connection.isConnected) {
@@ -294,7 +293,7 @@ function createAppStore() {
         };
       });
       
-      const currentState = get({ subscribe });
+      const currentState = get(appStore);
       saveToStorage('starred-namespaces', currentState.namespace.starred);
     },
 
@@ -384,8 +383,9 @@ export const preferences = derived(appStore, $appStore => $appStore.preferences)
 export const uiState = derived(appStore, $appStore => $appStore.ui);
 
 // Helper function to get current state
-function get<T>(store: { subscribe: (value: T) => void }): T {
+function get<T>(store: { subscribe: (fn: (value: T) => void) => () => void }): T {
   let value: T;
-  store.subscribe(v => value = v)();
+  const unsubscribe = store.subscribe((v: T) => { value = v; });
+  unsubscribe();
   return value!;
 }

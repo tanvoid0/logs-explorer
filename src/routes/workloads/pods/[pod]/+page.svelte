@@ -332,8 +332,7 @@
     <div class="px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
-          <Button 
-            onclick={() => window.history.back()}
+          <Button onclick={() => window.history.back()}
             variant="outline"
             size="sm"
           >
@@ -356,8 +355,7 @@
         </div>
         
         <div class="flex items-center space-x-2">
-          <Button 
-            onclick={loadPodDetails}
+          <Button onclick={loadPodDetails}
             disabled={isLoading}
             variant="outline"
           >
@@ -375,8 +373,7 @@
             {/if}
           </Button>
           
-          <Button 
-            onclick={() => restartPod()}
+          <Button onclick={() => restartPod()}
             variant="outline"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -385,8 +382,7 @@
             Restart
           </Button>
           
-          <Button 
-            onclick={() => showScaleDialog = true}
+          <Button onclick={() => showScaleDialog = true}
             variant="outline"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -395,8 +391,7 @@
             Scale
           </Button>
           
-          <Button 
-            onclick={() => showDeleteConfirm = true}
+          <Button onclick={() => showDeleteConfirm = true}
             variant="destructive"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,7 +476,7 @@
               <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Pod Status</h3>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Status</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Status</div>
                   <div class="mt-1">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {getStatusColor(pod.status)}">
                       {pod.status}
@@ -489,28 +484,29 @@
                   </div>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Ready</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Ready</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{pod.ready}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Restarts</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Restarts</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{pod.restarts}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Age</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Age</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{pod.age}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Namespace</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Namespace</div>
                   <p class="mt-1 text-sm text-slate-900 dark:text-white">{pod.namespace}</p>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Name</label>
+                  <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Name</div>
                   <div class="mt-1 flex items-center space-x-2">
                     <p class="text-sm text-slate-900 dark:text-white">{pod?.name || ''}</p>
                     <button
                       onclick={() => copyToClipboard(pod?.name || '')}
                       class="text-slate-400 hover:text-slate-600"
+                      aria-label="Copy Pod Name"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -620,10 +616,11 @@ status:
         Scale Deployment
       </h3>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+        <label for="pod-scale-replicas" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Number of Replicas
         </label>
         <input
+          id="pod-scale-replicas"
           type="number"
           bind:value={scaleReplicas}
           min="0"

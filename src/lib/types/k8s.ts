@@ -131,3 +131,19 @@ export interface PortForwardOptions {
   remotePort: number;
   resourceType: 'pod' | 'deployment';
 }
+
+// Namespace logs options
+export interface NamespaceLogsOptions {
+  namespace?: string;
+  deployments?: string[];
+  pods?: string[];
+  tail?: number;
+  page?: number;
+  search?: string;
+  severity?: string;
+  traceId?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  filters?: LogFilters;
+  since?: string;
+}

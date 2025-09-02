@@ -7,19 +7,30 @@
   import type { TaskFilters as TaskFiltersType, ResourceLinkType } from '$lib/types/task';
 
   // Props for customization
-  export let title = 'Task Manager';
-  export let subtitle = 'Organize your tasks with groups and subtasks';
-  export let initialFilters: Partial<TaskFiltersType> = {};
-  export let showAddGroupButton = true;
-  export let showProgressOverview = true;
-  export let showFilters = true;
-  export let emptyStateMessage = 'No task groups yet';
-  export let emptyStateDescription = 'Create your first task group to get started!';
+  const { 
+    title = 'Task Manager',
+    subtitle = 'Organize your tasks with groups and subtasks',
+    initialFilters = {},
+    showAddGroupButton = true,
+    showProgressOverview = true,
+    showFilters = true,
+    emptyStateMessage = 'No task groups yet',
+    emptyStateDescription = 'Create your first task group to get started!'
+  } = $props<{
+    title?: string;
+    subtitle?: string;
+    initialFilters?: Partial<TaskFiltersType>;
+    showAddGroupButton?: boolean;
+    showProgressOverview?: boolean;
+    showFilters?: boolean;
+    emptyStateMessage?: string;
+    emptyStateDescription?: string;
+  }>();
 
-  let showAddGroup = false;
-  let newGroupName = '';
-  let newGroupDescription = '';
-  let newGroupColor = '#3B82F6';
+  let showAddGroup = $state(false);
+  let newGroupName = $state('');
+  let newGroupDescription = $state('');
+  let newGroupColor = $state('#3B82F6');
 
   const colorOptions = [
     '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899',
@@ -27,18 +38,34 @@
   ];
 
   // Apply initial filters
-  $: if (initialFilters) {
-    $taskFilters = { ...$taskFilters, ...initialFilters };
-  }
+  onMount(() => {
+    console.log('TaskPage mounted, checking data...');
+    
+    // Apply initial filters only once
+    if (initialFilters && Object.keys(initialFilters).length > 0) {
+      $taskFilters = { ...$taskFilters, ...initialFilters };
+    }
+    
+    // Ensure the store is initialized
+    initializeTaskStore();
+    
+    // Check if data is loaded
+    setTimeout(() => {
+      const loaded = isDataLoaded();
+      console.log('Data loaded check:', loaded);
+    }, 100);
+  });
 
   // Get filtered task groups based on current filters
-  $: filteredTaskGroups = $taskGroups.filter(group => {
-    // If filtering by resource link
-    if ($taskFilters.resourceLinkType && $taskFilters.resourceLinkId) {
-      return group.resourceLink?.type === $taskFilters.resourceLinkType && 
-             group.resourceLink?.resourceId === $taskFilters.resourceLinkId;
-    }
-    return true;
+  const filteredTaskGroups = $derived(() => {
+    return $taskGroups.filter(group => {
+      // If filtering by resource link
+      if ($taskFilters.resourceLinkType && $taskFilters.resourceLinkId) {
+        return group.resourceLink?.type === $taskFilters.resourceLinkType && 
+               group.resourceLink?.resourceId === $taskFilters.resourceLinkId;
+      }
+      return true;
+    });
   });
 
   function handleAddGroup() {
@@ -84,17 +111,7 @@
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   }
 
-  onMount(() => {
-    console.log('TaskPage mounted, checking data...');
-    // Ensure the store is initialized
-    initializeTaskStore();
-    
-    // Check if data is loaded
-    setTimeout(() => {
-      const loaded = isDataLoaded();
-      console.log('Data loaded check:', loaded);
-    }, 100);
-  });
+
 </script>
 
 <div class="task-page max-w-7xl mx-auto p-6">
@@ -107,7 +124,7 @@
       </div>
       {#if showAddGroupButton}
         <button
-          on:click={() => showAddGroup = !showAddGroup}
+          onclick={() => showAddGroup = !showAddGroup}
           class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center space-x-2"
         >
           <Icon icon="mdi:plus" class="w-4 h-4" />
@@ -182,10 +199,11 @@
       <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Group</h3>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="task-group-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Group Name
           </label>
           <input
+            id="task-group-name"
             type="text"
             bind:value={newGroupName}
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -194,10 +212,11 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="task-group-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description (optional)
           </label>
           <textarea
+            id="task-group-description"
             bind:value={newGroupDescription}
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Enter group description..."
@@ -212,9 +231,10 @@
           <div class="flex flex-wrap gap-2">
             {#each colorOptions as color}
               <button
-                on:click={() => newGroupColor = color}
+                onclick={() => newGroupColor = color}
                 class="w-8 h-8 rounded-full border-2 transition-all {newGroupColor === color ? 'border-gray-900 dark:border-gray-100 scale-110' : 'border-gray-300 dark:border-gray-600 hover:scale-105'}"
                 style="background-color: {color}"
+                aria-label="Select color {color}"
               ></button>
             {/each}
           </div>
@@ -222,13 +242,13 @@
         
         <div class="flex space-x-3">
           <button
-            on:click={handleAddGroup}
+            onclick={handleAddGroup}
             class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
             Create Group
           </button>
           <button
-            on:click={() => showAddGroup = false}
+            onclick={() => showAddGroup = false}
             class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
           >
             Cancel
@@ -256,7 +276,7 @@
           <p class="text-gray-600 dark:text-gray-400 mb-4">{emptyStateDescription}</p>
           {#if showAddGroupButton}
             <button
-              on:click={() => showAddGroup = true}
+              onclick={() => showAddGroup = true}
               class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               Create First Group
@@ -265,7 +285,7 @@
         </div>
       {:else}
         <div class="space-y-6">
-          {#each filteredTaskGroups as group (group.id)}
+          {#each filteredTaskGroups() as group (group.id)}
             <TaskGroup 
               {group} 
               on:updateGroup={handleUpdateGroup}

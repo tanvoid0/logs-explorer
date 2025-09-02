@@ -1,9 +1,9 @@
 <script lang="ts">
   import { cn } from "$lib/utils";
   
-  let { class: className = "" } = $props<{
-    class?: string;
-  }>();
+  let { className = "" } = $props<{
+  className?: string;
+}>();
 </script>
 
 <tbody class={cn("[&_tr:last-child]:border-0", className)}>

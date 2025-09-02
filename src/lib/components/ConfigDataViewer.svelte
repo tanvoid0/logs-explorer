@@ -1,4 +1,7 @@
 <script lang="ts">
+  import Button from "$lib/components/ui/button.svelte";
+  import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
+
   const { data = {}, title = 'Configuration Data' } = $props<{
     data?: Record<string, string>;
     title?: string;
@@ -42,24 +45,30 @@
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
     <div class="view-controls">
       <div class="flex rounded-md shadow-sm">
-        <button
-          class="px-3 py-2 text-sm font-medium rounded-l-md border border-gray-300 dark:border-gray-600 {viewMode === 'tree' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}"
+        <Button
+          variant={viewMode === 'tree' ? 'default' : 'outline'}
+          size="sm"
+          class="rounded-l-md border-r-0 {viewMode === 'tree' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}"
           onclick={() => viewMode = 'tree'}
         >
           Tree
-        </button>
-        <button
-          class="px-3 py-2 text-sm font-medium border-t border-b border-gray-300 dark:border-gray-600 {viewMode === 'json' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}"
+        </Button>
+        <Button
+          variant={viewMode === 'json' ? 'default' : 'outline'}
+          size="sm"
+          class="border-r-0 {viewMode === 'json' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}"
           onclick={() => viewMode = 'json'}
         >
           JSON
-        </button>
-        <button
-          class="px-3 py-2 text-sm font-medium rounded-r-md border border-gray-300 dark:border-gray-600 {viewMode === 'yaml' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}"
+        </Button>
+        <Button
+          variant={viewMode === 'yaml' ? 'default' : 'outline'}
+          size="sm"
+          class="rounded-r-md {viewMode === 'yaml' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}"
           onclick={() => viewMode = 'yaml'}
         >
           YAML
-        </button>
+        </Button>
       </div>
     </div>
   </div>

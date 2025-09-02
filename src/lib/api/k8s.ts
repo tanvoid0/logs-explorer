@@ -4,19 +4,63 @@ import type { K8sPod, K8sService, K8sNamespace, K8sDeployment, K8sConfigMap, K8s
 // Centralized Kubernetes API
 class KubernetesAPI {
   private isInitialized = false;
+  private initPromise: Promise<boolean> | null = null;
+  private initAttempts = 0;
+  private maxInitAttempts = 3;
 
   // Initialize the Kubernetes client
   async init(): Promise<boolean> {
-    if (this.isInitialized) return true;
-    
-    try {
-      await invoke('init_k8s');
-      this.isInitialized = true;
+    // If already initialized, return true
+    if (this.isInitialized) {
+      console.log('K8S client already initialized, skipping...');
       return true;
-    } catch (error) {
-      console.error('Failed to initialize Kubernetes client:', error);
+    }
+    
+    // If initialization is in progress, wait for it
+    if (this.initPromise) {
+      console.log('K8S client initialization already in progress, waiting...');
+      return this.initPromise;
+    }
+    
+    // Check if we've exceeded max attempts
+    if (this.initAttempts >= this.maxInitAttempts) {
+      console.warn('K8S client initialization attempts exceeded, returning false');
       return false;
     }
+    
+    // Start initialization
+    this.initAttempts++;
+    this.initPromise = this._init();
+    return this.initPromise;
+  }
+
+  private async _init(): Promise<boolean> {
+    try {
+      console.log(`Initializing Kubernetes client (attempt ${this.initAttempts}/${this.maxInitAttempts})...`);
+      await invoke('init_k8s');
+      this.isInitialized = true;
+      this.initAttempts = 0; // Reset attempts on success
+      console.log('Kubernetes client initialized successfully');
+      return true;
+    } catch (error) {
+      console.error(`Failed to initialize Kubernetes client (attempt ${this.initAttempts}/${this.maxInitAttempts}):`, error);
+      this.isInitialized = false;
+      return false;
+    } finally {
+      this.initPromise = null;
+    }
+  }
+
+  // Reset initialization state (useful for testing or recovery)
+  resetInitState(): void {
+    this.isInitialized = false;
+    this.initPromise = null;
+    this.initAttempts = 0;
+  }
+
+  // Check if client is ready
+  isReady(): boolean {
+    return this.isInitialized;
   }
 
   // Health check

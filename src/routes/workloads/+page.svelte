@@ -134,8 +134,7 @@
           <div class="text-sm text-slate-600 dark:text-slate-400">
             Showing data for namespace: <span class="font-medium text-slate-900 dark:text-white">{$namespaceState.selected}</span>
           </div>
-          <Button 
-            variant="outline" 
+          <Button variant="outline" 
             onclick={refreshData}
             disabled={isLoading}
           >

@@ -72,8 +72,13 @@ export class BrowserKubernetesService {
 
   async requestFileAccess(): Promise<boolean> {
     try {
+      // Check if showOpenFilePicker is available
+      if (!('showOpenFilePicker' in window)) {
+        throw new Error('File System Access API not supported in this browser');
+      }
+      
       // Request permission to access files
-      const fileHandle = await window.showOpenFilePicker({
+      const fileHandle = await (window as any).showOpenFilePicker({
         types: [
           {
             description: 'Kubernetes Config',

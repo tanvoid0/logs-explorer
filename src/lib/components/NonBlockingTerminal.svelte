@@ -407,8 +407,7 @@
     </h4>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       {#each getFrameworkCommands() as command}
-        <Button 
-          variant="outline" 
+        <Button variant="outline" 
           onclick={() => selectedCommand = command.command}
           disabled={isRunning}
           class="h-auto p-3 flex flex-col items-center text-sm {selectedCommand === command.command ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : ''}"
@@ -428,8 +427,7 @@
       </h4>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {#each packageJsonScripts as script}
-          <Button 
-            variant="outline" 
+          <Button variant="outline" 
             onclick={() => selectedCommand = script.command}
             disabled={isRunning}
             class="h-auto p-3 flex flex-col items-center text-sm {selectedCommand === script.command ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : ''}"
@@ -477,8 +475,7 @@
             <div class="flex items-center space-x-2">
               <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span class="text-xs text-green-600 dark:text-green-400">Running: {currentCommand}</span>
-              <Button 
-                variant="outline" 
+              <Button variant="outline" 
                 onclick={() => {
                   // Use setTimeout to prevent blocking the UI
                   setTimeout(() => {
@@ -497,8 +494,7 @@
             <Icon icon="mdi:delete" class="w-4 h-4 mr-2" />
             Clear
           </Button>
-          <Button 
-            variant="outline" 
+          <Button variant="outline" 
             onclick={() => {
               console.log('🔥 FRONTEND: Testing output update...');
               output += '🧪 Test output: ' + new Date().toLocaleTimeString() + '\n';
@@ -529,8 +525,7 @@
             }
           }}
         />
-        <Button 
-          onclick={() => runCommand(selectedCommand)}
+        <Button onclick={() => runCommand(selectedCommand)}
           disabled={isRunning || !selectedCommand.trim()}
           size="sm"
         >

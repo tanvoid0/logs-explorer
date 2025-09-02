@@ -351,6 +351,7 @@
           {sortOrder}
           {traceIdFilter}
           {severityFilter}
+          namespace={currentNamespace}
           on:logCountChange={handleLogCountChange}
           on:sortOrderChange={handleSortOrderChange}
           on:traceIdChange={handleTraceIdChange}

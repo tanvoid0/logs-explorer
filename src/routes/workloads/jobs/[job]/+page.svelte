@@ -162,8 +162,7 @@
     <div class="px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
-          <Button 
-            onclick={() => window.history.back()}
+          <Button onclick={() => window.history.back()}
             variant="outline"
             size="sm"
           >
@@ -186,8 +185,7 @@
         </div>
         
         <div class="flex items-center space-x-2">
-          <Button 
-            onclick={loadAppDetails}
+          <Button onclick={loadAppDetails}
             disabled={isLoading}
             variant="outline"
           >
@@ -261,19 +259,19 @@
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">App: {appName}</h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Jobs</label>
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Jobs</div>
                 <p class="mt-1 text-sm text-slate-900 dark:text-white">{jobs.length}</p>
               </div>
               <div>
-                <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Running</label>
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Running</div>
                 <p class="mt-1 text-sm text-blue-600 dark:text-blue-400">{jobs.filter(j => j.status === 'Running' || j.status === 'Pending').length}</p>
               </div>
               <div>
-                <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Completed</label>
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Completed</div>
                 <p class="mt-1 text-sm text-green-600 dark:text-green-400">{jobs.filter(j => j.status === 'Completed' || j.status === 'Succeeded').length}</p>
               </div>
               <div>
-                <label class="text-sm font-medium text-slate-500 dark:text-slate-400">Failed</label>
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Failed</div>
                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{jobs.filter(j => j.status === 'Failed' || j.status === 'Error').length}</p>
               </div>
             </div>
@@ -283,8 +281,7 @@
           <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Jobs</h3>
-              <Button 
-                onclick={loadAppDetails}
+              <Button onclick={loadAppDetails}
                 disabled={isLoading}
                 variant="outline"
                 size="sm"
@@ -438,7 +435,7 @@
                 </TableHeader>
                 <TableBody>
                   {#each filteredJobs as job}
-                    <TableRow class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <TableRow className="hover:bg-slate-50 dark:hover:bg-slate-700">
                       <TableCell>
                         <div class="font-medium text-slate-900 dark:text-white">
                           {job.name}
@@ -471,8 +468,7 @@
                       </TableCell>
                       <TableCell>
                         <div class="flex items-center space-x-2">
-                          <Button 
-                            onclick={() => copyToClipboard(job.name)}
+                          <Button onclick={() => copyToClipboard(job.name)}
                             variant="outline"
                             size="sm"
                           >

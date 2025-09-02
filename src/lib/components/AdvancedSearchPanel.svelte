@@ -1,14 +1,18 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
+  import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
+  import { Input } from '$lib/components/ui/form/index.js';
 
-  export let searchQuery: string = "";
-  export let isConnected: boolean = false;
-  export let logsLoading: boolean = false;
+  let { searchQuery = $bindable(""), isConnected = false, logsLoading = false } = $props<{
+    searchQuery?: string;
+    isConnected?: boolean;
+    logsLoading?: boolean;
+  }>();
 
   const dispatch = createEventDispatcher();
 
-  let showAdvancedSearch = false;
+  let showAdvancedSearch = $state(false);
   let searchExamples = [
     {
       title: "Simple Text Search",
@@ -86,12 +90,14 @@
 <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
   <div class="flex items-center justify-between mb-4">
     <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300">Advanced Search</h4>
-    <button
+    <Button
       onclick={() => showAdvancedSearch = !showAdvancedSearch}
+      variant="ghost"
+      size="sm"
       class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
     >
       {showAdvancedSearch ? 'Hide' : 'Show'} Examples
-    </button>
+    </Button>
   </div>
 
   <!-- Search Input -->
@@ -114,17 +120,20 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
       </div>
-      <input
+      <Input
         type="text"
-        bind:value={searchQuery}
+        value={searchQuery}
+        onchange={(e: Event) => {
+          const target = e.target as HTMLInputElement;
+          searchQuery = target.value;
+        }}
         placeholder="Search functionality coming soon..."
         class="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-not-allowed"
         onkeydown={handleKeydown}
         disabled={true}
       />
     </div>
-    <Button 
-      onclick={handleSearch} 
+    <Button onclick={handleSearch} 
       disabled={!isConnected || logsLoading} 
       class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2"
       title={searchQuery ? "Search with current query" : "Load all logs"}
@@ -143,15 +152,17 @@
       {/if}
     </Button>
     {#if searchQuery}
-      <button
+      <Button
         onclick={clearSearch}
+        variant="ghost"
+        size="sm"
         class="px-3 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
         title="Clear search"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
-      </button>
+      </Button>
     {/if}
   </div>
 
@@ -162,7 +173,11 @@
       <div class="space-y-2 max-h-64 overflow-y-auto">
         {#each searchExamples as example}
           <div class="p-2 border border-slate-200 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-               onclick={() => useExample(example.query)}>
+               onclick={() => useExample(example.query)}
+               onkeydown={(e) => e.key === 'Enter' && useExample(example.query)}
+               role="button"
+               tabindex="0"
+               aria-label="Use search example: {example.query}">
             <div class="text-xs font-mono text-blue-600 dark:text-blue-400 mb-1">
               {example.query}
             </div>

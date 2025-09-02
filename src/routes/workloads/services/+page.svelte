@@ -158,10 +158,11 @@
 
         <!-- Type Filter -->
         <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+          <label for="type-filter" class="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
             Type:
           </label>
           <select
+            id="type-filter"
             bind:value={typeFilter}
             class="px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           >
@@ -175,8 +176,7 @@
 
 
         <!-- Refresh Button -->
-        <Button 
-          onclick={loadData}
+        <Button onclick={loadData}
           disabled={isLoading || !$connectionState.isConnected}
           class="px-3 py-1 text-sm"
         >
@@ -318,19 +318,19 @@
           </div>
         {:else}
                       <div class="overflow-x-auto">
-              <Table class="w-full min-w-full">
+              <Table className="w-full min-w-full">
                 <TableHeader>
-                  <TableRow class="bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <TableHead class="w-1/4 font-semibold text-slate-700 dark:text-slate-300">Service</TableHead>
-                    <TableHead class="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
-                    <TableHead class="w-1/3 font-semibold text-slate-700 dark:text-slate-300">Ports</TableHead>
-                    <TableHead class="w-1/6 font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
+                  <TableRow className="bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <TableHead className="w-1/4 font-semibold text-slate-700 dark:text-slate-300">Service</TableHead>
+                    <TableHead className="w-1/8 font-semibold text-slate-700 dark:text-slate-300">Status</TableHead>
+                    <TableHead className="w-1/3 font-semibold text-slate-700 dark:text-slate-300">Ports</TableHead>
+                    <TableHead className="w-1/6 font-semibold text-slate-700 dark:text-slate-300">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {#each filteredServices as service}
-                    <TableRow class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700">
-                      <TableCell class="font-medium truncate">
+                    <TableRow className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700">
+                      <TableCell className="font-medium truncate">
                         <div class="flex items-center space-x-2">
                           <div class="w-2 h-2 rounded-full {service.type_ === 'ClusterIP' ? 'bg-blue-500' : service.type_ === 'NodePort' ? 'bg-green-500' : 'bg-purple-500'}"></div>
                           <span class="text-slate-900 dark:text-white">{service.name}</span>
@@ -341,20 +341,23 @@
                           Active
                         </span>
                       </TableCell>
-                      <TableCell class="text-slate-600 dark:text-slate-400">
-                        <button 
+                      <TableCell className="text-slate-600 dark:text-slate-400">
+                        <Button 
                           onclick={() => copyToClipboard(service.ports)}
+                          variant="ghost"
+                          size="sm"
                           class="font-mono text-sm hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-all duration-200 hover:scale-105 cursor-pointer block w-full text-left"
                           title="Click to copy ports to clipboard: {service.ports}"
                         >
                           {formatPortsDisplay(service.ports)}
-                        </button>
+                        </Button>
                       </TableCell>
                       <TableCell>
                         <div class="flex items-center space-x-1">
                           <button 
                             class="p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 hover:scale-105"
                             title="View Service"
+                            aria-label="View service {service.name}"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -364,6 +367,7 @@
                           <button 
                             class="p-2 text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-all duration-200 hover:scale-105"
                             title="Edit Service"
+                            aria-label="Edit service {service.name}"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -372,6 +376,7 @@
                           <button 
                             class="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 hover:scale-105"
                             title="Delete Service"
+                            aria-label="Delete service {service.name}"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>

@@ -1,22 +1,32 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import Button from '$lib/components/ui/button.svelte';
   
-  export let message: string;
-  export let type: 'success' | 'error' | 'warning' | 'info' = 'info';
-  export let duration: number = 5000;
-  export let show: boolean = false;
+  let { 
+    message, 
+    type = 'info', 
+    duration = 5000, 
+    show = false 
+  } = $props<{
+    message: string;
+    type?: 'success' | 'error' | 'warning' | 'info';
+    duration?: number;
+    show?: boolean;
+  }>();
   
   const dispatch = createEventDispatcher();
   
   let timeoutId: ReturnType<typeof setTimeout>;
   
-  $: if (show && duration > 0) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      show = false;
-      dispatch('close');
-    }, duration);
-  }
+  $effect(() => {
+    if (show && duration > 0) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        show = false;
+        dispatch('close');
+      }, duration);
+    }
+  });
   
   function close() {
     show = false;
@@ -63,14 +73,16 @@
         <span class="text-lg font-bold">{getIcon()}</span>
         <span class="text-sm font-medium">{message}</span>
       </div>
-      <button 
+      <Button 
         onclick={close}
+        variant="ghost"
+        size="sm"
         class="ml-4 text-white hover:text-gray-200 focus:outline-none"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </Button>
     </div>
   </div>
 {/if}

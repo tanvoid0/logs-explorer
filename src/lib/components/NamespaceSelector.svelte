@@ -1,30 +1,33 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { onMount } from 'svelte';
+  import Button from '$lib/components/ui/button.svelte';
   import type { K8sNamespace } from '$lib/types/k8s';
   import { appStore, namespaceState } from '$lib/stores/app-store';
 
-  export let namespaces: K8sNamespace[];
-  export let selectedNamespace: string;
-  export let disabled: boolean;
-  export let variant: 'default' | 'sidebar' = 'default';
+  const { namespaces, selectedNamespace, disabled, variant = 'default' } = $props<{
+    namespaces: K8sNamespace[];
+    selectedNamespace: string;
+    disabled: boolean;
+    variant?: 'default' | 'sidebar';
+  }>();
 
   const dispatch = createEventDispatcher();
 
   // Get starred and ordered namespaces from store
-  $: starredNamespaces = $namespaceState.starred;
-  $: namespaceOrder = $namespaceState.order;
+  const starredNamespaces = $derived($namespaceState.starred);
+  const namespaceOrder = $derived($namespaceState.order);
   
   // Use the store's selected namespace as the source of truth
-  $: currentSelectedNamespace = $namespaceState.selected;
+  const currentSelectedNamespace = $derived($namespaceState.selected);
 
   // State for custom dropdown
-  let isOpen = false;
-  let searchQuery = "";
+  let isOpen = $state(false);
+  let searchQuery = $state("");
   let dropdownRef: HTMLDivElement;
 
   // Filter and sort namespaces
-  $: filteredNamespaces = (() => {
+  const filteredNamespaces = $derived(() => {
     const allNamespaces = namespaces;
     
     // If no starred namespaces and no custom order, show all
@@ -57,15 +60,20 @@
 
     // Combine: ordered first, then starred, then others
     return [...sortedOrdered, ...starred, ...others];
-  })();
+  });
 
   // Filter namespaces based on search query
-  $: displayNamespaces = (() => {
-    if (!searchQuery) return filteredNamespaces;
-    return filteredNamespaces.filter(ns => 
-      ns.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  })();
+  let displayNamespaces: K8sNamespace[] = $state(filteredNamespaces());
+  
+  $effect(() => {
+    if (!searchQuery) {
+      displayNamespaces = filteredNamespaces();
+    } else {
+      displayNamespaces = filteredNamespaces().filter((ns: K8sNamespace) => 
+        ns.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+  });
 
   function handleNamespaceChange(namespace: string) {
     console.log('NamespaceSelector: Changing namespace to:', namespace);
@@ -98,7 +106,7 @@
 
   function getSelectedNamespaceDisplay() {
     if (!currentSelectedNamespace) return "All Namespaces";
-    const ns = filteredNamespaces.find(n => n.name === currentSelectedNamespace);
+    const ns = filteredNamespaces().find((n: K8sNamespace) => n.name === currentSelectedNamespace);
     if (!ns) return currentSelectedNamespace;
     return `${starredNamespaces.includes(ns.name) ? '⭐' : '⚙️'} ${ns.name}`;
   }
@@ -143,10 +151,10 @@
   
   <div class="relative" bind:this={dropdownRef}>
     <!-- Custom Dropdown Button -->
-    <button
-      type="button"
+    <Button
       onclick={toggleDropdown}
       disabled={disabled}
+      variant="outline"
       class={selectClasses}
     >
       <div class="flex items-center justify-between">
@@ -160,7 +168,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       </div>
-    </button>
+    </Button>
 
     <!-- Dropdown Menu -->
     {#if isOpen}

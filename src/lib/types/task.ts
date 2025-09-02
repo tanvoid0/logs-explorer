@@ -13,6 +13,7 @@ export interface Task {
   updatedAt: Date;
   subtasks: Task[];
   parentId?: string;
+  groupId?: string;
 }
 
 export interface TaskGroup {

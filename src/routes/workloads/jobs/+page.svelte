@@ -166,8 +166,7 @@
           {/if}
         </div>
         
-        <Button 
-          onclick={loadData}
+        <Button onclick={loadData}
           disabled={isLoading}
           variant="outline"
         >
@@ -245,10 +244,11 @@
       {#if availableApps.length > 0}
         <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 mb-6">
           <div class="flex items-center space-x-4">
-            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label for="service-filter" class="text-sm font-medium text-slate-700 dark:text-slate-300">
               Filter by Service:
             </label>
             <select 
+              id="service-filter"
               bind:value={selectedAppFilter}
               onchange={applyFilter}
               class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -259,8 +259,7 @@
               {/each}
             </select>
             {#if selectedAppFilter !== 'all'}
-              <Button 
-                onclick={() => { selectedAppFilter = 'all'; applyFilter(); }}
+              <Button onclick={() => { selectedAppFilter = 'all'; applyFilter(); }}
                 variant="outline"
                 size="sm"
               >
@@ -333,7 +332,7 @@
             <TableBody>
               {#each Object.entries(filteredGroupedJobs) as [serviceName, jobs]}
                 {@const stats = getParentJobStats(serviceName)}
-                <TableRow class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                <TableRow className="hover:bg-slate-50 dark:hover:bg-slate-700">
                   <TableCell>
                     <div class="font-medium text-slate-900 dark:text-white">
                       {jobs[0]?.labels && jobs[0].labels['app.kubernetes.io/name'] ? jobs[0].labels['app.kubernetes.io/name'] : serviceName}
@@ -381,8 +380,7 @@
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button 
-                      onclick={() => navigateToJobDetails(serviceName)}
+                    <Button onclick={() => navigateToJobDetails(serviceName)}
                       variant="outline"
                       size="sm"
                     >

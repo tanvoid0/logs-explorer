@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
   
-  export let isConnected: boolean = false;
+  let { isConnected = false } = $props<{ isConnected?: boolean }>();
   
   const dispatch = createEventDispatcher();
   
@@ -31,27 +31,24 @@
 <div class="mb-8">
   <h2 class="text-lg font-medium text-slate-900 dark:text-white mb-4">Quick Actions</h2>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <Button 
-      variant="outline" 
-      className="h-20 flex flex-col items-center justify-center"
+    <Button variant="outline" 
+      class="h-20 flex flex-col items-center justify-center"
       onclick={handleRecentLogs}
       disabled={!isConnected}
     >
       <span class="text-lg font-medium">View Recent Logs</span>
       <span class="text-sm text-slate-500">Last 24 hours</span>
     </Button>
-    <Button 
-      variant="outline" 
-      className="h-20 flex flex-col items-center justify-center"
+    <Button variant="outline" 
+      class="h-20 flex flex-col items-center justify-center"
       onclick={handleErrorLogs}
       disabled={!isConnected}
     >
       <span class="text-lg font-medium">Error Logs</span>
       <span class="text-sm text-slate-500">Severity: ERROR</span>
     </Button>
-    <Button 
-      variant="outline" 
-      className="h-20 flex flex-col items-center justify-center"
+    <Button variant="outline" 
+      class="h-20 flex flex-col items-center justify-center"
       onclick={handleKubernetesLogs}
       disabled={!isConnected}
     >

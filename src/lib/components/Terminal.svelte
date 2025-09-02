@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { Terminal } from 'xterm';
-  import { FitAddon } from 'xterm-addon-fit';
-  import { WebLinksAddon } from 'xterm-addon-web-links';
+  import { Terminal } from '@xterm/xterm';
+  import Button from '$lib/components/ui/button.svelte';
+  import { FitAddon } from '@xterm/addon-fit';
+  import { WebLinksAddon } from '@xterm/addon-web-links';
   import { invoke } from '@tauri-apps/api/core';
 
   let { 
@@ -49,7 +50,6 @@
         background: '#1e1e1e',
         foreground: '#ffffff',
         cursor: '#ffffff',
-        selection: '#264f78',
         black: '#000000',
         red: '#cd3131',
         green: '#0dbc79',
@@ -190,20 +190,23 @@
     </div>
     
     <div class="flex items-center space-x-2">
-      <button
+      <Button
         onclick={clearTerminal}
+        variant="ghost"
+        size="sm"
         class="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
         title="Clear terminal"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-        </svg>
-      </button>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </Button>
       {#if isRunning}
         <button
           onclick={stopCommand}
           class="p-1 text-red-400 hover:text-red-200 hover:bg-red-900/20 rounded"
           title="Stop command"
+          aria-label="Stop command"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -215,6 +218,7 @@
         onclick={onClose}
         class="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded"
         title="Close terminal"
+        aria-label="Close terminal"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

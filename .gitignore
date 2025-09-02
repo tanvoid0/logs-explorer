@@ -42,3 +42,7 @@ dist/
 # Temporary files
 *.tmp
 *.temp
+
+# Project-specific npm/pnpm cache and store
+.npm-cache/
+.pnpm-store/

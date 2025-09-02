@@ -4,21 +4,24 @@
   import { taskActions, filteredTasks } from '$lib/stores/task-store';
   import TaskItem from './TaskItem.svelte';
   import Icon from '@iconify/svelte';
+  import Button from '$lib/components/ui/button.svelte';
 
-  export let group: TaskGroupType;
+  const { group } = $props<{
+    group: TaskGroupType;
+  }>();
 
   const dispatch = createEventDispatcher();
 
-  let isExpanded = true;
-  let isEditing = false;
-  let editName = group.name;
-  let editDescription = group.description || '';
-  let showAddTask = false;
-  let newTaskTitle = '';
-  let newTaskDescription = '';
+  let isExpanded = $state(true);
+  let isEditing = $state(false);
+  let editName = $state(group.name);
+  let editDescription = $state(group.description || '');
+  let showAddTask = $state(false);
+  let newTaskTitle = $state('');
+  let newTaskDescription = $state('');
 
   // Get tasks for this group
-  $: groupTasks = $filteredTasks.filter(task => !task.parentId);
+  const groupTasks = $derived($filteredTasks.filter(task => !task.parentId));
 
   function handleEdit() {
     isEditing = true;
@@ -74,7 +77,7 @@
         <!-- Expand/Collapse Button -->
         <button
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          on:click={() => isExpanded = !isExpanded}
+          onclick={() => isExpanded = !isExpanded}
         >
           <Icon icon={isExpanded ? 'mdi:chevron-down' : 'mdi:chevron-right'} class="w-5 h-5" />
         </button>
@@ -94,25 +97,25 @@
                 bind:value={editName}
                 class="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                 placeholder="Group name"
-                on:keydown={handleKeydown}
+                onkeydown={handleKeydown}
               />
               <textarea
                 bind:value={editDescription}
                 class="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Group description (optional)"
                 rows="2"
-                on:keydown={handleKeydown}
-              />
+                onkeydown={handleKeydown}
+              ></textarea>
               <div class="flex space-x-2">
                 <button
-                  on:click={handleSave}
                   class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                  onclick={handleSave}
                 >
                   Save
                 </button>
                 <button
-                  on:click={handleCancel}
                   class="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors text-sm"
+                  onclick={handleCancel}
                 >
                   Cancel
                 </button>
@@ -139,21 +142,21 @@
       <!-- Group Actions -->
       <div class="flex items-center space-x-2 ml-4">
         <button
-          on:click={() => showAddTask = !showAddTask}
+          onclick={() => showAddTask = !showAddTask}
           class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm flex items-center space-x-1"
         >
           <Icon icon="mdi:plus" class="w-4 h-4" />
           <span>Add Task</span>
         </button>
         <button
-          on:click={handleEdit}
+          onclick={handleEdit}
           class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           title="Edit group"
         >
           <Icon icon="mdi:pencil" class="w-4 h-4" />
         </button>
         <button
-          on:click={handleDelete}
+          onclick={handleDelete}
           class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
           title="Delete group"
         >
@@ -177,16 +180,16 @@
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Task description (optional)"
             rows="3"
-          />
+          ></textarea>
           <div class="flex space-x-2">
             <button
-              on:click={handleAddTask}
+              onclick={handleAddTask}
               class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               Add Task
             </button>
             <button
-              on:click={() => showAddTask = false}
+              onclick={() => showAddTask = false}
               class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
             >
               Cancel

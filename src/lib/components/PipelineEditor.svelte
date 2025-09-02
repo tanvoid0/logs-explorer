@@ -268,11 +268,11 @@
   <div class="editor-header">
     <h2>{pipeline ? 'Edit Pipeline' : 'Create New Pipeline'}</h2>
     <div class="header-actions">
-      <Button variant="outline" on:click={onCancel}>
+      <Button variant="outline" onclick={onCancel}>
         <Icon icon="mdi:close" class="w-4 h-4 mr-2" />
         Cancel
       </Button>
-      <Button on:click={savePipeline} disabled={isSaving}>
+      <Button onclick={savePipeline} disabled={isSaving}>
         <Icon icon="mdi:content-save" class="w-4 h-4 mr-2" />
         {isSaving ? 'Saving...' : 'Save Pipeline'}
       </Button>
@@ -350,27 +350,28 @@
       </div>
 
       <div class="form-group">
-        <label>Tags</label>
+        <label for="tags-input">Tags</label>
         <div class="tags-input">
           <div class="tags-list">
             {#each tags as tag}
               <span class="tag">
                 {tag}
-                <button type="button" on:click={() => removeTag(tag)} class="tag-remove">
+                <Button variant="ghost" size="sm" onclick={() => removeTag(tag)} class="tag-remove">
                   <Icon icon="mdi:close" class="w-3 h-3" />
-                </button>
+                </Button>
               </span>
             {/each}
           </div>
           <div class="tag-input">
             <input
+              id="tags-input"
               type="text"
               bind:value={newTag}
               placeholder="Add tag..."
               class="form-input"
-              on:keydown={(e) => e.key === 'Enter' && addTag()}
+              onkeydown={(e) => e.key === 'Enter' && addTag()}
             />
-            <Button size="sm" on:click={addTag}>
+            <Button size="sm" onclick={addTag}>
               <Icon icon="mdi:plus" class="w-4 h-4" />
             </Button>
           </div>
@@ -382,7 +383,7 @@
     <div class="section">
       <div class="section-header">
         <h3>Variables</h3>
-        <Button variant="outline" size="sm" on:click={() => showAddVariable = true}>
+        <Button variant="outline" size="sm" onclick={() => showAddVariable = true}>
           <Icon icon="mdi:plus" class="w-4 h-4 mr-2" />
           Add Variable
         </Button>
@@ -398,9 +399,9 @@
                 {#if variable.required}
                   <span class="required-badge">Required</span>
                 {/if}
-                <button type="button" on:click={() => removeVariable(index)} class="remove-btn">
+                <Button variant="ghost" size="sm" onclick={() => removeVariable(index)} class="remove-btn">
                   <Icon icon="mdi:delete" class="w-4 h-4" />
-                </button>
+                </Button>
               </div>
               {#if variable.description}
                 <p class="variable-description">{variable.description}</p>
@@ -468,8 +469,8 @@
           </div>
 
           <div class="modal-actions">
-            <Button variant="outline" on:click={() => showAddVariable = false}>Cancel</Button>
-            <Button on:click={addVariable}>Add Variable</Button>
+            <Button variant="outline" onclick={() => showAddVariable = false}>Cancel</Button>
+            <Button onclick={addVariable}>Add Variable</Button>
           </div>
         </div>
       {/if}
@@ -479,7 +480,7 @@
     <div class="section">
       <div class="section-header">
         <h3>Steps</h3>
-        <Button variant="outline" size="sm" on:click={() => showAddStep = true}>
+        <Button variant="outline" size="sm" onclick={() => showAddStep = true}>
           <Icon icon="mdi:plus" class="w-4 h-4 mr-2" />
           Add Step
         </Button>
@@ -496,15 +497,15 @@
                   <span class="step-type">({step.type})</span>
                 </div>
                 <div class="step-actions">
-                  <button type="button" on:click={() => moveStep(index, 'up')} disabled={index === 0}>
+                  <Button variant="ghost" size="sm" onclick={() => moveStep(index, 'up')} disabled={index === 0}>
                     <Icon icon="mdi:arrow-up" class="w-4 h-4" />
-                  </button>
-                  <button type="button" on:click={() => moveStep(index, 'down')} disabled={index === steps.length - 1}>
+                  </Button>
+                  <Button variant="ghost" size="sm" onclick={() => moveStep(index, 'down')} disabled={index === steps.length - 1}>
                     <Icon icon="mdi:arrow-down" class="w-4 h-4" />
-                  </button>
-                  <button type="button" on:click={() => removeStep(index)}>
+                  </Button>
+                  <Button variant="ghost" size="sm" onclick={() => removeStep(index)}>
                     <Icon icon="mdi:delete" class="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
               {#if step.description}
@@ -618,8 +619,8 @@
           </div>
 
           <div class="modal-actions">
-            <Button variant="outline" on:click={() => showAddStep = false}>Cancel</Button>
-            <Button on:click={addStep}>Add Step</Button>
+            <Button variant="outline" onclick={() => showAddStep = false}>Cancel</Button>
+            <Button onclick={addStep}>Add Step</Button>
           </div>
         </div>
       {/if}

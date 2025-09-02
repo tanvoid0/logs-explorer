@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import Button from './ui/button.svelte';
+  import Button from '$lib/components/ui/button.svelte';
+  import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
+  import { Input } from '$lib/components/ui/form/index.js';
 
   export interface FilterCondition {
     id: string;
@@ -196,8 +198,7 @@
   <!-- Filter Toggle -->
   <div class="flex items-center justify-between">
     <div class="flex items-center space-x-2">
-      <Button
-        variant="outline"
+      <Button variant="outline"
         onclick={() => showAdvancedFilter = !showAdvancedFilter}
         class="flex items-center space-x-2"
       >
@@ -255,19 +256,23 @@
               </div>
               
               <div class="flex items-center space-x-2">
-                <button
-                  onclick={() => addCondition(group.id)}
+                <Button
+                onclick={() => addCondition(group.id)}
+                  variant="ghost"
+                  size="sm"
                   class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   + Add Condition
-                </button>
+                </Button>
                 {#if filterGroups.length > 1}
-                  <button
-                    onclick={() => removeFilterGroup(group.id)}
+                  <Button
+                  onclick={() => removeFilterGroup(group.id)}
+                    variant="ghost"
+                    size="sm"
                     class="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
                     Remove Group
-                  </button>
+                  </Button>
                 {/if}
               </div>
             </div>
@@ -353,12 +358,13 @@
         {/each}
         
         <!-- Add Group Button -->
-        <button
-          onclick={addFilterGroup}
+        <Button
+        onclick={addFilterGroup}
+          variant="outline"
           class="w-full p-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
         >
           + Add Filter Group
-        </button>
+        </Button>
       </div>
     </div>
   {/if}

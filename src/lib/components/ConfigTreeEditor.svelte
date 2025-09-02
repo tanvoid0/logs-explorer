@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import Button from './ui/button.svelte';
+  import { Input } from '$lib/components/ui/form/index.js';
 
   const { data = {}, readOnly = false, title = 'Configuration Data' } = $props<{
     data?: Record<string, string>;
@@ -79,23 +80,20 @@
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
     {#if !readOnly}
       <div class="actions">
-        <Button 
-          variant="outline" 
+        <Button variant="outline" 
           size="sm" 
           onclick={() => isAdding = !isAdding}
           disabled={isAdding}
         >
           {isAdding ? 'Cancel' : 'Add Key'}
         </Button>
-        <Button 
-          variant="outline" 
+        <Button variant="outline" 
           size="sm" 
           onclick={saveChanges}
         >
           Save
         </Button>
-        <Button 
-          variant="outline" 
+        <Button variant="outline" 
           size="sm" 
           onclick={cancelChanges}
         >
@@ -110,23 +108,27 @@
       <div class="add-form bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label for="new-key-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Key
             </label>
-            <input
+            <Input
+              id="new-key-input"
               type="text"
-              bind:value={newKey}
+              value={newKey}
+              onchange={(e: Event) => newKey = (e.target as HTMLInputElement).value}
               placeholder="Enter key name"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label for="new-value-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Value
             </label>
-            <input
+            <Input
+              id="new-value-input"
               type="text"
-              bind:value={newValue}
+              value={newValue}
+              onchange={(e: Event) => newValue = (e.target as HTMLInputElement).value}
               placeholder="Enter value"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             />
@@ -160,10 +162,11 @@
             <div class="flex items-start justify-between">
               <div class="flex-1">
                 <div class="key-section mb-2">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label for="key-{key}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Key
                   </label>
                   <input
+                    id="key-{key}"
                     type="text"
                     value={key}
                     readonly
@@ -171,7 +174,7 @@
                   />
                 </div>
                 <div class="value-section">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label for="value-{key}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Value
                   </label>
                   {#if readOnly}
@@ -186,19 +189,19 @@
                     </div>
                   {:else}
                                          <textarea
+                       id="value-{key}"
                        value={value}
                        oninput={(e) => updateValue(key, (e.target as HTMLTextAreaElement).value)}
                        rows={isJson(value) ? 6 : 2}
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-sm resize-y"
                        placeholder="Enter value"
-                     />
+                     ></textarea>
                   {/if}
                 </div>
               </div>
               {#if !readOnly}
                 <div class="ml-4">
-                  <Button
-                    variant="outline"
+                  <Button variant="outline"
                     size="sm"
                     onclick={() => removeKey(key)}
                     class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"

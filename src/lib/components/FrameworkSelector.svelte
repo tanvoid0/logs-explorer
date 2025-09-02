@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
-  const { selectedFramework, disabled } = $props<{
+  const { selectedFramework = $bindable(), disabled } = $props<{
     selectedFramework: string | null;
     disabled: boolean;
   }>();
@@ -125,12 +125,13 @@
 </script>
 
 <div class="space-y-2">
-  <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+  <label for="framework-selector" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
     Framework
   </label>
   
   <div class="framework-selector-container relative">
     <button
+      id="framework-selector"
       type="button"
       onclick={toggleDropdown}
       {disabled}

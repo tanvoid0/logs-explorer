@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { taskGroups, taskGroupActions, filteredTasks, taskStats, initializeSampleData } from '$lib/stores/task-store';
+  import { taskGroups, taskGroupActions, filteredTasks, taskStats } from '$lib/stores/task-store';
   import TaskGroup from './TaskGroup.svelte';
   import TaskFilters from './TaskFilters.svelte';
   import Icon from '@iconify/svelte';
 
-  let showAddGroup = false;
-  let newGroupName = '';
-  let newGroupDescription = '';
-  let newGroupColor = '#3B82F6';
+  let showAddGroup = $state(false);
+  let newGroupName = $state('');
+  let newGroupDescription = $state('');
+  let newGroupColor = $state('#3B82F6');
 
   const colorOptions = [
     '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899',
@@ -43,10 +43,7 @@
   }
 
   onMount(() => {
-    // Initialize with sample data if no groups exist
-    if ($taskGroups.length === 0) {
-      initializeSampleData();
-    }
+    // Component mounted
   });
 </script>
 
@@ -59,7 +56,7 @@
         <p class="text-gray-600 dark:text-gray-400 mt-1">Organize your tasks with groups and subtasks</p>
       </div>
       <button
-        on:click={() => showAddGroup = !showAddGroup}
+        onclick={() => showAddGroup = !showAddGroup}
         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center space-x-2"
       >
         <Icon icon="mdi:plus" class="w-4 h-4" />
@@ -131,10 +128,11 @@
       <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Group</h3>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="group-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Group Name
           </label>
           <input
+            id="group-name"
             type="text"
             bind:value={newGroupName}
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -143,10 +141,11 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label for="group-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description (optional)
           </label>
           <textarea
+            id="group-description"
             bind:value={newGroupDescription}
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Enter group description..."
@@ -161,9 +160,10 @@
           <div class="flex flex-wrap gap-2">
             {#each colorOptions as color}
               <button
-                on:click={() => newGroupColor = color}
+                onclick={() => newGroupColor = color}
                 class="w-8 h-8 rounded-full border-2 transition-all {newGroupColor === color ? 'border-gray-900 dark:border-gray-100 scale-110' : 'border-gray-300 dark:border-gray-600 hover:scale-105'}"
                 style="background-color: {color}"
+                aria-label="Select color {color}"
               ></button>
             {/each}
           </div>
@@ -171,13 +171,13 @@
         
         <div class="flex space-x-3">
           <button
-            on:click={handleAddGroup}
+            onclick={handleAddGroup}
             class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
             Create Group
           </button>
           <button
-            on:click={() => showAddGroup = false}
+            onclick={() => showAddGroup = false}
             class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
           >
             Cancel
@@ -202,7 +202,7 @@
           <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No task groups yet</h3>
           <p class="text-gray-600 dark:text-gray-400 mb-4">Create your first task group to get started!</p>
           <button
-            on:click={() => showAddGroup = true}
+            onclick={() => showAddGroup = true}
             class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
             Create First Group

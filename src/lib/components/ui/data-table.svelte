@@ -11,7 +11,7 @@
   let { 
     data = [], 
     columns = [],
-    class: className = "",
+    className = "",
     title = "",
     emptyMessage = "No data found",
     loading = false
@@ -23,7 +23,7 @@
       sortable?: boolean;
       render?: (item: Record<string, any>) => string;
     }>;
-    class?: string;
+    className?: string;
     title?: string;
     emptyMessage?: string;
     loading?: boolean;
@@ -34,17 +34,21 @@
   let sortDirection = $state<"asc" | "desc">("asc");
 
   // Computed sorted data
-  let sortedData = $derived(() => {
-    if (!sortKey) return data;
-    
-    return [...data].sort((a, b) => {
-      const aVal = a[sortKey];
-      const bVal = b[sortKey];
-      
-      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
+  let sortedData: any[] = $state(data);
+  
+  $effect(() => {
+    if (!sortKey) {
+      sortedData = data;
+    } else {
+      sortedData = [...data].sort((a, b) => {
+        const aVal = a[sortKey];
+        const bVal = b[sortKey];
+        
+        if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
   });
 
   function handleSort(key: string) {
@@ -77,8 +81,7 @@
     <TableHeader>
       <TableRow>
         {#each columns as column}
-          <TableHead 
-            class={column.sortable ? "cursor-pointer select-none" : ""}
+          <TableHead className={column.sortable ? "cursor-pointer select-none" : ""}
             on:click={() => column.sortable && handleSort(column.key)}
           >
             <div class="flex items-center space-x-1">
@@ -94,7 +97,7 @@
     <TableBody>
       {#if loading}
         <TableRow>
-          <TableCell class="text-center py-8">
+          <TableCell className="text-center py-8">
             <div class="flex items-center justify-center space-x-2">
               <div class="w-4 h-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"></div>
               <span class="text-slate-500">Loading...</span>
@@ -103,14 +106,14 @@
         </TableRow>
       {:else if sortedData.length === 0}
         <TableRow>
-          <TableCell class="text-center py-8">
+          <TableCell className="text-center py-8">
             <div class="text-slate-500 dark:text-slate-400">
               {emptyMessage}
             </div>
           </TableCell>
         </TableRow>
       {:else}
-        {#each sortedData as item (item.name || item.id || String(item))}
+        {#each sortedData as item: any (item.name || item.id || String(item))}
           <TableRow>
             {#each columns as column}
               <TableCell>

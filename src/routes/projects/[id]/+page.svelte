@@ -76,7 +76,10 @@
       deployments = await k8sAPI.getDeployments(currentNamespace);
       
       // Find the specific deployment for this project
-      deploymentDetails = deployments.find(d => d.metadata.name === project.deployment);
+      if (project && project.deployment) {
+        const deploymentName = project.deployment;
+        deploymentDetails = deployments.find(d => d.metadata.name === deploymentName);
+      }
     } catch (err) {
       console.error('Failed to load deployment details:', err);
       deployments = [];
@@ -322,7 +325,7 @@
       <div class="flex items-center space-x-2">
         <button
           class="p-2 {project?.starred ? 'text-yellow-500' : 'text-slate-400'} hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors"
-          onclick={toggleProjectStar}
+                      onclick={toggleProjectStar}
           title={project?.starred ? 'Unstar project' : 'Star project'}
         >
           <Icon icon={project?.starred ? 'mdi:star' : 'mdi:star-outline'} class="w-5 h-5" />
@@ -436,8 +439,9 @@
                     Open in IDE
                   </Button>
                 {/if}
-                {#if project.deployment}
-                  <Button variant="outline" onclick={() => goto(`/workloads/deployments/${project.deployment}`)}>
+                {#if project && project.deployment}
+                  {@const deploymentName = project.deployment}
+                  <Button variant="outline" onclick={() => goto(`/workloads/deployments/${deploymentName}`)}>
                     <Icon icon="devicon:kubernetes" class="w-4 h-4 mr-2" />
                     View Deployment
                   </Button>
@@ -457,37 +461,37 @@
             </h3>
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Project Name
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white">{project.name}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Directory Path
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white font-mono text-sm break-all">{project.path}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Framework
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white">
                   {project.framework || 'Not detected'}
                 </p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Kubernetes Deployment
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white">
                   {project.deployment || 'Not configured'}
                 </p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Status
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white">
                   <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                     <Icon icon="mdi:check-circle" class="w-3 h-3 mr-1" />
@@ -505,21 +509,21 @@
             </h3>
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Created
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white">{formatDate(project.created_at)}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Last Updated
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white">{formatDate(project.updated_at)}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Starred
-                </label>
+                </div>
                 <p class="text-slate-900 dark:text-white">
                   {project.starred ? 'Yes' : 'No'}
                 </p>
@@ -542,21 +546,21 @@
             {:else}
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Deployment Name
-                  </label>
+                  </div>
                   <p class="text-slate-900 dark:text-white">{deploymentDetails.metadata.name}</p>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Namespace
-                  </label>
+                  </div>
                   <p class="text-slate-900 dark:text-white">{deploymentDetails.metadata.namespace}</p>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <div class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Replicas
-                  </label>
+                  </div>
                   <p class="text-slate-900 dark:text-white">
                     {deploymentDetails.spec.replicas} / {deploymentDetails.status.replicas}
                   </p>
@@ -606,13 +610,13 @@
                      <span>Open in IDE</span>
                    </Button>
                  {/if}
-                 {#if project.deployment}
-                   <Button variant="outline" onclick={() => goto(`/workloads/deployments/${project.deployment}`)} class="h-auto p-4 flex flex-col items-center">
+                 {#if project?.deployment}
+                   <Button variant="outline" onclick={() => goto(`/workloads/deployments/${project?.deployment}`)} class="h-auto p-4 flex flex-col items-center">
                      <Icon icon="devicon:kubernetes" class="w-6 h-6 mb-2" />
                      <span>View Deployment</span>
                    </Button>
                  {/if}
-                 <Button variant="outline" onclick={() => goto(`/logs?project=${project.id}`)} class="h-auto p-4 flex flex-col items-center">
+                 <Button variant="outline" onclick={() => goto(`/logs?project=${project?.id}`)} class="h-auto p-4 flex flex-col items-center">
                    <Icon icon="mdi:file-document" class="w-6 h-6 mb-2" />
                    <span>View Logs</span>
                  </Button>
@@ -697,19 +701,23 @@
             <label for="project-framework" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Framework
             </label>
-            <FrameworkSelector bind:selectedFramework={newProjectFramework} />
+            <FrameworkSelector bind:selectedFramework={newProjectFramework} disabled={false} />
           </div>
           
           <div>
             <label for="project-deployment" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Kubernetes Deployment
             </label>
-            <ProjectDeploymentSelector bind:selectedDeployment={newProjectDeployment} />
+            <ProjectDeploymentSelector 
+              bind:selectedDeployment={newProjectDeployment} 
+              deployments={deployments}
+              folderName=""
+              disabled={false}
+            />
           </div>
           
           <div class="flex gap-2 justify-end">
-            <Button 
-              variant="outline" 
+            <Button variant="outline" 
               onclick={() => showEditModal = false}
             >
               Cancel

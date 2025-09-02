@@ -503,6 +503,7 @@
             {severityFilter}
             {hasNextPage}
             {hasPreviousPage}
+            namespace={currentNamespace}
             on:logCountChange={handleLogCountChange}
             on:sortOrderChange={handleSortOrderChange}
             on:severityChange={handleSeverityChange}

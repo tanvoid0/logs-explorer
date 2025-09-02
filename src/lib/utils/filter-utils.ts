@@ -27,7 +27,6 @@ function getFieldValue(log: K8sLog, fieldName: string): any {
   const directFields: Record<string, any> = {
     message: log.message,
     level: log.level,
-    namespace: log.namespace,
     pod: log.pod,
     container: log.container,
     timestamp: log.timestamp

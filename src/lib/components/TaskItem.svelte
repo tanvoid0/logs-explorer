@@ -3,20 +3,24 @@
   import type { Task, TaskStatus } from '$lib/types/task';
   import { taskActions } from '$lib/stores/task-store';
   import Icon from '@iconify/svelte';
+  import Button from '$lib/components/ui/button.svelte';
+  import TaskItem from './TaskItem.svelte';
 
-  export let task: Task;
-  export let depth = 0;
-  export let showSubtasks = true;
+  const { task, depth = 0, showSubtasks = true } = $props<{
+    task: Task;
+    depth?: number;
+    showSubtasks?: boolean;
+  }>();
 
   const dispatch = createEventDispatcher();
 
-  let isExpanded = true;
-  let isEditing = false;
-  let editTitle = task.title;
-  let editDescription = task.description || '';
-  let showAddSubtask = false;
-  let newSubtaskTitle = '';
-  let newSubtaskDescription = '';
+  let isExpanded = $state(true);
+  let isEditing = $state(false);
+  let editTitle = $state(task.title);
+  let editDescription = $state(task.description || '');
+  let showAddSubtask = $state(false);
+  let newSubtaskTitle = $state('');
+  let newSubtaskDescription = $state('');
 
   const statusColors = {
     'pending': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
@@ -98,7 +102,7 @@
         {#if task.subtasks.length > 0}
           <button
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            on:click={() => isExpanded = !isExpanded}
+            onclick={() => isExpanded = !isExpanded}
           >
             <Icon icon={isExpanded ? 'mdi:chevron-down' : 'mdi:chevron-right'} class="w-5 h-5" />
           </button>
@@ -109,7 +113,7 @@
         <!-- Status Toggle -->
         <button
           class="flex-shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors {task.status === 'completed' ? 'bg-green-500 border-green-500' : ''}"
-          on:click={handleStatusToggle}
+          onclick={handleStatusToggle}
         >
           {#if task.status === 'completed'}
             <Icon icon="mdi:check" class="w-3 h-3 text-white" />
@@ -131,17 +135,17 @@
                 class="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Task description (optional)"
                 rows="2"
-              />
+              ></textarea>
               <div class="flex space-x-2">
                 <button
-                  on:click={handleSave}
                   class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                  onclick={handleSave}
                 >
                   Save
                 </button>
                 <button
-                  on:click={handleCancel}
                   class="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors text-sm"
+                  onclick={handleCancel}
                 >
                   Cancel
                 </button>
@@ -173,38 +177,38 @@
         <div class="relative">
           <button
             class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-            on:click={() => dispatch('priorityMenu', { taskId: task.id, priority: task.priority })}
+            onclick={() => dispatch('priorityMenu', { taskId: task.id, priority: task.priority })}
           >
             <Icon 
-              icon={priorityIcons[task.priority]} 
-              class="w-4 h-4 {priorityColors[task.priority]}" 
+              icon={priorityIcons[task.priority as keyof typeof priorityIcons]} 
+              class="w-4 h-4 {priorityColors[task.priority as keyof typeof priorityColors]}" 
             />
           </button>
         </div>
 
         <!-- Status Badge -->
-        <span class="px-2 py-1 text-xs font-medium rounded-full {statusColors[task.status]}">
+        <span class="px-2 py-1 text-xs font-medium rounded-full {statusColors[task.status as keyof typeof statusColors]}">
           {task.status.replace('-', ' ')}
         </span>
 
         <!-- Action Buttons -->
         <div class="flex items-center space-x-1">
           <button
-            on:click={() => showAddSubtask = !showAddSubtask}
+            onclick={() => showAddSubtask = !showAddSubtask}
             class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             title="Add subtask"
           >
             <Icon icon="mdi:plus" class="w-4 h-4" />
           </button>
           <button
-            on:click={handleEdit}
+            onclick={handleEdit}
             class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             title="Edit task"
           >
             <Icon icon="mdi:pencil" class="w-4 h-4" />
           </button>
           <button
-            on:click={handleDelete}
+            onclick={handleDelete}
             class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             title="Delete task"
           >
@@ -229,16 +233,16 @@
             class="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Subtask description (optional)"
             rows="2"
-          />
+          ></textarea>
           <div class="flex space-x-2">
             <button
-              on:click={handleAddSubtask}
+              onclick={handleAddSubtask}
               class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
             >
               Add Subtask
             </button>
             <button
-              on:click={() => showAddSubtask = false}
+              onclick={() => showAddSubtask = false}
               class="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors text-sm"
             >
               Cancel
@@ -253,7 +257,7 @@
   {#if showSubtasks && task.subtasks.length > 0 && isExpanded}
     <div class="subtasks">
       {#each task.subtasks as subtask (subtask.id)}
-        <svelte:self 
+        <TaskItem 
           task={subtask} 
           depth={depth + 1} 
           showSubtasks={showSubtasks}

@@ -6,9 +6,11 @@
   // Define the connection state type that includes autoConnect
   type ConnectionStateWithAutoConnect = AppState['connection'] & { autoConnectEnabled: boolean };
   
-  export let connectionState: ConnectionStateWithAutoConnect;
-  export let onConnect: () => void;
-  export let onDisconnect: () => void;
+  const { connectionState, onConnect, onDisconnect } = $props<{
+    connectionState: ConnectionStateWithAutoConnect;
+    onConnect: () => void;
+    onDisconnect: () => void;
+  }>();
   
   const dispatch = createEventDispatcher();
   
@@ -41,8 +43,7 @@
     {/if}
   </div>
   
-  <Button 
-    variant={connectionState.isConnected ? "outline" : "default"}
+  <Button variant={connectionState.isConnected ? "outline" : "default"}
     onclick={connectionState.isConnected ? handleDisconnect : handleConnect}
     disabled={connectionState.isConnecting}
   >

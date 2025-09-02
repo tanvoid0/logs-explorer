@@ -1,0 +1,16 @@
+pub mod m20240101_000001_create_task_groups_table;
+pub mod m20240101_000002_create_tasks_table;
+pub mod m20240101_000003_create_ide_configs_table;
+pub mod m20240101_000004_create_framework_ide_mappings_table;
+pub mod m20240101_000005_create_projects_table;
+pub mod m20240101_000006_create_frameworks_table;
+pub mod m20240101_000007_create_framework_detections_table;
+
+// Re-export all migrations for easy access
+pub use m20240101_000001_create_task_groups_table::Migration as createTaskGroupsTable;
+pub use m20240101_000002_create_tasks_table::Migration as createTasksTable;
+pub use m20240101_000003_create_ide_configs_table::Migration as createIdeConfigsTable;
+pub use m20240101_000004_create_framework_ide_mappings_table::Migration as createFrameworkIdeMappingsTable;
+pub use m20240101_000005_create_projects_table::Migration as createProjectsTable;
+pub use m20240101_000006_create_frameworks_table::Migration as createFrameworksTable;
+pub use m20240101_000007_create_framework_detections_table::Migration as createFrameworkDetectionsTable;

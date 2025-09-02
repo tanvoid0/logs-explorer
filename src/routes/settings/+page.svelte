@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Button from "$lib/components/ui/button.svelte";
+  import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
+  import { Input } from '$lib/components/ui/form/index.js';
   import { k8sAPI, type K8sNamespace } from "$lib/api/k8s";
   import { appStore, connectionState, namespaceState, preferences } from '$lib/stores/app-store';
   import { ideSettingsAPI, type IdeConfig, type FrameworkIdeMapping } from "$lib/api/ide-settings";
@@ -470,8 +472,9 @@
         <div class="w-64 flex-shrink-0">
           <nav class="space-y-2">
             {#each settingsSections as section}
-              <button
+              <Button
                 onclick={() => currentSection = section.id}
+                variant="ghost"
                 class="w-full text-left p-3 rounded-lg transition-colors {currentSection === section.id ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}"
               >
                 <div class="flex items-center space-x-3">
@@ -485,7 +488,7 @@
                     </div>
                   </div>
                 </div>
-              </button>
+              </Button>
             {/each}
           </nav>
         </div>
@@ -552,12 +555,14 @@
                             <div class="text-sm font-medium text-slate-500 dark:text-slate-400 w-6">
                               {index + 1}
                             </div>
-                            <button
+                            <Button
                               onclick={() => toggleStar(namespace.name)}
+                              variant="ghost"
+                              size="sm"
                               class="text-slate-400 hover:text-yellow-500 {$namespaceState.starred.includes(namespace.name) ? 'text-yellow-500' : ''}"
                             >
                               {$namespaceState.starred.includes(namespace.name) ? '⭐' : '☆'}
-                            </button>
+                            </Button>
                             <div>
                               <div class="font-medium text-slate-900 dark:text-white">
                                 {namespace.name}
@@ -570,20 +575,24 @@
                           
                           {#if $namespaceState.starred.includes(namespace.name)}
                             <div class="flex items-center space-x-1">
-                              <button
+                              <Button
                                 onclick={() => moveUp(index)}
                                 disabled={index === 0}
+                                variant="ghost"
+                                size="sm"
                                 class="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 ↑
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 onclick={() => moveDown(index)}
                                 disabled={index === filteredNamespaces.length - 1}
+                                variant="ghost"
+                                size="sm"
                                 class="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 ↓
-                              </button>
+                              </Button>
                             </div>
                           {/if}
                         </div>
@@ -718,8 +727,7 @@
                         Test the current Kubernetes connection
                       </div>
                     </div>
-                    <Button 
-                      onclick={() => appStore.connect()}
+                    <Button onclick={() => appStore.connect()}
                       disabled={$connectionState.isConnecting}
                     >
                       {$connectionState.isConnecting ? 'Connecting...' : 'Test Connection'}
@@ -733,8 +741,7 @@
                         Clear stored connection preferences and data
                       </div>
                     </div>
-                    <Button 
-                      variant="outline"
+                    <Button variant="outline"
                       onclick={() => {
                         localStorage.removeItem('k8s-auto-connect');
                         localStorage.removeItem('k8s-last-connected');
@@ -853,8 +860,7 @@
                         IDEs found on your system that can be added to the configuration
                       </p>
                     </div>
-                    <Button 
-                      variant="outline"
+                    <Button variant="outline"
                       onclick={detectInstalledIdes}
                       disabled={isDetectingIdes}
                     >
@@ -874,10 +880,12 @@
                       {#each installedIdes as executable}
                         {@const isConfigured = isIdeConfigured(executable)}
                         <div class="flex flex-col items-center">
-                          <div 
+                          <button 
                             class="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors cursor-pointer w-full"
                             onclick={() => openIde(executable)}
                             title="Open {executable}"
+                            aria-label="Open {executable}"
+                            onkeydown={(e) => e.key === 'Enter' && openIde(executable)}
                           >
                             <div class="text-2xl mb-2">{getIdeIcon(executable)}</div>
                             <div class="flex items-center space-x-2 mb-2">
@@ -886,22 +894,24 @@
                                 {executable}
                               </span>
                             </div>
-                          </div>
+                          </button>
                           {#if !isConfigured}
-                            <button 
-                              class="mt-2 p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            <Button 
                               onclick={() => {
                                 newIdeName = executable.charAt(0).toUpperCase() + executable.slice(1);
                                 newIdeExecutable = executable;
                                 showAddIdeModal = true;
                                 editingIde = null;
                               }}
+                              variant="ghost"
+                              size="sm"
+                              class="mt-2 p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                               title="Add IDE"
                             >
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                               </svg>
-                            </button>
+                            </Button>
                           {/if}
                         </div>
                       {/each}
@@ -979,21 +989,24 @@
                           
                                                  <div class="flex items-center space-x-1">
                          {#if installedIdes.length === 0 || isIdeInstalled(ide.executable)}
-                           <button
-                             class="p-2 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                           <Button
                              onclick={() => openIde(ide.executable)}
+                             variant="ghost"
+                             size="sm"
+                             class="p-2 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                              title="Open IDE"
                            >
                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                              </svg>
-                           </button>
+                           </Button>
                          {/if}
                          {#if !ide.is_default}
                            <button
                              class="p-2 text-yellow-600 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors"
                              onclick={() => setDefaultIde(ide.id!)}
                              title="Set as Default"
+                             aria-label="Set {ide.name} as default IDE"
                            >
                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
@@ -1004,6 +1017,7 @@
                            class="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                            onclick={() => openEditIdeModal(ide)}
                            title="Edit IDE"
+                           aria-label="Edit {ide.name} IDE"
                          >
                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -1013,6 +1027,7 @@
                            class="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                            onclick={() => deleteIde(ide.id!)}
                            title="Delete IDE"
+                           aria-label="Delete {ide.name} IDE"
                          >
                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -1113,6 +1128,7 @@
                               class="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                               onclick={() => openEditFrameworkMappingModal(mapping)}
                               title="Edit Mapping"
+                              aria-label="Edit framework mapping for {mapping.framework}"
                             >
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -1122,6 +1138,7 @@
                               class="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                               onclick={() => deleteFrameworkMapping(mapping.framework)}
                               title="Delete Mapping"
+                              aria-label="Delete framework mapping for {mapping.framework}"
                             >
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -1320,14 +1337,12 @@
         </div>
         
         <div class="flex justify-end space-x-3 mt-6">
-          <Button 
-            variant="outline"
+          <Button variant="outline"
             onclick={() => showAddIdeModal = false}
           >
             Cancel
           </Button>
-          <Button 
-            onclick={saveIde}
+          <Button onclick={saveIde}
             disabled={!newIdeName.trim() || !newIdeExecutable.trim()}
           >
             {editingIde ? 'Update' : 'Add'}
@@ -1414,14 +1429,12 @@
         </div>
         
         <div class="flex justify-end space-x-3 mt-6">
-          <Button 
-            variant="outline"
+          <Button variant="outline"
             onclick={() => showAddFrameworkMappingModal = false}
           >
             Cancel
           </Button>
-          <Button 
-            onclick={saveFrameworkMapping}
+          <Button onclick={saveFrameworkMapping}
             disabled={!newFrameworkMappingFramework.trim() || !newFrameworkMappingIdeId || ides.filter(ide => installedIdes.length === 0 || isIdeInstalled(ide.executable)).length === 0}
           >
             {editingFrameworkMapping ? 'Update' : 'Add'}
@@ -1492,14 +1505,12 @@ steps:
         </div>
         
         <div class="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
-          <Button 
-            variant="outline"
+          <Button variant="outline"
             onclick={() => { showYamlImportModal = false; yamlContent = ''; }}
           >
             Cancel
           </Button>
-          <Button 
-            onclick={importYamlPipeline}
+          <Button onclick={importYamlPipeline}
             disabled={!yamlContent.trim()}
           >
             Import Pipeline

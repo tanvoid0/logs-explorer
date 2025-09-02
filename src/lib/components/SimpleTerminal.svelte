@@ -272,8 +272,7 @@
     </h4>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       {#each getFrameworkCommands() as command}
-        <Button 
-          variant="outline" 
+        <Button variant="outline" 
           onclick={() => selectedCommand = command.command}
           disabled={isRunning}
           class="h-auto p-3 flex flex-col items-center text-sm {selectedCommand === command.command ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : ''}"
@@ -293,8 +292,7 @@
       </h4>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {#each packageJsonScripts as script}
-          <Button 
-            variant="outline" 
+          <Button variant="outline" 
             onclick={() => selectedCommand = script.command}
             disabled={isRunning}
             class="h-auto p-3 flex flex-col items-center text-sm {selectedCommand === script.command ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : ''}"
@@ -342,8 +340,7 @@
             }
           }}
         />
-        <Button 
-          onclick={() => runCommand(selectedCommand)}
+        <Button onclick={() => runCommand(selectedCommand)}
           disabled={isRunning || !selectedCommand.trim()}
           size="sm"
         >

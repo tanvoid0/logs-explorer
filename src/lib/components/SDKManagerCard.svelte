@@ -97,7 +97,7 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">Manage development tools and SDKs</p>
       </div>
     </div>
-    <Button variant="outline" size="sm" on:click={navigateToSDKManager}>
+    <Button variant="outline" size="sm" onclick={navigateToSDKManager}>
       <Icon icon="mdi:arrow-right" class="w-4 h-4 mr-2" />
       Open
     </Button>
@@ -157,7 +157,7 @@
         variant="outline" 
         size="sm" 
         class="flex-1"
-        on:click={() => sdkStore.refreshAll()}
+        onclick={() => sdkStore.refreshAll()}
         disabled={isLoading}
       >
         <Icon icon="mdi:refresh" class="w-4 h-4 mr-1" />
@@ -167,7 +167,7 @@
         variant="outline" 
         size="sm" 
         class="flex-1"
-        on:click={navigateToSDKManager}
+        onclick={navigateToSDKManager}
       >
         <Icon icon="mdi:settings" class="w-4 h-4 mr-1" />
         Manage

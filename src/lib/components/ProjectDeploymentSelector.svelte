@@ -1,8 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { K8sDeployment } from '$lib/types/k8s';
+  import Button from '$lib/components/ui/button.svelte';
 
-  const { deployments, selectedDeployment, folderName, disabled } = $props<{
+  const { deployments, selectedDeployment = $bindable(), folderName, disabled } = $props<{
     deployments: K8sDeployment[];
     selectedDeployment: string | null;
     folderName: string;
@@ -88,17 +89,18 @@
 </script>
 
 <div class="space-y-2">
-  <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+  <label for="deployment-selector" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
     Linked Deployment (Optional)
   </label>
   
   <div class="project-deployment-selector-container relative">
-    <button
-      type="button"
-      onclick={toggleDropdown}
-      {disabled}
-      class="w-full px-3 py-2 text-left bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-    >
+    <div id="deployment-selector">
+      <Button
+        variant="outline"
+        onclick={toggleDropdown}
+        disabled={disabled}
+        class="w-full px-3 py-2 text-left bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+      >
       <div class="flex items-center justify-between">
         <span class="text-sm text-slate-900 dark:text-white">
           {#if selectedDeployment}
@@ -111,7 +113,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
         </svg>
       </div>
-    </button>
+    </Button>
+    </div>
 
     {#if isDropdownOpen && !disabled}
       <div class="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md shadow-lg max-h-60 overflow-auto">
@@ -191,3 +194,5 @@
     Link this project to a Kubernetes deployment for quick access to deployment details
   </p>
 </div>
+
+export default ProjectDeploymentSelector;
