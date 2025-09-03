@@ -8,5 +8,8 @@ export { default as Heading } from './heading.svelte';
 export { default as Text } from './text.svelte';
 export { default as Container } from './container.svelte';
 
+// Layout components
+export { Sidebar, Layout } from './layout';
+
 // Note: Other components should be imported directly from their respective directories
 // to avoid export conflicts

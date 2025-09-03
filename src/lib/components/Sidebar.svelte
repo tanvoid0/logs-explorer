@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from "svelte";
   import { browser } from '$app/environment';
+  import { Sidebar } from "$lib/components/ui/layout";
   import Button from "$lib/components/ui/button.svelte";
   import NamespaceSelector from "$lib/components/NamespaceSelector.svelte";
   import { k8sAPI, type K8sNamespace } from "$lib/api/k8s";
@@ -12,6 +13,9 @@
   
   // Loading state
   let isLoading = $state(false);
+  
+  // Collapsible state
+  let isCollapsed = $state(false);
 
   // Navigation items
   const navigationItems = [
@@ -143,6 +147,10 @@
     }
   }
   
+  function toggleCollapse() {
+    isCollapsed = !isCollapsed;
+  }
+  
   function isActive(route: string): boolean {
     const currentPath = $page.url.pathname;
     
@@ -214,193 +222,231 @@
   });
 </script>
 
-<nav class="w-64 bg-slate-800 text-white h-full flex flex-col">
+<!-- Sidebar component - just the sidebar, no layout wrapper -->
+<aside class="bg-slate-800 text-white h-full flex flex-col transition-all duration-300 ease-in-out {isCollapsed ? 'w-16' : 'w-64'}">
   <!-- Header -->
   <Container variant="header" className="p-4 border-b border-slate-700">
-    <div class="flex items-center space-x-2">
+    <div class="flex items-center {isCollapsed ? 'justify-center' : 'space-x-2'}">
       <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
         <span class="text-white font-bold text-sm">LE</span>
       </div>
-      <div>
-        <Heading level="h1" variant="emphasized" className="text-lg">Logs Explorer</Heading>
-        <Text variant="muted" className="text-xs">The Kubernetes IDE</Text>
-      </div>
+      {#if !isCollapsed}
+        <div>
+          <Heading level="h1" variant="emphasized" className="text-lg">Logs Explorer</Heading>
+          <Text variant="muted" className="text-xs">The Kubernetes IDE</Text>
+        </div>
+      {/if}
     </div>
   </Container>
 
   <!-- Navigation Controls -->
   <Container variant="header" className="p-3 border-b border-slate-700">
-    <div class="flex items-center space-x-2">
-      <IconButton
-        variant="ghost"
-        size="sm"
-        onclick={goBack}
-        disabled={!canGoBack}
-        title="Go Back"
-        aria-label="Go Back"
-        className="w-8 h-8 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </IconButton>
+    <div class="flex items-center {isCollapsed ? 'justify-center' : 'space-x-2'}">
+      {#if !isCollapsed}
+        <IconButton
+          variant="ghost"
+          size="sm"
+          onclick={goBack}
+          disabled={!canGoBack}
+          title="Go Back"
+          aria-label="Go Back"
+          className="w-8 h-8 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </IconButton>
+        
+        <IconButton
+          variant="ghost"
+          size="sm"
+          onclick={goForward}
+          disabled={!canGoForward}
+          title="Go Forward"
+          aria-label="Go Forward"
+          className="w-8 h-8 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </IconButton>
+        
+        <div class="flex-1"></div>
+        
+        <IconButton
+          variant="ghost"
+          size="sm"
+          onclick={() => navigateTo('/overview')}
+          title="Go to Overview"
+          aria-label="Go to Overview"
+          className="w-8 h-8 bg-slate-700 hover:bg-slate-600"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        </IconButton>
+      {/if}
       
-      <IconButton
-        variant="ghost"
-        size="sm"
-        onclick={goForward}
-        disabled={!canGoForward}
-        title="Go Forward"
-        aria-label="Go Forward"
-        className="w-8 h-8 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+      <!-- Collapse toggle button - always visible -->
+      <button
+        onclick={toggleCollapse}
+        class="w-8 h-8 bg-slate-700 hover:bg-slate-600 rounded flex items-center justify-center transition-colors"
+        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </IconButton>
-      
-      <div class="flex-1"></div>
-      
-      <IconButton
-        variant="ghost"
-        size="sm"
-        onclick={() => navigateTo('/overview')}
-        title="Go to Overview"
-        aria-label="Go to Overview"
-        className="w-8 h-8 bg-slate-700 hover:bg-slate-600"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      </IconButton>
+        {#if isCollapsed}
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        {:else}
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        {/if}
+      </button>
     </div>
   </Container>
   
-  <!-- Navigation Items -->
-  <div class="flex-1 overflow-y-auto py-4">
-    <div class="px-4">
-      <Heading level="h2" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-        Navigation
-      </Heading>
-      
-      <ul class="space-y-1">
-        {#each navigationItems as item}
-          <li>
-            <!-- Navigation Item -->
-            <Button
-              variant="ghost"
-              onclick={() => navigateTo(item.href)}
-              className="w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors hover:bg-slate-700 {isActive(item.href) ? 'bg-slate-700 text-white' : 'text-slate-300'}"
-            >
-              <div class="flex items-center space-x-3">
-                <span class="text-lg">{item.icon}</span>
-                <span class="font-medium">{item.name}</span>
-              </div>
-            </Button>
-          </li>
-        {/each}
-      </ul>
+      <!-- Navigation Items -->
+    <div class="flex-1 overflow-y-auto py-4">
+      <div class="px-4">
+        {#if !isCollapsed}
+          <Heading level="h2" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            Navigation
+          </Heading>
+        {/if}
+        
+        <ul class="space-y-1">
+          {#each navigationItems as item}
+            <li>
+              <!-- Navigation Item -->
+              <Button
+                variant="ghost"
+                onclick={() => navigateTo(item.href)}
+                className="w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors hover:bg-slate-700 {isActive(item.href) ? 'bg-slate-700 text-white' : 'text-slate-300'}"
+                title={isCollapsed ? item.name : ''}
+              >
+                <div class="flex items-center space-x-3">
+                  <span class="text-lg">{item.icon}</span>
+                  {#if !isCollapsed}
+                    <span class="font-medium">{item.name}</span>
+                  {/if}
+                </div>
+              </Button>
+            </li>
+          {/each}
+        </ul>
+      </div>
     </div>
-  </div>
   
-  <!-- Footer with Connection Status and Namespace Selector -->
-  <Container variant="header" className="p-4 border-t border-slate-700 space-y-4">
-    <!-- Connection Status -->
-    <div class="space-y-2">
-      <Heading level="h3" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-        Connection
-      </Heading>
-      {#if $connectionState.isConnected}
-        <div class="flex items-center space-x-2 bg-green-900/30 px-3 py-2 rounded-lg border border-green-700/50">
-          <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-green-300 truncate">
-              {$connectionState.currentContext || 'Kubernetes'}
-            </div>
-            <div class="text-xs text-green-400">Connected</div>
-          </div>
-        </div>
-      {:else}
+      <!-- Footer with Connection Status and Namespace Selector -->
+    {#if !isCollapsed}
+      <Container variant="header" className="p-4 border-t border-slate-700 space-y-4">
+        <!-- Connection Status -->
         <div class="space-y-2">
-          <div class="flex items-center space-x-2 bg-red-900/30 px-3 py-2 rounded-lg border border-red-700/50">
-            <div class="w-2 h-2 rounded-full bg-red-400"></div>
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-red-300">Disconnected</div>
-              <div class="text-xs text-red-400">No cluster connection</div>
+          <Heading level="h3" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Connection
+          </Heading>
+          {#if $connectionState.isConnected}
+            <div class="flex items-center space-x-2 bg-green-900/30 px-3 py-2 rounded-lg border border-green-700/50">
+              <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-green-300 truncate">
+                  {$connectionState.currentContext || 'Kubernetes'}
+                </div>
+                <div class="text-xs text-green-400">Connected</div>
+              </div>
             </div>
-          </div>
-          <Button 
-            onclick={handleRefresh}
-            disabled={isLoading}
-            variant="default"
-            size="sm"
-            className="w-full flex items-center justify-center px-3 py-2 text-xs"
-          >
-            {#if isLoading}
-              <svg class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Connecting...
-            {:else}
-              <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Connect to Cluster
-            {/if}
-          </Button>
-        </div>
-      {/if}
-    </div>
-
-    <!-- Namespace Selector -->
-    {#if $connectionState.isConnected}
-      <div class="space-y-2">
-        <Heading level="h3" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Namespace
-        </Heading>
-        <div class="bg-slate-700/50 rounded-lg p-3">
-          {#if $namespaceState.available.length > 0}
-            <NamespaceSelector 
-              namespaces={$namespaceState.available.map(name => ({ name, status: 'Active', age: '' }))}
-              selectedNamespace={$namespaceState.selected}
-              disabled={!$connectionState.isConnected}
-              variant="sidebar"
-              onNamespaceChange={handleNamespaceChange}
-            />
           {:else}
-            <div class="text-sm text-slate-400">
-              Loading namespaces... ({$namespaceState.available.length} available)
+            <div class="space-y-2">
+              <div class="flex items-center space-x-2 bg-red-900/30 px-3 py-2 rounded-lg border border-red-700/50">
+                <div class="w-2 h-2 rounded-full bg-red-400"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-red-300">Disconnected</div>
+                  <div class="text-xs text-red-400">No cluster connection</div>
+                </div>
+              </div>
+              <Button 
+                onclick={handleRefresh}
+                disabled={isLoading}
+                variant="default"
+                size="sm"
+                className="w-full flex items-center justify-center px-3 py-2 text-xs"
+              >
+                {#if isLoading}
+                  <svg class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Connecting...
+                {:else}
+                  <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Connect to Cluster
+                {/if}
+              </Button>
             </div>
           {/if}
         </div>
-      </div>
-    {/if}
 
-    <!-- Refresh Button - Compact -->
-    {#if $connectionState.isConnected}
-      <div class="pt-1">
-        <Button 
-          variant="ghost"
-          size="sm"
-          onclick={handleRefresh}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center px-3 py-2 text-xs text-slate-400 hover:text-slate-300 hover:bg-slate-700/50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {#if isLoading}
-            <svg class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Refreshing...
-          {:else}
-            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh Context ({$namespaceState.available.length} namespaces)
-                      {/if}
-        </Button>
+        <!-- Namespace Selector -->
+        {#if $connectionState.isConnected}
+          <div class="space-y-2">
+            <Heading level="h3" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Namespace
+            </Heading>
+            <div class="bg-slate-700/50 rounded-lg p-3">
+              {#if $namespaceState.available.length > 0}
+                <NamespaceSelector 
+                  namespaces={$namespaceState.available.map(name => ({ name, status: 'Active', age: '' }))}
+                  selectedNamespace={$namespaceState.selected}
+                  disabled={!$connectionState.isConnected}
+                  variant="sidebar"
+                  onNamespaceChange={handleNamespaceChange}
+                />
+              {:else}
+                <div class="text-sm text-slate-400">
+                  Loading namespaces... ({$namespaceState.available.length} available)
+                </div>
+              {/if}
+            </div>
+          </div>
+        {/if}
+
+        <!-- Refresh Button - Compact -->
+        {#if $connectionState.isConnected}
+          <div class="pt-1">
+            <Button 
+              variant="ghost"
+              size="sm"
+              onclick={handleRefresh}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center px-3 py-2 text-xs text-slate-400 hover:text-slate-300 hover:bg-slate-700/50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if isLoading}
+                <svg class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Refreshing...
+              {:else}
+                <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh Context ({$namespaceState.available.length} namespaces)
+              {/if}
+            </Button>
+          </div>
+        {/if}
+      </Container>
+    {:else}
+      <!-- Collapsed footer - just connection status indicator -->
+      <div class="mt-auto p-2 border-t border-slate-700">
+        {#if $connectionState.isConnected}
+          <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse mx-auto" title="Connected to Kubernetes"></div>
+        {:else}
+          <div class="w-2 h-2 rounded-full bg-red-400 mx-auto" title="Disconnected from Kubernetes"></div>
+        {/if}
       </div>
     {/if}
-  </Container>
-</nav>
+</aside>
