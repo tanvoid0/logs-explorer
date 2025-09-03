@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  const { selectedFramework, disabled } = $props<{
+  const { 
+    selectedFramework, 
+    disabled,
+    onFrameworkChange
+  } = $props<{
     selectedFramework: string | null;
     disabled: boolean;
+    onFrameworkChange?: (framework: string | null) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
   
   let searchQuery = $state("");
   let isDropdownOpen = $state(false);
@@ -77,13 +78,13 @@
 
   function handleFrameworkSelect(framework: string) {
     const newSelection = selectedFramework === framework ? null : framework;
-    dispatch('frameworkChange', { framework: newSelection });
+    onFrameworkChange?.(newSelection);
     isDropdownOpen = false;
     searchQuery = "";
   }
 
   function clearFramework() {
-    dispatch('frameworkChange', { framework: null });
+    onFrameworkChange?.(null);
   }
   
   function toggleDropdown() {

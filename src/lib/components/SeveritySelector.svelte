@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  const { severityFilter, disabled } = $props<{
+  const { 
+    severityFilter, 
+    disabled,
+    onSeverityChange
+  } = $props<{
     severityFilter: string;
     disabled: boolean;
+    onSeverityChange?: (severity: string) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
   
   let isDropdownOpen = $state(false);
   
@@ -19,7 +20,7 @@
   ];
   
   function handleSeveritySelect(severity: string) {
-    dispatch('severityChange', { severity });
+    onSeverityChange?.(severity);
     isDropdownOpen = false;
   }
   

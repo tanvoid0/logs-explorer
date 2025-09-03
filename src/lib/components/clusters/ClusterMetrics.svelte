@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ActionButton } from '$lib/components/ui/action/index.js';
 
   const { 
@@ -10,7 +9,9 @@
     loadBalancers = 0, 
     namespacesCount = 0, 
     isLoading = false, 
-    className = "" 
+    className = "",
+    onViewMetrics,
+    onConfigure
   } = $props<{
     totalPods?: number;
     runningPods?: number;
@@ -20,16 +21,16 @@
     namespacesCount?: number;
     isLoading?: boolean;
     className?: string;
+    onViewMetrics?: () => void;
+    onConfigure?: () => void;
   }>();
 
-  const dispatch = createEventDispatcher();
-
   function handleViewMetrics() {
-    dispatch('viewMetrics');
+    onViewMetrics?.();
   }
 
   function handleConfigure() {
-    dispatch('configure');
+    onConfigure?.();
   }
 </script>
 

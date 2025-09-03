@@ -1,13 +1,18 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Icon from '@iconify/svelte';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
   import Button from '$lib/components/ui/button.svelte';
   import type { SDKManager } from '$lib/types/sdk';
 
-  const { sdkManagers = [], className = "" } = $props<{sdkManagers?: SDKManager[] ; className?: any }>();
-
-  const dispatch = createEventDispatcher();
+  const { 
+    sdkManagers = [], 
+    className = "",
+    onOpenManagerDocs
+  } = $props<{
+    sdkManagers?: SDKManager[];
+    className?: any;
+    onOpenManagerDocs?: (managerName: string) => void;
+  }>();
 
   function getManagerIcon(managerName: string): string {
     const iconMap: Record<string, string> = {
@@ -38,7 +43,7 @@
   }
 
   function handleOpenManagerDocs(managerName: string) {
-    dispatch('openManagerDocs', { managerName });
+    onOpenManagerDocs?.(managerName);
   }
 </script>
 

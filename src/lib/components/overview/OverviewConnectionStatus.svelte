@@ -1,12 +1,23 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { StatusIndicator } from '$lib/components/ui/status/index.js';
   import { ActionButton } from '$lib/components/ui/action/index.js';
   import { Card, CardContent } from '$lib/components/ui/card/index.js';
 
-  const { isConnected = false, currentContext = "", isLoading = false, lastUpdated = new Date(), className = "" } = $props<{isConnected?: any; currentContext?: any; isLoading?: any; lastUpdated?: any; className?: any }>();
-
-  const dispatch = createEventDispatcher();
+  const { 
+    isConnected = false, 
+    currentContext = "", 
+    isLoading = false, 
+    lastUpdated = new Date(), 
+    className = "",
+    onRefresh
+  } = $props<{
+    isConnected?: any;
+    currentContext?: any;
+    isLoading?: any;
+    lastUpdated?: any;
+    className?: any;
+    onRefresh?: () => void;
+  }>();
 
   function formatTimeAgo(date: Date): string {
     const now = new Date();
@@ -19,7 +30,7 @@
   }
 
   function handleRefresh() {
-    dispatch('refresh');
+    onRefresh?.();
   }
 </script>
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
   import NamespaceSelector from "$lib/components/NamespaceSelector.svelte";
   import DeploymentSelector from "./DeploymentSelector.svelte";
@@ -8,7 +7,61 @@ import SeveritySelector from "./SeveritySelector.svelte";
 import TimeFilter from "./TimeFilter.svelte";
   import type { K8sNamespace, K8sDeployment, K8sPod } from "$lib/types/k8s";
   
-  const { namespaces = [], deployments = [], pods = [], selectedNamespace: initialSelectedNamespace = "", selectedDeployments: initialSelectedDeployments = [], selectedPods: initialSelectedPods = [], searchQuery: initialSearchQuery = "", severityFilter: initialSeverityFilter = "", traceIdFilter: initialTraceIdFilter = "", startTime: initialStartTime = null, endTime: initialEndTime = null, pinnedStartLog = null, pinnedEndLog = null, isLiveMode: initialIsLiveMode = false, isStaticMode: initialIsStaticMode = true, logsLoading = false, isConnected = false } = $props<{namespaces?: K8sNamespace[] ; deployments?: K8sDeployment[] ; pods?: K8sPod[] ; selectedNamespace?: string ; selectedDeployments?: string[] ; selectedPods?: string[] ; searchQuery?: string ; severityFilter?: string ; traceIdFilter?: string ; startTime?: string | null ; endTime?: string | null ; pinnedStartLog?: string | null ; pinnedEndLog?: string | null ; isLiveMode?: boolean ; isStaticMode?: boolean ; logsLoading?: boolean ; isConnected?: boolean  }>();
+  const { 
+    namespaces = [], 
+    deployments = [], 
+    pods = [], 
+    selectedNamespace: initialSelectedNamespace = "", 
+    selectedDeployments: initialSelectedDeployments = [], 
+    selectedPods: initialSelectedPods = [], 
+    searchQuery: initialSearchQuery = "", 
+    severityFilter: initialSeverityFilter = "", 
+    traceIdFilter: initialTraceIdFilter = "", 
+    startTime: initialStartTime = null, 
+    endTime: initialEndTime = null, 
+    pinnedStartLog = null, 
+    pinnedEndLog = null, 
+    isLiveMode: initialIsLiveMode = false, 
+    isStaticMode: initialIsStaticMode = true, 
+    logsLoading = false, 
+    isConnected = false,
+    onDeploymentsChange,
+    onPodsChange,
+    onSearch,
+    onSeverityChange,
+    onTraceIdChange,
+    onTimeChange,
+    onPinStartTime,
+    onPinEndTime,
+    onModeChange
+  } = $props<{
+    namespaces?: K8sNamespace[]; 
+    deployments?: K8sDeployment[]; 
+    pods?: K8sPod[]; 
+    selectedNamespace?: string; 
+    selectedDeployments?: string[]; 
+    selectedPods?: string[]; 
+    searchQuery?: string; 
+    severityFilter?: string; 
+    traceIdFilter?: string; 
+    startTime?: string | null; 
+    endTime?: string | null; 
+    pinnedStartLog?: string | null; 
+    pinnedEndLog?: string | null; 
+    isLiveMode?: boolean; 
+    isStaticMode?: boolean; 
+    logsLoading?: boolean; 
+    isConnected?: boolean;
+    onDeploymentsChange?: (deployments: string[]) => void;
+    onPodsChange?: (pods: string[]) => void;
+    onSearch?: () => void;
+    onSeverityChange?: (severity: string) => void;
+    onTraceIdChange?: (traceId: string) => void;
+    onTimeChange?: (startTime: string | null, endTime: string | null) => void;
+    onPinStartTime?: () => void;
+    onPinEndTime?: () => void;
+    onModeChange?: (isLiveMode: boolean, isStaticMode: boolean) => void;
+  }>();
 
   let selectedNamespace = $state(initialSelectedNamespace);
   let selectedDeployments = $state(initialSelectedDeployments);
@@ -21,72 +74,70 @@ import TimeFilter from "./TimeFilter.svelte";
   let isLiveMode = $state(initialIsLiveMode);
   let isStaticMode = $state(initialIsStaticMode);
   
-  const dispatch = createEventDispatcher();
-  
   // Removed handleNamespaceChange since we don't have namespace selector anymore
   
-  function handleDeploymentsChange(event: CustomEvent<{deployments: string[]}>) {
-    selectedDeployments = event.detail.deployments;
-    dispatch('deploymentsChange', { deployments: selectedDeployments });
+  function handleDeploymentsChange(deployments: string[]) {
+    selectedDeployments = deployments;
+    onDeploymentsChange?.(selectedDeployments);
   }
   
-  function handlePodsChange(event: CustomEvent<{pods: string[]}>) {
-    selectedPods = event.detail.pods;
-    dispatch('podsChange', { pods: selectedPods });
+  function handlePodsChange(pods: string[]) {
+    selectedPods = pods;
+    onPodsChange?.(selectedPods);
   }
   
   function handleSearch() {
-    dispatch('search');
+    onSearch?.();
   }
   
   function handleSeverityChange(data: {severity: string}) {
     severityFilter = data.severity;
-    dispatch('severityChange', { severity: severityFilter });
+    onSeverityChange?.(severityFilter);
   }
   
   function handleTraceIdChange() {
-    dispatch('traceIdChange', { traceId: traceIdFilter });
+    onTraceIdChange?.(traceIdFilter);
   }
   
   function clearTraceIdFilter() {
     traceIdFilter = "";
-    dispatch('traceIdChange', { traceId: "" });
+    onTraceIdChange?.("");
   }
 
   function clearDeploymentFilter(deploymentName: string) {
     selectedDeployments = selectedDeployments.filter((d: string) => d !== deploymentName);
-    dispatch('deploymentsChange', { deployments: selectedDeployments });
+    onDeploymentsChange?.(selectedDeployments);
   }
 
   function clearAllDeploymentFilters() {
     selectedDeployments = [];
-    dispatch('deploymentsChange', { deployments: [] });
+    onDeploymentsChange?.([]);
   }
   
   function toggleLiveMode() {
     isLiveMode = !isLiveMode;
     isStaticMode = !isLiveMode;
-    dispatch('modeChange', { isLiveMode, isStaticMode });
+    onModeChange?.(isLiveMode, isStaticMode);
   }
   
   function toggleStaticMode() {
     isStaticMode = !isStaticMode;
     isLiveMode = !isStaticMode;
-    dispatch('modeChange', { isLiveMode, isStaticMode });
+    onModeChange?.(isLiveMode, isStaticMode);
   }
 
-  function handleTimeChange(event: CustomEvent<{startTime: string | null, endTime: string | null}>) {
-    startTime = event.detail.startTime;
-    endTime = event.detail.endTime;
-    dispatch('timeChange', { startTime, endTime });
+  function handleTimeChange(newStartTime: string | null, newEndTime: string | null) {
+    startTime = newStartTime;
+    endTime = newEndTime;
+    onTimeChange?.(startTime, endTime);
   }
 
   function handlePinStartTime() {
-    dispatch('pinStartTime');
+    onPinStartTime?.();
   }
 
   function handlePinEndTime() {
-    dispatch('pinEndTime');
+    onPinEndTime?.();
   }
 </script>
 
@@ -112,7 +163,7 @@ import TimeFilter from "./TimeFilter.svelte";
               {deployments}
               {selectedDeployments}
               disabled={!isConnected}
-              on:deploymentsChange={handleDeploymentsChange}
+              onDeploymentsChange={handleDeploymentsChange}
             />
           </div>
         </div>
@@ -126,7 +177,7 @@ import TimeFilter from "./TimeFilter.svelte";
               {pods}
               {selectedPods}
               disabled={!isConnected}
-              on:podsChange={handlePodsChange}
+              onPodsChange={handlePodsChange}
             />
           </div>
         </div>
@@ -152,9 +203,9 @@ import TimeFilter from "./TimeFilter.svelte";
           {pinnedStartLog}
           {pinnedEndLog}
           disabled={!isConnected}
-          on:timeChange={handleTimeChange}
-          on:pinStartTime={handlePinStartTime}
-          on:pinEndTime={handlePinEndTime}
+          onTimeChange={handleTimeChange}
+          onPinStartTime={handlePinStartTime}
+          onPinEndTime={handlePinEndTime}
         />
       </div>
     {/if}

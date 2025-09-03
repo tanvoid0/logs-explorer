@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ModalBuilder } from '$lib/components/ui/modal/index.js';
   import { FormBuilder } from '$lib/components/ui/form-enhanced/index.js';
   import type { Framework } from '$lib/api/frameworks';
@@ -9,16 +8,18 @@
     editingFramework = null,
     categories = [],
     loading = false,
-    className = ""
+    className = "",
+    onClose,
+    onSave
   } = $props<{
     isOpen?: boolean;
     editingFramework?: Framework | null;
     categories?: string[];
     loading?: boolean;
     className?: string;
+    onClose?: () => void;
+    onSave?: (values: Record<string, any>, isEditing: boolean) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   let formValues = $state({
     name: '',
@@ -108,20 +109,20 @@
   });
 
   function handleClose() {
-    dispatch('close');
+    onClose?.();
   }
 
   function handleAction(event: CustomEvent) {
     const { action } = event.detail;
     if (action === 'save') {
-      dispatch('save', { values: formValues, isEditing: !!editingFramework });
+      onSave?.(formValues, !!editingFramework);
     } else if (action === 'cancel') {
       handleClose();
     }
   }
 
   function handleFormSubmit(values: Record<string, any>) {
-    dispatch('save', { values, isEditing: !!editingFramework });
+    onSave?.(values, !!editingFramework);
   }
 </script>
 

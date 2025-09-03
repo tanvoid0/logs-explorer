@@ -1,12 +1,19 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Icon from '@iconify/svelte';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
   import Button from '$lib/components/ui/button.svelte';
 
-  const { installedSDKsByType = {}, className = "" } = $props<{installedSDKsByType?: Record<string, any[]> ; className?: any }>();
-
-  const dispatch = createEventDispatcher();
+  const { 
+    installedSDKsByType = {}, 
+    className = "",
+    onInstallSDK,
+    onUninstallSDK
+  } = $props<{
+    installedSDKsByType?: Record<string, any[]>;
+    className?: any;
+    onInstallSDK?: (sdkName: string) => void;
+    onUninstallSDK?: (sdkName: string) => void;
+  }>();
 
   function getSDKIcon(sdkName: string): string {
     const iconMap: Record<string, string> = {
@@ -48,11 +55,11 @@
   }
 
   function handleInstallSDK(sdkName: string) {
-    dispatch('installSDK', { sdkName });
+    onInstallSDK?.(sdkName);
   }
 
   function handleUninstallSDK(sdkName: string) {
-    dispatch('uninstallSDK', { sdkName });
+    onUninstallSDK?.(sdkName);
   }
 </script>
 

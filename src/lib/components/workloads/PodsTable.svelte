@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { EmptyState } from '$lib/components/ui/display/index.js';
   import Table from "$lib/components/ui/table.svelte";
   import TableHeader from "$lib/components/ui/table-header.svelte";
@@ -14,16 +13,24 @@
     filteredPods = [], 
     hasFilters = false, 
     selectedNamespace = "", 
-    className = "" 
+    className = "",
+    onViewPod,
+    onViewLogs,
+    onCopyPodName,
+    onExecuteCommand,
+    onDeletePod
   } = $props<{
     pods?: K8sPod[];
     filteredPods?: K8sPod[];
     hasFilters?: boolean;
     selectedNamespace?: string;
     className?: string;
+    onViewPod?: (pod: K8sPod) => void;
+    onViewLogs?: (pod: K8sPod) => void;
+    onCopyPodName?: (pod: K8sPod) => void;
+    onExecuteCommand?: (pod: K8sPod) => void;
+    onDeletePod?: (pod: K8sPod) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   function getStatusColor(status: string): string {
     switch (status.toLowerCase()) {
@@ -41,23 +48,23 @@
   }
 
   function handleViewPod(pod: K8sPod) {
-    dispatch('viewPod', { pod });
+    onViewPod?.(pod);
   }
 
   function handleViewLogs(pod: K8sPod) {
-    dispatch('viewLogs', { pod });
+    onViewLogs?.(pod);
   }
 
   function handleCopyPodName(pod: K8sPod) {
-    dispatch('copyPodName', { pod });
+    onCopyPodName?.(pod);
   }
 
   function handleExecuteCommand(pod: K8sPod) {
-    dispatch('executeCommand', { pod });
+    onExecuteCommand?.(pod);
   }
 
   function handleDeletePod(pod: K8sPod) {
-    dispatch('deletePod', { pod });
+    onDeletePod?.(pod);
   }
 </script>
 

@@ -291,6 +291,52 @@ export const taskActions = {
 
   updatePriority: async (id: string, priority: 'low' | 'medium' | 'high'): Promise<void> => {
     return taskActions.update(id, { priority });
+  },
+
+  toggleStatus: async (id: string): Promise<void> => {
+    try {
+      const currentTask = get(tasks).find(task => task.id === id);
+      if (!currentTask) {
+        logger.error('Task not found for status toggle', { taskId: id });
+        return;
+      }
+
+      // Cycle through statuses: pending -> in-progress -> completed -> pending
+      const statusOrder: TaskStatus[] = ['pending', 'in-progress', 'completed'];
+      const currentIndex = statusOrder.indexOf(currentTask.status);
+      const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+
+      await taskActions.updateStatus(id, nextStatus);
+      logger.info('Task status toggled successfully', { taskId: id, newStatus: nextStatus });
+    } catch (error) {
+      logger.error('Failed to toggle task status', error as Error, { taskId: id });
+      throw new Error('Failed to toggle task status');
+    }
+  },
+
+  addSubtask: async (parentId: string, title: string, description: string): Promise<Task> => {
+    try {
+      logger.info('Adding subtask via database', { parentId, title, description });
+      
+      const newSubtask = await getTaskService().createTask({
+        title,
+        description,
+        status: 'pending',
+        priority: 'medium',
+        parentId
+      });
+      
+      // Update local store to add subtask to parent
+      tasks.update(taskList => updateTaskInList(taskList, parentId, {
+        subtasks: [...(get(tasks).find(t => t.id === parentId)?.subtasks || []), newSubtask]
+      }));
+      
+      logger.info('Subtask added successfully', { subtaskId: newSubtask.id, parentId, title });
+      return newSubtask;
+    } catch (error) {
+      logger.error('Failed to add subtask', error as Error, { parentId, title, description });
+      throw new Error('Failed to add subtask');
+    }
   }
 };
 

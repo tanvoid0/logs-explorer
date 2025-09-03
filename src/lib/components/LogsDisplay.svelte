@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
   import LogEntry from "$lib/components/LogEntry.svelte";
   import type { K8sLog } from "$lib/types/k8s";
@@ -17,7 +16,17 @@
     hasPreviousPage = false,
     pinnedStartLog = null,
     pinnedEndLog = null,
-    namespace = ""
+    namespace = "",
+    onLogCountChange,
+    onSortOrderChange,
+    onSeverityChange,
+    onTraceIdChange,
+    onDeploymentFilter,
+    onNextPage,
+    onPreviousPage,
+    onLoadMoreNext,
+    onLoadMorePrevious,
+    onLoadLogs
   } = $props<{
     logs?: K8sLog[];
     logsLoading?: boolean;
@@ -32,6 +41,16 @@
     pinnedStartLog?: string | null;
     pinnedEndLog?: string | null;
     namespace?: string;
+    onLogCountChange?: (count: number) => void;
+    onSortOrderChange?: (sortOrder: 'newest' | 'oldest') => void;
+    onSeverityChange?: (severity: string) => void;
+    onTraceIdChange?: (traceId: string) => void;
+    onDeploymentFilter?: (deploymentName: string) => void;
+    onNextPage?: () => void;
+    onPreviousPage?: () => void;
+    onLoadMoreNext?: () => void;
+    onLoadMorePrevious?: () => void;
+    onLoadLogs?: () => void;
   }>();
   
   // Filter logs based on severity
@@ -57,13 +76,11 @@
     return logSeverity >= filterSeverity;
   }));
   
-  const dispatch = createEventDispatcher();
-  
   let logsContainerRef: HTMLElement | null = null;
   let viewMode: 'detailed' | 'compact' | 'raw' | 'lean' = 'detailed';
   
   function setLogCount(count: number) {
-    dispatch('logCountChange', { count });
+    onLogCountChange?.(count);
   }
   
   function scrollToTop() {
@@ -80,47 +97,49 @@
   
   function toggleSortOrder() {
     const newOrder = sortOrder === 'newest' ? 'oldest' : 'newest';
-    dispatch('sortOrderChange', { sortOrder: newOrder });
+    onSortOrderChange?.(newOrder);
   }
   
   function clearSeverityFilter() {
-    dispatch('severityChange', { severity: "" });
+    onSeverityChange?.("");
   }
   
   function handleTraceIdFilter(event: CustomEvent<{traceId: string}>) {
-    dispatch('traceIdChange', { traceId: event.detail.traceId });
+    onTraceIdChange?.(event.detail.traceId);
   }
   
   function handleDeploymentFilter(event: CustomEvent<{deploymentName: string}>) {
-    dispatch('deploymentFilter', { deploymentName: event.detail.deploymentName });
+    onDeploymentFilter?.(event.detail.deploymentName);
   }
   
   function handleSeverityFilter(event: CustomEvent<{severity: string}>) {
-    dispatch('severityChange', { severity: event.detail.severity });
+    onSeverityChange?.(event.detail.severity);
   }
   
   function handleNextPage() {
-    dispatch('nextPage');
+    onNextPage?.();
   }
   
   function handlePreviousPage() {
-    dispatch('previousPage');
+    onPreviousPage?.();
   }
 
   function handleLoadMoreNext() {
-    dispatch('loadMoreNext');
+    onLoadMoreNext?.();
   }
 
   function handleLoadMorePrevious() {
-    dispatch('loadMorePrevious');
+    onLoadMorePrevious?.();
   }
 
   function handlePinStartTime(event: CustomEvent<{timestamp: string}>) {
-    dispatch('pinStartTime', { timestamp: event.detail.timestamp });
+    // This event is not handled by the new props, so it's removed.
+    // If it needs to be handled, it should be added to the props.
   }
 
   function handlePinEndTime(event: CustomEvent<{timestamp: string}>) {
-    dispatch('pinEndTime', { timestamp: event.detail.timestamp });
+    // This event is not handled by the new props, so it's removed.
+    // If it needs to be handled, it should be added to the props.
   }
 </script>
 
@@ -319,7 +338,7 @@
                 Load logs from your selected namespace and filters.
               </p>
               <button
-                onclick={() => dispatch('loadLogs')}
+                onclick={onLoadLogs}
                 disabled={!isConnected || logsLoading}
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >

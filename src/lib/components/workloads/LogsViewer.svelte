@@ -1,15 +1,12 @@
 <script lang="ts">
   import { logger } from '$lib/utils/logger';
   import { onMount } from 'svelte';
-  import { createEventDispatcher } from 'svelte';
   import { k8sAPI, type K8sNamespace, type K8sDeployment, type K8sLog, type K8sPod } from '$lib/api/k8s';
   import { appStore, namespaceState } from '$lib/stores/app-store';
   import { connectionState } from '$lib/stores/app-store';
   import { toastStore } from '$lib/stores/toast-store';
   import LogsDisplay from "$lib/components/LogsDisplay.svelte";
   import LogsSearchPanel from "$lib/components/LogsSearchPanel.svelte";
-
-  const dispatch = createEventDispatcher();
 
   // Props for configuring the logs viewer
   let { 
@@ -23,7 +20,9 @@
     defaultTraceIdFilter = "",
     defaultLogCount = 100,
     defaultSortOrder = 'newest' as 'newest' | 'oldest',
-    showNamespaceLabel = true
+    showNamespaceLabel = true,
+    onPinStartTime,
+    onPinEndTime
   } = $props<{
     title?: string;
     description?: string;
@@ -36,6 +35,8 @@
     defaultLogCount?: number;
     defaultSortOrder?: 'newest' | 'oldest';
     showNamespaceLabel?: boolean;
+    onPinStartTime?: () => void;
+    onPinEndTime?: () => void;
   }>();
 
   // Data state
@@ -229,12 +230,12 @@
 
   function handlePinStartTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinStartTime');
+    onPinStartTime?.();
   }
 
   function handlePinEndTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinEndTime');
+    onPinEndTime?.();
   }
 
   function sortLogs(logsToSort: K8sLog[]) {

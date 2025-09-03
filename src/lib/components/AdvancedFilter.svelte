@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from '$lib/components/ui/button.svelte';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
   import { Input } from '$lib/components/ui/form/index.js';
@@ -19,17 +18,19 @@
     enabled: boolean;
   }
 
-  const { filterGroups: initialFilterGroups = [] } = $props<{
+  const { 
+    filterGroups: initialFilterGroups = [],
+    onFiltersChange,
+    onApplyFilters,
+    onClearFilters
+  } = $props<{
     filterGroups?: FilterGroup[];
+    onFiltersChange?: (filters: FilterGroup[]) => void;
+    onApplyFilters?: (filters: FilterGroup[]) => void;
+    onClearFilters?: () => void;
   }>();
   
   let filterGroups = $state<FilterGroup[]>(initialFilterGroups);
-
-  const dispatch = createEventDispatcher<{
-    filtersChange: FilterGroup[];
-    applyFilters: FilterGroup[];
-    clearFilters: void;
-  }>();
 
   // Available fields for filtering
   const availableFields = [
@@ -89,12 +90,12 @@
     };
     
     filterGroups = [...filterGroups, newGroup];
-    dispatch('filtersChange', filterGroups);
+    onFiltersChange?.(filterGroups);
   }
 
   function removeFilterGroup(groupId: string) {
     filterGroups = filterGroups.filter(group => group.id !== groupId);
-    dispatch('filtersChange', filterGroups);
+    onFiltersChange?.(filterGroups);
   }
 
   function addCondition(groupId: string) {
@@ -113,7 +114,7 @@
       }
       return group;
     });
-    dispatch('filtersChange', filterGroups);
+    onFiltersChange?.(filterGroups);
   }
 
   function removeCondition(groupId: string, conditionId: string) {
@@ -126,7 +127,7 @@
       }
       return group;
     });
-    dispatch('filtersChange', filterGroups);
+    onFiltersChange?.(filterGroups);
   }
 
   function updateCondition(groupId: string, conditionId: string, updates: Partial<FilterCondition>) {
@@ -144,7 +145,7 @@
       }
       return group;
     });
-    dispatch('filtersChange', filterGroups);
+    onFiltersChange?.(filterGroups);
   }
 
   function updateFilterGroup(groupId: string, updates: Partial<FilterGroup>) {
@@ -154,16 +155,16 @@
       }
       return group;
     });
-    dispatch('filtersChange', filterGroups);
+    onFiltersChange?.(filterGroups);
   }
 
   function clearAllFilters() {
     filterGroups = [];
-    dispatch('clearFilters');
+    onClearFilters?.();
   }
 
   function applyFilters() {
-    dispatch('applyFilters', filterGroups);
+    onApplyFilters?.(filterGroups);
   }
 
   function getFieldType(fieldName: string) {

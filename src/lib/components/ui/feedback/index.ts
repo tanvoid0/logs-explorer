@@ -1,4 +1,14 @@
 export { default as Alert } from './alert.svelte';
+export { default as Avatar } from './avatar.svelte';
 export { default as Badge } from './badge.svelte';
+export { default as Divider } from './divider.svelte';
+export { default as Icon } from './icon.svelte';
+export { default as Notification } from './notification.svelte';
+export { default as Progress } from './progress.svelte';
+export { default as Status } from './status.svelte';
 export { default as Toast } from './toast.svelte';
 export { default as ToastContainer } from './toast-container.svelte';
+export { default as Tooltip } from './tooltip.svelte';
+export { default as Skeleton } from './skeleton.svelte';
+export { default as ConfirmationDialog } from './confirmation-dialog.svelte';
+export { default as Accordion } from './accordion.svelte';

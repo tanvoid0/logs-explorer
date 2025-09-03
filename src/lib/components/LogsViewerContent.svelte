@@ -5,11 +5,8 @@
   import LogsSearchPanel from '$lib/components/LogsSearchPanel.svelte';
   import LogsDisplay from '$lib/components/LogsDisplay.svelte';
   import AdvancedSearchPanel from '$lib/components/AdvancedSearchPanel.svelte';
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
   import { toastStore } from '$lib/stores/toast-store';
-
-  const dispatch = createEventDispatcher();
 
   // Props
   let {
@@ -17,8 +14,26 @@
     title = "Logs",
     description = "View and filter logs",
     defaultNamespace = "",
-    showNamespaceLabel = true
-  } = $props();
+    showNamespaceLabel = true,
+    onPinStartTime,
+    onPinEndTime,
+    onDeploymentsChange,
+    onPodsChange,
+    onSeverityChange,
+    onTraceIdChange
+  } = $props<{
+    defaultPods?: string[];
+    title?: string;
+    description?: string;
+    defaultNamespace?: string;
+    showNamespaceLabel?: boolean;
+    onPinStartTime?: () => void;
+    onPinEndTime?: () => void;
+    onDeploymentsChange?: (deployments: string[]) => void;
+    onPodsChange?: (pods: string[]) => void;
+    onSeverityChange?: (severity: string) => void;
+    onTraceIdChange?: (traceId: string) => void;
+  }>();
 
   // State
   let logs = $state<K8sLog[]>([]);
@@ -167,26 +182,30 @@
   // Event handlers
   function handleDeploymentsChange(event: CustomEvent<{deployments: string[]}>) {
     selectedDeployments = event.detail.deployments;
+    onDeploymentsChange?.(selectedDeployments);
     loadLogs(1); // Reset to first page when filters change
   }
 
   function handlePodsChange(event: CustomEvent<{pods: string[]}>) {
     selectedPods = event.detail.pods;
+    onPodsChange?.(selectedPods);
     loadLogs(1); // Reset to first page when filters change
   }
 
-  function handleSearch(event: CustomEvent<{query: string}>) {
-    searchQuery = event.detail.query;
+  function handleSearch(query: string) {
+    searchQuery = query;
     loadLogs(1); // Reset to first page when filters change
   }
 
   function handleSeverityChange(event: CustomEvent<{severity: string}>) {
     severityFilter = event.detail.severity;
+    onSeverityChange?.(severityFilter);
     loadLogs(1); // Reset to first page when filters change
   }
 
   function handleTraceIdChange(event: CustomEvent<{traceId: string}>) {
     traceIdFilter = event.detail.traceId;
+    onTraceIdChange?.(traceIdFilter);
     loadLogs(1); // Reset to first page when filters change
   }
 
@@ -210,12 +229,12 @@
 
   function handlePinStartTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinStartTime');
+    onPinStartTime?.();
   }
 
   function handlePinEndTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinEndTime');
+    onPinEndTime?.();
   }
 
   function handleNextPage() {
@@ -245,13 +264,13 @@
     }
   }
 
-  function handleLogCountChange(event: CustomEvent<{count: number}>) {
-    logCount = event.detail.count;
+  function handleLogCountChange(count: number) {
+    logCount = count;
     loadLogs();
   }
 
-  function handleSortOrderChange(event: CustomEvent<{sortOrder: 'newest' | 'oldest'}>) {
-    sortOrder = event.detail.sortOrder;
+  function handleSortOrderChange(sortOrderValue: 'newest' | 'oldest') {
+    sortOrder = sortOrderValue;
     logs = sortLogs([...logs]);
   }
 
@@ -268,15 +287,14 @@
     });
   }
 
-  function handleDeploymentFilter(event: CustomEvent<{deploymentName: string}>) {
-    const deploymentName = event.detail.deploymentName;
+  function handleDeploymentFilter(deploymentName: string) {
     if (!selectedDeployments.includes(deploymentName)) {
       selectedDeployments = [...selectedDeployments, deploymentName];
     }
   }
 
-  function handleSeverityFilter(event: CustomEvent<{severity: string}>) {
-    severityFilter = event.detail.severity;
+  function handleSeverityFilter(severity: string) {
+    severityFilter = severity;
   }
 </script>
 
@@ -324,10 +342,10 @@
                   severityFilter = "";
                   traceIdFilter = "";
                   searchQuery = "";
-                  dispatch('deploymentsChange', { deployments: [] });
-                  dispatch('podsChange', { pods: [] });
-                  dispatch('severityChange', { severity: "" });
-                  dispatch('traceIdChange', { traceId: "" });
+                  onDeploymentsChange?.([]);
+                  onPodsChange?.([]);
+                  onSeverityChange?.("");
+                  onTraceIdChange?.("");
                 }}
                 class="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
               >
@@ -356,7 +374,7 @@
                   <button
                     onclick={() => {
                       selectedDeployments = selectedDeployments.filter(d => d !== deployment);
-                      dispatch('deploymentsChange', { deployments: selectedDeployments });
+                      onDeploymentsChange?.(selectedDeployments);
                     }}
                     class="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                   >
@@ -375,7 +393,7 @@
                   <button
                     onclick={() => {
                       selectedPods = selectedPods.filter(p => p !== pod);
-                      dispatch('podsChange', { pods: selectedPods });
+                      onPodsChange?.(selectedPods);
                     }}
                     class="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200"
                   >
@@ -394,7 +412,7 @@
                   <button
                     onclick={() => {
                       severityFilter = "";
-                      dispatch('severityChange', { severity: "" });
+                      onSeverityChange?.("");
                     }}
                     class="ml-1 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200"
                   >
@@ -413,7 +431,7 @@
                   <button
                     onclick={() => {
                       traceIdFilter = "";
-                      dispatch('traceIdChange', { traceId: "" });
+                      onTraceIdChange?.("");
                     }}
                     class="ml-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200"
                   >
@@ -454,7 +472,7 @@
             bind:searchQuery
             {isConnected}
             {logsLoading}
-            on:search={handleSearch}
+            onSearch={handleSearch}
           />
 
           <!-- Log Filters Card -->
@@ -492,27 +510,27 @@
       <div class="flex-1 min-w-0">
         <!-- Logs Display -->
         <div>
-          <LogsDisplay
-            {logs}
-            {logsLoading}
-            {logsLoadingMore}
-            {isConnected}
-            {logCount}
-            {sortOrder}
-            {traceIdFilter}
-            {severityFilter}
-            {hasNextPage}
-            {hasPreviousPage}
-            namespace={currentNamespace}
-            on:logCountChange={handleLogCountChange}
-            on:sortOrderChange={handleSortOrderChange}
-            on:severityChange={handleSeverityChange}
-            on:nextPage={handleNextPage}
-            on:previousPage={handlePreviousPage}
-            on:loadMoreNext={handleLoadMoreNext}
-            on:loadMorePrevious={handleLoadMorePrevious}
-            on:loadLogs={() => loadLogs(1)}
-          />
+                  <LogsDisplay
+          {logs}
+          {logsLoading}
+          {logsLoadingMore}
+          {isConnected}
+          {logCount}
+          {sortOrder}
+          {traceIdFilter}
+          {severityFilter}
+          {hasNextPage}
+          {hasPreviousPage}
+          namespace={currentNamespace}
+          onLogCountChange={handleLogCountChange}
+          onSortOrderChange={handleSortOrderChange}
+          onSeverityChange={handleSeverityChange}
+          onNextPage={handleNextPage}
+          onPreviousPage={handlePreviousPage}
+          onLoadMoreNext={handleLoadMoreNext}
+          onLoadMorePrevious={handleLoadMorePrevious}
+          onLoadLogs={() => loadLogs(1)}
+        />
         </div>
       </div>
     </div>

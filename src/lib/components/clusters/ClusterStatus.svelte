@@ -1,14 +1,21 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { StatusIndicator } from '$lib/components/ui/status/index.js';
   import { ActionButton } from '$lib/components/ui/action/index.js';
 
-  const { isConnected = false, isConnecting = false, currentContext = "", clusterHealth = {
-    apiServer: 'unknown',
-    scheduler: 'unknown',
-    controllerManager: 'unknown',
-    etcd: 'unknown'
-  }, className = "" } = $props<{
+  const { 
+    isConnected = false, 
+    isConnecting = false, 
+    currentContext = "", 
+    clusterHealth = {
+      apiServer: 'unknown',
+      scheduler: 'unknown',
+      controllerManager: 'unknown',
+      etcd: 'unknown'
+    }, 
+    className = "",
+    onConnect,
+    onRefresh
+  } = $props<{
     isConnected?: boolean;
     isConnecting?: boolean;
     currentContext?: string;
@@ -19,9 +26,9 @@
       etcd: string;
     };
     className?: string;
+    onConnect?: () => void;
+    onRefresh?: () => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   function getHealthStatus(status: string) {
     switch (status) {
@@ -42,11 +49,11 @@
   }
 
   function handleConnect() {
-    dispatch('connect');
+    onConnect?.();
   }
 
   function handleRefresh() {
-    dispatch('refresh');
+    onRefresh?.();
   }
 </script>
 

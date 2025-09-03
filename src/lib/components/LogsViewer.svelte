@@ -1,14 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { createEventDispatcher } from 'svelte';
   import { k8sAPI, type K8sNamespace, type K8sDeployment, type K8sLog, type K8sPod } from '$lib/api/k8s';
   import { appStore, namespaceState } from '$lib/stores/app-store';
   import { connectionState } from '$lib/stores/app-store';
   import { toastStore } from '$lib/stores/toast-store';
   import LogsDisplay from "$lib/components/LogsDisplay.svelte";
   import LogsSearchPanel from "$lib/components/LogsSearchPanel.svelte";
-
-  const dispatch = createEventDispatcher();
 
   // Props for configuring the logs viewer
   let { 
@@ -22,7 +19,9 @@
     defaultTraceIdFilter = "",
     defaultLogCount = 100,
     defaultSortOrder = 'newest' as 'newest' | 'oldest',
-    showNamespaceLabel = true
+    showNamespaceLabel = true,
+    onPinStartTime,
+    onPinEndTime
   } = $props<{
     title?: string;
     description?: string;
@@ -35,6 +34,8 @@
     defaultLogCount?: number;
     defaultSortOrder?: 'newest' | 'oldest';
     showNamespaceLabel?: boolean;
+    onPinStartTime?: () => void;
+    onPinEndTime?: () => void;
   }>();
 
   // Data state
@@ -187,13 +188,13 @@
     severityFilter = event.detail.severity;
   }
 
-  function handleTraceIdChange(event: CustomEvent<{traceId: string}>) {
-    traceIdFilter = event.detail.traceId;
+  function handleTraceIdChange(traceId: string) {
+    traceIdFilter = traceId;
   }
 
-  function handleModeChange(event: CustomEvent<{isLiveMode: boolean, isStaticMode: boolean}>) {
-    isLiveMode = event.detail.isLiveMode;
-    isStaticMode = event.detail.isStaticMode;
+  function handleModeChange(isLiveModeValue: boolean, isStaticModeValue: boolean) {
+    isLiveMode = isLiveModeValue;
+    isStaticMode = isStaticModeValue;
     
     if (isLiveMode) {
       refreshInterval = setInterval(() => {
@@ -210,30 +211,30 @@
     }
   }
 
-  function handleLogCountChange(event: CustomEvent<{count: number}>) {
-    logCount = event.detail.count;
+  function handleLogCountChange(count: number) {
+    logCount = count;
     loadLogs();
   }
 
-  function handleSortOrderChange(event: CustomEvent<{sortOrder: 'newest' | 'oldest'}>) {
-    sortOrder = event.detail.sortOrder;
+  function handleSortOrderChange(sortOrderValue: 'newest' | 'oldest') {
+    sortOrder = sortOrderValue;
     logs = sortLogs([...logs]);
   }
 
-  function handleTimeChange(event: CustomEvent<{startTime: string | null, endTime: string | null}>) {
-    startTime = event.detail.startTime;
-    endTime = event.detail.endTime;
+  function handleTimeChange(startTimeValue: string | null, endTimeValue: string | null) {
+    startTime = startTimeValue;
+    endTime = endTimeValue;
     loadLogs();
   }
 
   function handlePinStartTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinStartTime');
+    onPinStartTime?.();
   }
 
   function handlePinEndTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinEndTime');
+    onPinEndTime?.();
   }
 
   function sortLogs(logsToSort: K8sLog[]) {
@@ -249,8 +250,7 @@
     });
   }
 
-  function handleDeploymentFilter(event: CustomEvent<{deploymentName: string}>) {
-    const deploymentName = event.detail.deploymentName;
+  function handleDeploymentFilter(deploymentName: string) {
     if (!selectedDeployments.includes(deploymentName)) {
       selectedDeployments = [...selectedDeployments, deploymentName];
     }
@@ -352,11 +352,11 @@
           {traceIdFilter}
           {severityFilter}
           namespace={currentNamespace}
-          on:logCountChange={handleLogCountChange}
-          on:sortOrderChange={handleSortOrderChange}
-          on:traceIdChange={handleTraceIdChange}
-          on:deploymentFilter={handleDeploymentFilter}
-          on:severityChange={handleSeverityChange}
+          onLogCountChange={handleLogCountChange}
+          onSortOrderChange={handleSortOrderChange}
+          onTraceIdChange={handleTraceIdChange}
+          onDeploymentFilter={handleDeploymentFilter}
+          onSeverityChange={handleSeverityChange}
         />
       {/if}
     </div>

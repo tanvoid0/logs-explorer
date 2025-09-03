@@ -1,16 +1,37 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ActionButton } from '$lib/components/ui/action/index.js';
 
-  const { title = "", icon = "", total = 0, metrics = [], description = "", actionLabel = "", actionRoute = "", isLoading = false, className = "" } = $props<{title?: any; icon?: any; total?: any; metrics?: Array<{ label: string; value: number; color: string }> ; description?: any; actionLabel?: any; actionRoute?: any; isLoading?: any; className?: any }>();
-
-  const dispatch = createEventDispatcher();
+  const { 
+    title = "", 
+    icon = "", 
+    total = 0, 
+    metrics = [], 
+    description = "", 
+    actionLabel = "", 
+    actionRoute = "", 
+    isLoading = false, 
+    className = "",
+    onNavigate,
+    onViewDetails
+  } = $props<{
+    title?: any; 
+    icon?: any; 
+    total?: any; 
+    metrics?: Array<{ label: string; value: number; color: string }>; 
+    description?: any; 
+    actionLabel?: any; 
+    actionRoute?: any; 
+    isLoading?: any; 
+    className?: any;
+    onNavigate?: (route: string) => void;
+    onViewDetails?: () => void;
+  }>();
 
   function handleViewDetails() {
     if (actionRoute) {
-      dispatch('navigate', { route: actionRoute });
+      onNavigate?.(actionRoute);
     } else {
-      dispatch('viewDetails');
+      onViewDetails?.();
     }
   }
 </script>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ActionButton } from '$lib/components/ui/action/index.js';
   import { BaseSelector } from '$lib/components/ui/selector/index.js';
 
@@ -11,7 +10,9 @@
     pageSizeOptions = [10, 25, 50, 100], 
     showPageSizeSelector = true, 
     showPageInfo = true, 
-    className = "" 
+    className = "",
+    onPageChange,
+    onPageSizeChange
   } = $props<{
     currentPage?: number;
     totalPages?: number;
@@ -21,19 +22,19 @@
     showPageSizeSelector?: boolean;
     showPageInfo?: boolean;
     className?: string;
+    onPageChange?: (page: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   function handlePageChange(page: number) {
     if (page >= 1 && page <= totalPages) {
-      dispatch('pageChange', { page });
+      onPageChange?.(page);
     }
   }
 
   function handlePageSizeChange(event: CustomEvent) {
     const newPageSize = Number(event.detail.value);
-    dispatch('pageSizeChange', { pageSize: newPageSize });
+    onPageSizeChange?.(newPageSize);
   }
 
   function getPageNumbers(): number[] {

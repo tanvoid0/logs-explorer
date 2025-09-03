@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from '$lib/components/ui/button.svelte';
 
   let { 
@@ -9,7 +8,10 @@
     hasFilters = false, 
     filteredCount = 0, 
     totalCount = 0, 
-    className = "" 
+    className = "",
+    onSearchChange,
+    onStatusChange,
+    onClearFilters
   } = $props<{
     searchQuery?: string;
     statusFilter?: string;
@@ -18,22 +20,23 @@
     filteredCount?: number;
     totalCount?: number;
     className?: string;
+    onSearchChange?: (value: string) => void;
+    onStatusChange?: (value: string) => void;
+    onClearFilters?: () => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   function handleSearchChange(event: Event) {
     const target = event.target as HTMLInputElement;
-    dispatch('searchChange', { value: target.value });
+    onSearchChange?.(target.value);
   }
 
   function handleStatusChange(event: Event) {
     const target = event.target as HTMLSelectElement;
-    dispatch('statusChange', { value: target.value });
+    onStatusChange?.(target.value);
   }
 
   function handleClearFilters() {
-    dispatch('clearFilters');
+    onClearFilters?.();
   }
 </script>
 

@@ -1,16 +1,20 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { K8sDeployment } from '$lib/types/k8s';
   import Button from '$lib/components/ui/button.svelte';
 
-  const { deployments, selectedDeployment = $bindable(), folderName, disabled } = $props<{
+  const { 
+    deployments, 
+    selectedDeployment = $bindable(), 
+    folderName, 
+    disabled,
+    onDeploymentChange
+  } = $props<{
     deployments: K8sDeployment[];
     selectedDeployment: string | null;
     folderName: string;
     disabled: boolean;
+    onDeploymentChange?: (deployment: string | null) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
   
   let searchQuery = $state("");
   let isDropdownOpen = $state(false);
@@ -41,13 +45,13 @@
 
   function handleDeploymentSelect(deploymentName: string) {
     const newSelection = selectedDeployment === deploymentName ? null : deploymentName;
-    dispatch('deploymentChange', { deployment: newSelection });
+    onDeploymentChange?.(newSelection);
     isDropdownOpen = false;
     searchQuery = "";
   }
 
   function clearDeployment() {
-    dispatch('deploymentChange', { deployment: null });
+    onDeploymentChange?.(null);
   }
   
   function toggleDropdown() {

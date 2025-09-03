@@ -1,12 +1,9 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Icon from '@iconify/svelte';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
   import type { SDKManagerOperation } from '$lib/types/sdk';
 
   const { recentOperations = [], className = "" } = $props<{recentOperations?: SDKManagerOperation[] ; className?: any }>();
-
-  const dispatch = createEventDispatcher();
 
   function getStatusColor(status: string): string {
     switch (status) {

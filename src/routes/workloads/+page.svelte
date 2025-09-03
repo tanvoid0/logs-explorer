@@ -6,6 +6,7 @@
   import { k8sAPI, type K8sPod, type K8sService, type K8sNamespace } from '$lib/api/k8s';
   import Button from "$lib/components/ui/button.svelte";
   import WorkloadTabs from "$lib/components/WorkloadTabs.svelte";
+  import TopNavbar from "$lib/components/TopNavbar.svelte";
 
   // Workload data
   let pods = $state<K8sPod[]>([]);
@@ -100,245 +101,90 @@
     nodePortServices = services.filter(svc => svc.type_ === 'NodePort').length;
   }
 
-  // Manual refresh function
-  async function refreshData() {
+  async function handleRefresh() {
     await loadData();
+  }
+
+  function handleNamespaceChange() {
+    // The effect will handle reloading data when namespace changes
   }
 </script>
 
-<div class="flex-1 flex flex-col min-h-0">
-  <WorkloadTabs />
+<!-- Top Navigation Bar -->
+<TopNavbar 
+  pageTitle="Workloads" 
+  pageDescription="Kubernetes workloads and resources" 
+/>
 
-  <!-- Main Content -->
-  <main class="flex-1 overflow-y-auto p-6 min-h-0">
-    <div class="w-full">
-      <!-- Connection Status and Refresh Button -->
-      {#if !$connectionState.isConnected}
-        <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+<!-- Main Content -->
+<div class="p-6">
+  <!-- Connection Status Check -->
+  {#if !$connectionState.isConnected}
+    <div class="text-center py-12">
+      <div class="text-slate-400 dark:text-slate-500 mb-4">
+        <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">
+        Not Connected to Kubernetes
+      </h3>
+      <p class="text-slate-500 dark:text-slate-400 mb-4">
+        Connect to a Kubernetes cluster to view workload data
+      </p>
+      <Button onclick={() => appStore.connect()}>
+        Connect to Kubernetes
+      </Button>
+    </div>
+  {:else}
+    <!-- Workload Content -->
+    <div class="space-y-6">
+      <!-- Header with Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Pod Stats -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
           <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Pods</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">{totalPods}</p>
+            </div>
+            <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
               </svg>
-              <span class="text-yellow-800 dark:text-yellow-200">
-                Not connected to Kubernetes. Connect to view workload data.
-              </span>
             </div>
-            <Button onclick={() => appStore.connect()}>
-              Connect
-            </Button>
+          </div>
+          <div class="mt-2 flex items-center space-x-2 text-sm">
+            <span class="text-green-600 dark:text-green-400">{runningPods} running</span>
+            <span class="text-yellow-600 dark:text-yellow-400">{pendingPods} pending</span>
+            <span class="text-red-600 dark:text-red-400">{failedPods} failed</span>
           </div>
         </div>
-      {:else if $namespaceState.selected}
-        <div class="mb-6 flex items-center justify-between">
-          <div class="text-sm text-slate-600 dark:text-slate-400">
-            Showing data for namespace: <span class="font-medium text-slate-900 dark:text-white">{$namespaceState.selected}</span>
-          </div>
-          <Button variant="outline" 
-            onclick={refreshData}
-            disabled={isLoading}
-          >
-            {#if isLoading}
-              <svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+
+        <!-- Service Stats -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Services</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">{totalServices}</p>
+            </div>
+            <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
               </svg>
-            {:else}
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-            {/if}
-            Refresh
-          </Button>
-        </div>
-      {/if}
-
-      <!-- Workload Types Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        <!-- Pods Summary -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <span class="text-2xl mr-3">📦</span>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Pods</h3>
-            </div>
-            <span class="text-2xl font-bold text-slate-900 dark:text-white">
-              {isLoading ? '...' : totalPods}
-            </span>
-          </div>
-          <div class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Running:</span>
-              <span class="text-green-600 dark:text-green-400">
-                {isLoading ? '...' : runningPods}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Pending:</span>
-              <span class="text-yellow-600 dark:text-yellow-400">
-                {isLoading ? '...' : pendingPods}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Failed:</span>
-              <span class="text-red-600 dark:text-red-400">
-                {isLoading ? '...' : failedPods}
-              </span>
             </div>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-4">
-            View pods in deployment details
-          </p>
-        </div>
-
-        <!-- Services Summary -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <span class="text-2xl mr-3">🔗</span>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Services</h3>
-            </div>
-            <span class="text-2xl font-bold text-slate-900 dark:text-white">
-              {isLoading ? '...' : totalServices}
-            </span>
+          <div class="mt-2 flex items-center space-x-2 text-sm">
+            <span class="text-blue-600 dark:text-blue-400">{clusterIPServices} ClusterIP</span>
+            <span class="text-purple-600 dark:text-purple-400">{loadBalancerServices} LoadBalancer</span>
+            <span class="text-orange-600 dark:text-orange-400">{nodePortServices} NodePort</span>
           </div>
-          <div class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">ClusterIP:</span>
-              <span class="text-blue-600 dark:text-blue-400">
-                {isLoading ? '...' : clusterIPServices}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">LoadBalancer:</span>
-              <span class="text-purple-600 dark:text-purple-400">
-                {isLoading ? '...' : loadBalancerServices}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">NodePort:</span>
-              <span class="text-orange-600 dark:text-orange-400">
-                {isLoading ? '...' : nodePortServices}
-              </span>
-            </div>
-          </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-4">
-            Services managed via deployments
-          </p>
-        </div>
-
-        <!-- Deployments (estimated) -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <span class="text-2xl mr-3">🚀</span>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Deployments</h3>
-            </div>
-            <span class="text-2xl font-bold text-slate-900 dark:text-white">
-              {isLoading ? '...' : Math.ceil(totalPods / 3)}
-            </span>
-          </div>
-          <div class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Available:</span>
-              <span class="text-green-600 dark:text-green-400">
-                {isLoading ? '...' : Math.ceil(runningPods / 3)}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Updating:</span>
-              <span class="text-blue-600 dark:text-blue-400">
-                {isLoading ? '...' : Math.ceil(pendingPods / 3)}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Failed:</span>
-              <span class="text-red-600 dark:text-red-400">
-                {isLoading ? '...' : Math.ceil(failedPods / 3)}
-              </span>
-            </div>
-          </div>
-          <button 
-            onclick={() => goto('/workloads/deployments')}
-            class="w-full mt-4 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-          >
-            View Deployments
-          </button>
-        </div>
-
-        <!-- Jobs (estimated) -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <span class="text-2xl mr-3">⚡</span>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Jobs</h3>
-            </div>
-            <span class="text-2xl font-bold text-slate-900 dark:text-white">
-              {isLoading ? '...' : Math.ceil(totalPods / 4)}
-            </span>
-          </div>
-          <div class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Running:</span>
-              <span class="text-blue-600 dark:text-blue-400">
-                {isLoading ? '...' : Math.ceil(pendingPods / 4)}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Completed:</span>
-              <span class="text-green-600 dark:text-green-400">
-                {isLoading ? '...' : Math.ceil(runningPods / 4)}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Failed:</span>
-              <span class="text-red-600 dark:text-red-400">
-                {isLoading ? '...' : Math.ceil(failedPods / 4)}
-              </span>
-            </div>
-          </div>
-          <button 
-            onclick={() => goto('/workloads/jobs')}
-            class="w-full mt-4 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-          >
-            View Jobs
-          </button>
-        </div>
-
-        <!-- Config Maps (estimated) -->
-        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <span class="text-2xl mr-3">⚙️</span>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Config Maps</h3>
-            </div>
-            <span class="text-2xl font-bold text-slate-900 dark:text-white">
-              {isLoading ? '...' : Math.ceil(totalServices * 1.5)}
-            </span>
-          </div>
-          <div class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Active:</span>
-              <span class="text-green-600 dark:text-green-400">
-                {isLoading ? '...' : Math.ceil(totalServices * 1.5)}
-              </span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-600 dark:text-slate-400">Keys:</span>
-              <span class="text-blue-600 dark:text-blue-400">
-                {isLoading ? '...' : Math.ceil(totalServices * 3)}
-              </span>
-            </div>
-          </div>
-          <button 
-            onclick={() => goto('/workloads/configs')}
-            class="w-full mt-4 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-          >
-            View Config Maps
-          </button>
         </div>
       </div>
+
+      <!-- Workload Tabs -->
+      <WorkloadTabs />
     </div>
-  </main>
+  {/if}
 </div>
 

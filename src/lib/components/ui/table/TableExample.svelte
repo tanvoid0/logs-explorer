@@ -2,6 +2,15 @@
 import { logger } from '$lib/utils/logger';
 import { EnhancedDataTable } from './index';
 
+// Define the Filter type locally since it's not exported
+interface Filter {
+  key: string;
+  label: string;
+  type: 'text' | 'select' | 'date' | 'number';
+  options?: Array<{ value: string; label: string }>;
+  value: string | number | null;
+}
+
   // Sample data
   let data = $state([
     { id: 1, name: 'John Doe', email: 'john@example.com', status: 'Active', role: 'Admin' },
@@ -54,30 +63,27 @@ import { EnhancedDataTable } from './index';
   ];
 
   // Event handlers
-  function handleSearchChange(event: CustomEvent) {
-    searchQuery = event.detail.value;
+  function handleSearchChange(query: string) {
+    searchQuery = query;
     // Implement search logic
   }
 
-  function handleFilterChange(event: CustomEvent) {
-    const { key, value } = event.detail;
+  function handleFilterChange(filters: Filter[]) {
     // Implement filter logic
   }
 
-  function handlePageChange(event: CustomEvent) {
-    currentPage = event.detail.page;
+  function handlePageChange(page: number) {
+    currentPage = page;
     // Implement pagination logic
   }
 
-  function handleAction(event: CustomEvent) {
-    const { action, items } = event.detail;
+  function handleAction(action: string, items: any[]) {
     // Implement action logic
     logger.info({ action, items });
   }
 
-  function handleSelectAll(event: CustomEvent) {
-    const { selected } = event.detail;
-    selectedItems = selected ? [...data] : [];
+  function handleSelectAll(selectedItems: any[]) {
+    // Update selected items
   }
 </script>
 
@@ -96,9 +102,9 @@ import { EnhancedDataTable } from './index';
     {pageSize}
     {selectedItems}
     {actions}
-    on:searchChange={handleSearchChange}
-    on:filterChange={handleFilterChange}
-    on:action={handleAction}
-    on:selectAll={handleSelectAll}
+    onSearchChange={handleSearchChange}
+    onFilterChange={handleFilterChange}
+    onAction={handleAction}
+    onSelectionChange={handleSelectAll}
   />
 </div>

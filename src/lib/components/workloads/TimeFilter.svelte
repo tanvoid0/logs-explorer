@@ -1,13 +1,28 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
 
-  const { startTime: initialStartTime = null, endTime: initialEndTime = null, disabled = false, pinnedStartLog = null, pinnedEndLog = null } = $props<{startTime?: string | null ; endTime?: string | null ; disabled?: boolean ; pinnedStartLog?: string | null ; pinnedEndLog?: string | null  }>();
+  const { 
+    startTime: initialStartTime = null, 
+    endTime: initialEndTime = null, 
+    disabled = false, 
+    pinnedStartLog = null, 
+    pinnedEndLog = null,
+    onTimeChange,
+    onPinStartTime,
+    onPinEndTime
+  } = $props<{
+    startTime?: string | null; 
+    endTime?: string | null; 
+    disabled?: boolean; 
+    pinnedStartLog?: string | null; 
+    pinnedEndLog?: string | null;
+    onTimeChange?: (startTime: string | null, endTime: string | null) => void;
+    onPinStartTime?: () => void;
+    onPinEndTime?: () => void;
+  }>();
 
   let startTime = $state(initialStartTime);
   let endTime = $state(initialEndTime);
-
-  const dispatch = createEventDispatcher();
 
   // Preset time ranges
   const timePresets = [
@@ -58,7 +73,7 @@
   }
 
   function dispatchTimeChange() {
-    dispatch('timeChange', { startTime, endTime });
+    onTimeChange?.(startTime, endTime);
   }
 
   function handleStartTimeChange() {
@@ -70,11 +85,11 @@
   }
 
   function pinStartTime() {
-    dispatch('pinStartTime');
+    onPinStartTime?.();
   }
 
   function pinEndTime() {
-    dispatch('pinEndTime');
+    onPinEndTime?.();
   }
 
   // Check if a preset is currently active

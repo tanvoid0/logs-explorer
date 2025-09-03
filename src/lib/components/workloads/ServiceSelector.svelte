@@ -1,14 +1,17 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { K8sService } from '$lib/types/k8s';
 
-  const { services, selectedServices, disabled } = $props<{
+  const { 
+    services, 
+    selectedServices, 
+    disabled,
+    onServicesChange
+  } = $props<{
     services: K8sService[];
     selectedServices: string[];
     disabled: boolean;
+    onServicesChange?: (services: string[]) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
   
   let searchQuery = $state("");
   let isDropdownOpen = $state(false);
@@ -33,16 +36,16 @@
       newSelectedServices = [...selectedServices, serviceName];
     }
     
-    dispatch('servicesChange', { services: newSelectedServices });
+    onServicesChange?.(newSelectedServices);
   }
 
   function clearAllServices() {
-    dispatch('servicesChange', { services: [] });
+    onServicesChange?.([]);
   }
 
   function selectAllServices() {
     const allServiceNames = filteredServices.map((service: K8sService) => service.name);
-    dispatch('servicesChange', { services: allServiceNames });
+    onServicesChange?.(allServiceNames);
   }
   
   function toggleDropdown() {

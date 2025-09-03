@@ -29,9 +29,9 @@
   // Get tasks for this project (all tasks from linked groups)
   const projectTasks = $derived($filteredTasks.filter(task => !task.parentId));
 
-  function handleAddGroup() {
+  async function handleAddGroup() {
     if (newGroupName.trim()) {
-      const newGroup = taskGroupActions.create(
+      const newGroup = await taskGroupActions.create(
         newGroupName.trim(), 
         newGroupDescription.trim(), 
         newGroupColor

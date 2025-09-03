@@ -1,34 +1,44 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { SearchInput } from '$lib/components/ui/search/index.js';
   import { BaseSelector } from '$lib/components/ui/selector/index.js';
   import { ActionButton } from '$lib/components/ui/action/index.js';
   import { Card, CardContent } from '$lib/components/ui/card/index.js';
 
-  const { searchQuery = "", selectedCategory = "", categories = [], className = "" } = $props<{
+  const { 
+    searchQuery = "", 
+    selectedCategory = "", 
+    categories = [], 
+    className = "",
+    onSearchChange,
+    onCategoryChange,
+    onSearch,
+    onRefresh
+  } = $props<{
     searchQuery?: string;
     selectedCategory?: string;
     categories?: string[];
     className?: string;
+    onSearchChange?: (query: string) => void;
+    onCategoryChange?: (category: string) => void;
+    onSearch?: () => void;
+    onRefresh?: () => void;
   }>();
 
-  const dispatch = createEventDispatcher();
-
   function handleSearchChange(query: string) {
-    dispatch('searchChange', { query });
+    onSearchChange?.(query);
   }
 
   function handleCategoryChange(event: CustomEvent) {
     const category = event.detail.values[0] || "";
-    dispatch('categoryChange', { category });
+    onCategoryChange?.(category);
   }
 
   function handleSearch() {
-    dispatch('search');
+    onSearch?.();
   }
 
   function handleRefresh() {
-    dispatch('refresh');
+    onRefresh?.();
   }
 
   const categoryOptions = [

@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { K8sDeployment } from '$lib/types/k8s';
   import Button from "$lib/components/ui/button.svelte";
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
+  import { createEventDispatcher } from 'svelte';
 
   const { deployments, selectedDeployments, disabled } = $props<{
     deployments: K8sDeployment[];
     selectedDeployments: string[];
     disabled: boolean;
   }>();
-
+  
   const dispatch = createEventDispatcher();
   
   let searchQuery = $state("");
@@ -35,16 +35,16 @@
       newSelectedDeployments = [...selectedDeployments, deploymentName];
     }
     
-    dispatch('deploymentsChange', { deployments: newSelectedDeployments });
+    dispatch('deployments-change', newSelectedDeployments);
   }
 
   function clearAllDeployments() {
-    dispatch('deploymentsChange', { deployments: [] });
+    dispatch('deployments-change', []);
   }
 
   function selectAllDeployments() {
     const allDeploymentNames = filteredDeployments.map((deployment: K8sDeployment) => deployment.name);
-    dispatch('deploymentsChange', { deployments: allDeploymentNames });
+    dispatch('deployments-change', allDeploymentNames);
   }
   
   function toggleDropdown() {

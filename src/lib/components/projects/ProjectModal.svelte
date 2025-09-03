@@ -101,8 +101,8 @@
     dispatch('nameInput', { value: newProjectName });
   }
 
-  function handleFrameworkChange(event: CustomEvent) {
-    newProjectFramework = event.detail.framework;
+  function handleFrameworkChange(framework: string | null) {
+    newProjectFramework = framework;
     dispatch('frameworkChange', { framework: newProjectFramework });
   }
 
@@ -110,8 +110,8 @@
     dispatch('detectFramework');
   }
 
-  function handleDeploymentChange(event: CustomEvent) {
-    newProjectDeployment = event.detail.deployment;
+  function handleDeploymentChange(deployment: string | null) {
+    newProjectDeployment = deployment;
     dispatch('deploymentChange', { deployment: newProjectDeployment });
   }
 
@@ -222,7 +222,7 @@
       <FrameworkSelector 
         selectedFramework={newProjectFramework}
         disabled={false}
-        on:frameworkChange={handleFrameworkChange}
+        onFrameworkChange={handleFrameworkChange}
       />
       <div class="flex justify-end">
         <Button
@@ -246,7 +246,7 @@
       selectedDeployment={newProjectDeployment}
       folderName={newProjectName}
       disabled={false}
-      on:deploymentChange={handleDeploymentChange}
+      onDeploymentChange={handleDeploymentChange}
     />
   </div>
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ActionButton } from '$lib/components/ui/action/index.js';
   import { BaseSelector } from '$lib/components/ui/selector/index.js';
 
@@ -9,7 +8,10 @@
     actions = [], 
     showBulkActions = true, 
     showSelectAll = true, 
-    className = "" 
+    className = "",
+    onAction,
+    onSelectAll,
+    onBulkAction
   } = $props<{
     selectedItems?: any[];
     totalItems?: number;
@@ -25,25 +27,26 @@
     showBulkActions?: boolean;
     showSelectAll?: boolean;
     className?: string;
+    onAction?: (action: string, items: any[]) => void;
+    onSelectAll?: (selected: boolean) => void;
+    onBulkAction?: (action: string, items: any[]) => void;
   }>();
 
-  const dispatch = createEventDispatcher();
-
   function handleAction(actionKey: string) {
-    dispatch('action', { action: actionKey, items: selectedItems });
+    onAction?.(actionKey, selectedItems);
   }
 
   function handleSelectAll() {
     if (selectedItems.length === totalItems) {
-      dispatch('selectAll', { selected: false });
+      onSelectAll?.(false);
     } else {
-      dispatch('selectAll', { selected: true });
+      onSelectAll?.(true);
     }
   }
 
   function handleBulkAction(event: CustomEvent) {
     const action = event.detail.value;
-    dispatch('bulkAction', { action, items: selectedItems });
+    onBulkAction?.(action, selectedItems);
   }
 
   function getBulkActionOptions() {

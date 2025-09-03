@@ -1,13 +1,24 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Icon from '@iconify/svelte';
   import { Card, CardContent } from '$lib/components/ui/card/index.js';
   import Button from '$lib/components/ui/button.svelte';
   import type { SDKManager } from '$lib/types/sdk';
 
-  const { availableManagers = [], installedSDKs = [], className = "" } = $props<{availableManagers?: SDKManager[] ; installedSDKs?: any[] ; className?: any }>();
-
-  const dispatch = createEventDispatcher();
+  const { 
+    availableManagers = [], 
+    installedSDKs = [], 
+    className = "",
+    onOpenManagerDocs,
+    onInstallSDK,
+    onUninstallSDK
+  } = $props<{
+    availableManagers?: SDKManager[];
+    installedSDKs?: any[];
+    className?: any;
+    onOpenManagerDocs?: (managerName: string) => void;
+    onInstallSDK?: (sdkName: string) => void;
+    onUninstallSDK?: (sdkName: string) => void;
+  }>();
 
   function getManagerIcon(managerName: string): string {
     const iconMap: Record<string, string> = {
@@ -77,15 +88,15 @@
   }
 
   function handleOpenManagerDocs(managerName: string) {
-    dispatch('openManagerDocs', { managerName });
+    onOpenManagerDocs?.(managerName);
   }
 
   function handleInstallSDK(sdkName: string) {
-    dispatch('installSDK', { sdkName });
+    onInstallSDK?.(sdkName);
   }
 
   function handleUninstallSDK(sdkName: string) {
-    dispatch('uninstallSDK', { sdkName });
+    onUninstallSDK?.(sdkName);
   }
 </script>
 

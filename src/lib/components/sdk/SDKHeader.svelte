@@ -1,9 +1,15 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Icon from '@iconify/svelte';
   import Button from '$lib/components/ui/button.svelte';
+  import { createEventDispatcher } from 'svelte';
 
-  const { isLoading = false, className = "" } = $props<{isLoading?: any; className?: any }>();
+  const { 
+    isLoading = false, 
+    className = ""
+  } = $props<{
+    isLoading?: any; 
+    className?: any;
+  }>();
 
   const dispatch = createEventDispatcher();
 

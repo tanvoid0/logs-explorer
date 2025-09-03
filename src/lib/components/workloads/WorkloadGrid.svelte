@@ -1,21 +1,41 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { goto } from '$lib/utils/navigation';
   import WorkloadCard from './WorkloadCard.svelte';
 
-  const { totalPods = 0, runningPods = 0, pendingPods = 0, failedPods = 0, totalServices = 0, clusterIPServices = 0, loadBalancerServices = 0, nodePortServices = 0, isLoading = false, className = "" } = $props<{totalPods?: any; runningPods?: any; pendingPods?: any; failedPods?: any; totalServices?: any; clusterIPServices?: any; loadBalancerServices?: any; nodePortServices?: any; isLoading?: any; className?: any }>();
+  const { 
+    totalPods = 0, 
+    runningPods = 0, 
+    pendingPods = 0, 
+    failedPods = 0, 
+    totalServices = 0, 
+    clusterIPServices = 0, 
+    loadBalancerServices = 0, 
+    nodePortServices = 0, 
+    isLoading = false, 
+    className = "",
+    onViewDetails
+  } = $props<{
+    totalPods?: any; 
+    runningPods?: any; 
+    pendingPods?: any; 
+    failedPods?: any; 
+    totalServices?: any; 
+    clusterIPServices?: any; 
+    loadBalancerServices?: any; 
+    nodePortServices?: any; 
+    isLoading?: any; 
+    className?: any;
+    onViewDetails?: () => void;
+  }>();
 
-  const dispatch = createEventDispatcher();
-
-  function handleNavigate(event: CustomEvent) {
-    const route = event.detail.route;
+  function handleNavigate(route: string) {
     if (route) {
       goto(route);
     }
   }
 
   function handleViewDetails() {
-    dispatch('viewDetails');
+    onViewDetails?.();
   }
 </script>
 
@@ -61,7 +81,7 @@
     actionLabel="View Deployments"
     actionRoute="/workloads/deployments"
     {isLoading}
-    on:navigate={handleNavigate}
+    onNavigate={handleNavigate}
   />
 
   <!-- Jobs (estimated) -->
@@ -77,7 +97,7 @@
     actionLabel="View Jobs"
     actionRoute="/workloads/jobs"
     {isLoading}
-    on:navigate={handleNavigate}
+    onNavigate={handleNavigate}
   />
 
   <!-- Config Maps (estimated) -->
@@ -92,6 +112,6 @@
     actionLabel="View Config Maps"
     actionRoute="/workloads/configs"
     {isLoading}
-    on:navigate={handleNavigate}
+    onNavigate={handleNavigate}
   />
 </div>

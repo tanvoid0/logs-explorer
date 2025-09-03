@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { goto } from '$lib/utils/navigation';
   import Icon from '@iconify/svelte';
   import { Badge } from '$lib/components/ui/feedback/index.js';
@@ -7,12 +6,25 @@
   import Button from '$lib/components/ui/button.svelte';
   import type { Project } from '$lib/api/projects';
 
-  const { project, className = "" } = $props<{
+  const { 
+    project, 
+    className = "",
+    onToggleStar,
+    onOpenInExplorer,
+    onOpenInIde,
+    onViewDeployment,
+    onEdit,
+    onDelete
+  } = $props<{
     project?: Project;
     className?: string;
+    onToggleStar?: (project: any) => void;
+    onOpenInExplorer?: (path: string) => void;
+    onOpenInIde?: (project: any) => void;
+    onViewDeployment?: (deployment: string) => void;
+    onEdit?: (project: any) => void;
+    onDelete?: (project: any) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   function getFrameworkIcon(framework: string | null | undefined): string {
     if (!framework) return 'devicon:folder';
@@ -78,29 +90,29 @@
   }
 
   function handleToggleStar() {
-    dispatch('toggleStar', { project });
+    onToggleStar?.(project);
   }
 
   function handleOpenInExplorer() {
-    dispatch('openInExplorer', { path: project.path });
+    onOpenInExplorer?.(project.path);
   }
 
   function handleOpenInIde() {
-    dispatch('openInIde', { project });
+    onOpenInIde?.(project);
   }
 
   function handleViewDeployment() {
     if (project.deployment) {
-      dispatch('viewDeployment', { deployment: project.deployment });
+      onViewDeployment?.(project.deployment);
     }
   }
 
   function handleEdit() {
-    dispatch('edit', { project });
+    onEdit?.(project);
   }
 
   function handleDelete() {
-    dispatch('delete', { project });
+    onDelete?.(project);
   }
 </script>
 

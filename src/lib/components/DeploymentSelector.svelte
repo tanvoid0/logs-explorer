@@ -1,14 +1,17 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { K8sDeployment } from '$lib/types/k8s';
 
-  const { deployments, selectedDeployments, disabled } = $props<{
+  const { 
+    deployments, 
+    selectedDeployments, 
+    disabled,
+    onDeploymentsChange
+  } = $props<{
     deployments: K8sDeployment[];
     selectedDeployments: string[];
     disabled: boolean;
+    onDeploymentsChange?: (deployments: string[]) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
   
   let searchQuery = $state("");
   let isDropdownOpen = $state(false);
@@ -33,16 +36,16 @@
       newSelectedDeployments = [...selectedDeployments, deploymentName];
     }
     
-    dispatch('deploymentsChange', { deployments: newSelectedDeployments });
+    onDeploymentsChange?.(newSelectedDeployments);
   }
 
   function clearAllDeployments() {
-    dispatch('deploymentsChange', { deployments: [] });
+    onDeploymentsChange?.([]);
   }
 
   function selectAllDeployments() {
     const allDeploymentNames = filteredDeployments.map((deployment: K8sDeployment) => deployment.name);
-    dispatch('deploymentsChange', { deployments: allDeploymentNames });
+    onDeploymentsChange?.(allDeploymentNames);
   }
   
   function toggleDropdown() {

@@ -4,6 +4,26 @@
   import Button from '$lib/components/ui/button.svelte';
   import Icon from '@iconify/svelte';
 
+  // Type definitions for invoke results
+  interface TaskGroupResult {
+    uuid: string;
+    name: string;
+    description?: string;
+    color: string;
+  }
+
+  interface TaskResult {
+    uuid: string;
+    title: string;
+    description?: string;
+    status: string;
+    priority: string;
+    dueDate?: string;
+  }
+
+  interface TaskListResult extends Array<TaskResult> {}
+  interface TaskGroupListResult extends Array<TaskGroupResult> {}
+
   // Test state
   let isRunning = $state(false);
   let testResults = $state<string[]>([]);
@@ -53,7 +73,7 @@
   async function testCreateTaskGroup() {
     try {
       log('🧪 Creating task group...', 'info');
-      const result = await invoke<any>('add_task_group', {
+      const result = await invoke<TaskGroupResult>('add_task_group', {
         name: mockTaskGroup.name,
         description: mockTaskGroup.description,
         color: mockTaskGroup.color,
@@ -74,7 +94,7 @@
   async function testGetAllTaskGroups() {
     try {
       log('🧪 Getting all task groups...', 'info');
-      const result = await invoke<any[]>('get_all_task_groups');
+      const result = await invoke<TaskGroupListResult>('get_all_task_groups');
       log(`✅ Retrieved ${result.length} task groups`, 'success');
       
     } catch (error) {
@@ -97,7 +117,7 @@
         color: "#EF4444"
       };
       
-      const result = await invoke<any>('update_task_group', updateData);
+      const result = await invoke<TaskGroupResult>('update_task_group', updateData);
       log(`✅ Task group updated: ${result.name}`, 'success');
       
     } catch (error) {
@@ -113,7 +133,7 @@
 
     try {
       log('🧪 Creating task...', 'info');
-      const result = await invoke('add_task', mockTask);
+      const result = await invoke<TaskResult>('add_task', mockTask);
       testTaskId = result.uuid;
       
       log(`✅ Task created: ${result.uuid}`, 'success');
@@ -126,7 +146,7 @@
   async function testGetAllTasks() {
     try {
       log('🧪 Getting all tasks...', 'info');
-      const result = await invoke('get_all_tasks');
+      const result = await invoke<TaskListResult>('get_all_tasks');
       log(`✅ Retrieved ${result.length} tasks`, 'success');
       
     } catch (error) {
@@ -142,7 +162,7 @@
 
     try {
       log('🧪 Getting tasks by group...', 'info');
-      const result = await invoke('get_tasks_by_group', { groupId: testGroupId });
+      const result = await invoke<TaskListResult>('get_tasks_by_group', { groupId: testGroupId });
       log(`✅ Retrieved ${result.length} tasks for group ${testGroupId}`, 'success');
       
     } catch (error) {
@@ -167,7 +187,7 @@
         dueDate: mockUpdateTask.dueDate
       };
       
-      const result = await invoke('update_task', updateData);
+      const result = await invoke<TaskResult>('update_task', updateData);
       log(`✅ Task updated: ${result.title}`, 'success');
       
     } catch (error) {
@@ -183,7 +203,7 @@
 
     try {
       log('🧪 Toggling task status...', 'info');
-      const result = await invoke('toggle_task_status', { uuid: testTaskId });
+      const result = await invoke<TaskResult>('toggle_task_status', { uuid: testTaskId });
       log(`✅ Task status toggled: ${result.status}`, 'success');
       
     } catch (error) {
@@ -199,7 +219,7 @@
 
     try {
       log('🧪 Moving task...', 'info');
-      const result = await invoke('move_task', { uuid: testTaskId, groupId: testGroupId });
+      const result = await invoke<TaskResult>('move_task', { uuid: testTaskId, groupId: testGroupId });
       log(`✅ Task moved: ${result.uuid}`, 'success');
       
     } catch (error) {
@@ -215,7 +235,7 @@
 
     try {
       log('🧪 Deleting task...', 'info');
-      const result = await invoke('delete_task', { uuid: testTaskId });
+      const result = await invoke<string>('delete_task', { uuid: testTaskId });
       log(`✅ Task deleted: ${result}`, 'success');
       testTaskId = null;
       
@@ -232,7 +252,7 @@
 
     try {
       log('🧪 Deleting task group...', 'info');
-      const result = await invoke('delete_task_group', { uuid: testGroupId });
+      const result = await invoke<string>('delete_task_group', { uuid: testGroupId });
       log(`✅ Task group deleted: ${result}`, 'success');
       testGroupId = null;
       
@@ -244,8 +264,8 @@
   async function testVerifyCleanup() {
     try {
       log('🧪 Verifying cleanup...', 'info');
-      const groups = await invoke('get_all_task_groups');
-      const tasks = await invoke('get_all_tasks');
+      const groups = await invoke<TaskGroupListResult>('get_all_task_groups');
+      const tasks = await invoke<TaskListResult>('get_all_tasks');
       
       log(`✅ Remaining groups: ${groups.length}`, 'success');
       log(`✅ Remaining tasks: ${tasks.length}`, 'success');
@@ -355,10 +375,10 @@
 
 <Card className="mb-6">
   <CardHeader className="p-4 border-b border-gray-200 dark:border-gray-700">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <Icon icon="mdi:test-tube" class="w-6 h-6 text-blue-500" />
-        <CardTitle class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <Icon icon="mdi:test-tube" class="w-6 h-6 text-blue-500" />
+            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Task CRUD Integration Tester
         </CardTitle>
       </div>

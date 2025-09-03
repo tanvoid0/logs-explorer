@@ -6,7 +6,7 @@
   import { Container, Separator } from '$lib/components/ui/layout/index.js';
   import { SearchInput, SearchExamples } from '$lib/components/ui/search/index.js';
   import { BaseSelector } from '$lib/components/ui/selector/index.js';
-  import { StatusIndicator, ProgressBar } from '$lib/components/ui/status/index.js';
+  import { StatusIndicator } from '$lib/components/ui/status/index.js';
   import { ActionButton, ActionGroup } from '$lib/components/ui/action/index.js';
   import { EmptyState, LoadingState } from '$lib/components/ui/display/index.js';
   import type { K8sLog } from '$lib/types/k8s';
@@ -191,9 +191,7 @@
       <div>
         <h4 class="text-sm font-medium mb-2">Progress Bars</h4>
         <div class="space-y-2">
-          <ProgressBar value={75} max={100} label="Upload Progress" />
-          <ProgressBar value={30} max={100} variant="warning" />
-          <ProgressBar value={90} max={100} variant="success" />
+                  <!-- ProgressBar component removed - component no longer available -->
         </div>
       </div>
     </CardContent>

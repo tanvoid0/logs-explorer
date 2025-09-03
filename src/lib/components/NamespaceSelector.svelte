@@ -1,18 +1,22 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { onMount } from 'svelte';
   import Button from '$lib/components/ui/button.svelte';
   import type { K8sNamespace } from '$lib/types/k8s';
   import { appStore, namespaceState } from '$lib/stores/app-store';
 
-  const { namespaces, selectedNamespace, disabled, variant = 'default' } = $props<{
+  const { 
+    namespaces, 
+    selectedNamespace, 
+    disabled, 
+    variant = 'default',
+    onNamespaceChange
+  } = $props<{
     namespaces: K8sNamespace[];
     selectedNamespace: string;
     disabled: boolean;
     variant?: 'default' | 'sidebar';
+    onNamespaceChange?: (namespace: string) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   // Get starred and ordered namespaces from store
   const starredNamespaces = $derived($namespaceState.starred);
@@ -78,7 +82,7 @@
   function handleNamespaceChange(namespace: string) {
     console.log('NamespaceSelector: Changing namespace to:', namespace);
     appStore.setSelectedNamespace(namespace);
-    dispatch('namespaceChange', { namespace });
+    onNamespaceChange?.(namespace);
     isOpen = false;
     searchQuery = "";
   }

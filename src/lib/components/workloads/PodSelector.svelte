@@ -1,14 +1,17 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { K8sPod } from '$lib/types/k8s';
 
-  const { pods, selectedPods, disabled } = $props<{
+  const { 
+    pods, 
+    selectedPods, 
+    disabled,
+    onPodsChange
+  } = $props<{
     pods: K8sPod[];
     selectedPods: string[];
     disabled: boolean;
+    onPodsChange?: (pods: string[]) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
   
   let searchQuery = $state("");
   let isDropdownOpen = $state(false);
@@ -33,16 +36,16 @@
       newSelectedPods = [...selectedPods, podName];
     }
     
-    dispatch('podsChange', { pods: newSelectedPods });
+    onPodsChange?.(newSelectedPods);
   }
 
   function clearAllPods() {
-    dispatch('podsChange', { pods: [] });
+    onPodsChange?.([]);
   }
 
   function selectAllPods() {
     const allPodNames = filteredPods.map((pod: K8sPod) => pod.name);
-    dispatch('podsChange', { pods: allPodNames });
+    onPodsChange?.(allPodNames);
   }
   
   function toggleDropdown() {

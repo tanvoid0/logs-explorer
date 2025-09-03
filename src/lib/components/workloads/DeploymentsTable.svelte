@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { LoadingState, EmptyState } from '$lib/components/ui/display/index.js';
   import Button from '$lib/components/ui/button.svelte';
   import Table from "$lib/components/ui/table.svelte";
@@ -15,16 +14,24 @@
     filteredDeployments = [], 
     isLoading = false, 
     hasFilters = false, 
-    className = "" 
+    className = "",
+    onViewDeployment,
+    onStopDeployment,
+    onStartDeployment,
+    onRestartDeployment,
+    onCopyImage
   } = $props<{
     deployments?: K8sDeployment[];
     filteredDeployments?: K8sDeployment[];
     isLoading?: boolean;
     hasFilters?: boolean;
     className?: string;
+    onViewDeployment?: (deployment: K8sDeployment) => void;
+    onStopDeployment?: (deployment: K8sDeployment) => void;
+    onStartDeployment?: (deployment: K8sDeployment) => void;
+    onRestartDeployment?: (deployment: K8sDeployment) => void;
+    onCopyImage?: (deployment: K8sDeployment) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   function getStatusColor(status: string) {
     switch (status) {
@@ -99,23 +106,23 @@
   }
 
   function handleViewDeployment(deployment: K8sDeployment) {
-    dispatch('viewDeployment', { deployment });
+    onViewDeployment?.(deployment);
   }
 
   function handleStopDeployment(deployment: K8sDeployment) {
-    dispatch('stopDeployment', { deployment });
+    onStopDeployment?.(deployment);
   }
 
   function handleStartDeployment(deployment: K8sDeployment) {
-    dispatch('startDeployment', { deployment });
+    onStartDeployment?.(deployment);
   }
 
   function handleRestartDeployment(deployment: K8sDeployment) {
-    dispatch('restartDeployment', { deployment });
+    onRestartDeployment?.(deployment);
   }
 
   function handleCopyImage(deployment: K8sDeployment) {
-    dispatch('copyImage', { deployment });
+    onCopyImage?.(deployment);
   }
 </script>
 

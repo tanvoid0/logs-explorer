@@ -129,8 +129,7 @@
     }
   }
 
-  function handleNamespaceChange(event: CustomEvent<{namespace: string}>) {
-    const namespace = event.detail.namespace;
+  function handleNamespaceChange(namespace: string) {
     console.log('Sidebar: Received namespace change event:', namespace);
     
     // The appStore.setSelectedNamespace is already called in the NamespaceSelector
@@ -357,7 +356,7 @@
               selectedNamespace={$namespaceState.selected}
               disabled={!$connectionState.isConnected}
               variant="sidebar"
-              on:namespaceChange={handleNamespaceChange}
+              onNamespaceChange={handleNamespaceChange}
             />
           {:else}
             <div class="text-sm text-slate-400">

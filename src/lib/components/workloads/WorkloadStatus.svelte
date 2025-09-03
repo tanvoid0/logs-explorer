@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ActionButton } from '$lib/components/ui/action/index.js';
   import { Alert } from '$lib/components/ui/feedback/index.js';
 
@@ -7,22 +6,24 @@
     isConnected = false, 
     selectedNamespace = "", 
     isLoading = false, 
-    className = "" 
+    className = "",
+    onConnect,
+    onRefresh
   } = $props<{
     isConnected?: boolean;
     selectedNamespace?: string;
     isLoading?: boolean;
     className?: string;
+    onConnect?: () => void;
+    onRefresh?: () => void;
   }>();
 
-  const dispatch = createEventDispatcher();
-
   function handleConnect() {
-    dispatch('connect');
+    onConnect?.();
   }
 
   function handleRefresh() {
-    dispatch('refresh');
+    onRefresh?.();
   }
 </script>
 

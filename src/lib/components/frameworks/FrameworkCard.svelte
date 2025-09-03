@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ActionButton } from '$lib/components/ui/action/index.js';
   import { Card, CardContent } from '$lib/components/ui/card/index.js';
   import { Badge } from '$lib/components/ui/feedback/index.js';
@@ -7,29 +6,33 @@
 
   const { 
     framework = null, 
-    className = "" 
+    className = "",
+    onToggleActive,
+    onDelete,
+    onEdit
   } = $props<{
     framework?: Framework;
     className?: string;
+    onToggleActive?: (id: number) => void;
+    onDelete?: (id: number) => void;
+    onEdit?: (framework: Framework) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   function handleToggleActive() {
     if (framework) {
-      dispatch('toggleActive', { id: framework.id });
+      onToggleActive?.(framework.id);
     }
   }
 
   function handleDelete() {
     if (framework) {
-      dispatch('delete', { id: framework.id });
+      onDelete?.(framework.id);
     }
   }
 
   function handleEdit() {
     if (framework) {
-      dispatch('edit', { framework });
+      onEdit?.(framework);
     }
   }
 </script>

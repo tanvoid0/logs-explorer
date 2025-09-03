@@ -6,11 +6,8 @@
   import LogsSearchPanel from '$lib/components/LogsSearchPanel.svelte';
   import LogsDisplay from '$lib/components/LogsDisplay.svelte';
   import AdvancedSearchPanel from './AdvancedSearchPanel.svelte';
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
   import { toastStore } from '$lib/stores/toast-store';
-
-  const dispatch = createEventDispatcher();
 
   // Props
   let {
@@ -18,8 +15,26 @@
     title = "Logs",
     description = "View and filter logs",
     defaultNamespace = "",
-    showNamespaceLabel = true
-  } = $props();
+    showNamespaceLabel = true,
+    onPinStartTime,
+    onPinEndTime,
+    onDeploymentsChange,
+    onPodsChange,
+    onSeverityChange,
+    onTraceIdChange
+  } = $props<{
+    defaultPods?: string[];
+    title?: string;
+    description?: string;
+    defaultNamespace?: string;
+    showNamespaceLabel?: boolean;
+    onPinStartTime?: () => void;
+    onPinEndTime?: () => void;
+    onDeploymentsChange?: (deployments: string[]) => void;
+    onPodsChange?: (pods: string[]) => void;
+    onSeverityChange?: (severity: string) => void;
+    onTraceIdChange?: (traceId: string) => void;
+  }>();
 
   // State
   let logs = $state<K8sLog[]>([]);
@@ -169,11 +184,13 @@
   function handleDeploymentsChange(event: CustomEvent<{deployments: string[]}>) {
     selectedDeployments = event.detail.deployments;
     loadLogs(1); // Reset to first page when filters change
+    onDeploymentsChange?.(selectedDeployments);
   }
 
   function handlePodsChange(event: CustomEvent<{pods: string[]}>) {
     selectedPods = event.detail.pods;
     loadLogs(1); // Reset to first page when filters change
+    onPodsChange?.(selectedPods);
   }
 
   function handleSearch(event: CustomEvent<{query: string}>) {
@@ -184,11 +201,13 @@
   function handleSeverityChange(event: CustomEvent<{severity: string}>) {
     severityFilter = event.detail.severity;
     loadLogs(1); // Reset to first page when filters change
+    onSeverityChange?.(severityFilter);
   }
 
   function handleTraceIdChange(event: CustomEvent<{traceId: string}>) {
     traceIdFilter = event.detail.traceId;
     loadLogs(1); // Reset to first page when filters change
+    onTraceIdChange?.(traceIdFilter);
   }
 
   function handleTimeChange(event: CustomEvent<{startTime: string | null, endTime: string | null}>) {
@@ -211,12 +230,12 @@
 
   function handlePinStartTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinStartTime');
+    onPinStartTime?.();
   }
 
   function handlePinEndTime() {
     // This will be handled by the LogsDisplay component when a log is selected
-    dispatch('pinEndTime');
+    onPinEndTime?.();
   }
 
   function handleNextPage() {
@@ -273,11 +292,13 @@
     const deploymentName = event.detail.deploymentName;
     if (!selectedDeployments.includes(deploymentName)) {
       selectedDeployments = [...selectedDeployments, deploymentName];
+      onDeploymentsChange?.(selectedDeployments);
     }
   }
 
   function handleSeverityFilter(event: CustomEvent<{severity: string}>) {
     severityFilter = event.detail.severity;
+    onSeverityChange?.(severityFilter);
   }
 </script>
 
@@ -325,10 +346,10 @@
                   severityFilter = "";
                   traceIdFilter = "";
                   searchQuery = "";
-                  dispatch('deploymentsChange', { deployments: [] });
-                  dispatch('podsChange', { pods: [] });
-                  dispatch('severityChange', { severity: "" });
-                  dispatch('traceIdChange', { traceId: "" });
+                  onDeploymentsChange?.([]);
+                  onPodsChange?.([]);
+                  onSeverityChange?.("");
+                  onTraceIdChange?.("");
                 }}
                 class="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
               >
@@ -357,7 +378,7 @@
                   <button
                     onclick={() => {
                       selectedDeployments = selectedDeployments.filter(d => d !== deployment);
-                      dispatch('deploymentsChange', { deployments: selectedDeployments });
+                      onDeploymentsChange?.(selectedDeployments);
                     }}
                     class="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                   >
@@ -376,7 +397,7 @@
                   <button
                     onclick={() => {
                       selectedPods = selectedPods.filter(p => p !== pod);
-                      dispatch('podsChange', { pods: selectedPods });
+                      onPodsChange?.(selectedPods);
                     }}
                     class="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200"
                   >
@@ -395,7 +416,7 @@
                   <button
                     onclick={() => {
                       severityFilter = "";
-                      dispatch('severityChange', { severity: "" });
+                      onSeverityChange?.("");
                     }}
                     class="ml-1 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200"
                   >
@@ -414,7 +435,7 @@
                   <button
                     onclick={() => {
                       traceIdFilter = "";
-                      dispatch('traceIdChange', { traceId: "" });
+                      onTraceIdChange?.("");
                     }}
                     class="ml-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200"
                   >

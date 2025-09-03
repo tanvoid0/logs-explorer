@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { TableRow, TableCell, TableHead, TableBody, TableHeader } from '$lib/components/ui/table-modern/index.js';
+  import TableRow from '$lib/components/ui/table-row.svelte';
+  import TableCell from '$lib/components/ui/table-cell.svelte';
+  import TableHead from '$lib/components/ui/table-head.svelte';
+  import TableBody from '$lib/components/ui/table-body.svelte';
   import TableFilters from './TableFilters.svelte';
   import TablePagination from './TablePagination.svelte';
   import TableActions from './TableActions.svelte';
@@ -49,7 +51,13 @@
     showPagination = true,
     showActions = true,
     showSearch = true,
-    className = ""
+    className = "",
+    onSearchChange,
+    onFilterChange,
+    onPageChange,
+    onPageSizeChange,
+    onSelectionChange,
+    onAction
   } = $props<{
     data?: Record<string, any>[];
     columns?: Column[];
@@ -70,16 +78,15 @@
     showActions?: boolean;
     showSearch?: boolean;
     className?: string;
+    onSearchChange?: (query: string) => void;
+    onFilterChange?: (filters: Filter[]) => void;
+    onPageChange?: (page: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
+    onSelectionChange?: (selectedItems: any[]) => void;
+    onAction?: (action: string, items: any[]) => void;
   }>();
 
-  const dispatch = createEventDispatcher<{
-    searchChange: { query: string };
-    filterChange: { filters: Filter[] };
-    pageChange: { page: number };
-    pageSizeChange: { pageSize: number };
-    selectionChange: { selectedItems: any[] };
-    action: { action: string; items: any[] };
-  }>();
+  // Event handlers now use callback props
 
   let internalSearchQuery = $state(searchQuery);
   let internalFilters = $state(filters);
@@ -87,9 +94,9 @@
   let internalPageSize = $state(pageSize);
   let internalSelectedItems = $state(selectedItems);
 
-  function handleSearchChange(event: CustomEvent) {
-    internalSearchQuery = event.detail.query;
-    dispatch('searchChange', { query: internalSearchQuery });
+  function handleSearchChange(query: string) {
+    internalSearchQuery = query;
+    onSearchChange?.(internalSearchQuery);
   }
 
   function handleFilterChange(key: string, value: any) {
@@ -98,26 +105,26 @@
     if (filterIndex !== -1) {
       internalFilters[filterIndex].value = value;
     }
-    dispatch('filterChange', { filters: internalFilters });
+    onFilterChange?.(internalFilters);
   }
 
-  function handlePageChange(event: CustomEvent) {
-    internalCurrentPage = event.detail.page;
-    dispatch('pageChange', { page: internalCurrentPage });
+  function handlePageChange(page: number) {
+    internalCurrentPage = page;
+    onPageChange?.(internalCurrentPage);
   }
 
-  function handlePageSizeChange(event: CustomEvent) {
-    internalPageSize = event.detail.pageSize;
-    dispatch('pageSizeChange', { pageSize: internalPageSize });
+  function handlePageSizeChange(pageSize: number) {
+    internalPageSize = pageSize;
+    onPageSizeChange?.(internalPageSize);
   }
 
-  function handleSelectionChange(event: CustomEvent) {
-    internalSelectedItems = event.detail.selectedItems;
-    dispatch('selectionChange', { selectedItems: internalSelectedItems });
+  function handleSelectionChange(selectedItems: any[]) {
+    internalSelectedItems = selectedItems;
+    onSelectionChange?.(internalSelectedItems);
   }
 
-  function handleAction(event: CustomEvent) {
-    dispatch('action', event.detail);
+  function handleAction(action: string, items: any[]) {
+    onAction?.(action, items);
   }
 </script>
 
@@ -133,7 +140,7 @@
       <TableActions 
         {actions}
         {selectedItems}
-        on:action={handleAction}
+        onAction={handleAction}
       />
     </div>
   {/if}
@@ -153,7 +160,7 @@
         <TableHead>
           <TableRow>
                          {#if showActions && actions.some((a: Action) => a.bulkOnly)}
-              <TableHeader className="w-12">
+              <TableHead className="w-12">
                 <input 
                   type="checkbox" 
                   class="rounded border-slate-300 dark:border-slate-600"
@@ -164,15 +171,15 @@
                     } else {
                       internalSelectedItems = [];
                     }
-                    dispatch('selectionChange', { selectedItems: internalSelectedItems });
+                    onSelectionChange?.(internalSelectedItems);
                   }}
                 />
-              </TableHeader>
+              </TableHead>
             {/if}
             {#each columns as column}
-              <TableHeader className={column.sortable ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700' : ''}>
+              <TableHead className={column.sortable ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700' : ''}>
                 {column.label}
-              </TableHeader>
+              </TableHead>
             {/each}
           </TableRow>
         </TableHead>
@@ -207,7 +214,7 @@
                         } else {
                           internalSelectedItems = internalSelectedItems.filter((i: any) => i !== item);
                         }
-                        dispatch('selectionChange', { selectedItems: internalSelectedItems });
+                        onSelectionChange?.(internalSelectedItems);
                       }}
                     />
                   </TableCell>
@@ -237,8 +244,8 @@
         {totalItems}
         {pageSize}
         {pageSizeOptions}
-        on:pageChange={handlePageChange}
-        on:pageSizeChange={handlePageSizeChange}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
       />
     </div>
   {/if}

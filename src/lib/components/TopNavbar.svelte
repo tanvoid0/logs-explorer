@@ -1,12 +1,23 @@
 <script lang="ts">
   import { appStore, connectionState, preferences } from '$lib/stores/app-store';
   import ConnectionStatus from './ConnectionStatus.svelte';
+  import { page } from '$app/stores';
 
   // Props
   let { pageTitle = "", pageDescription = "" } = $props<{
     pageTitle?: string;
     pageDescription?: string;
   }>();
+
+  // Determine if connection status should be shown based on current route
+  const shouldShowConnectionStatus = $derived.by(() => {
+    const path = $page.url.pathname;
+    // Only show connection status on Kubernetes-related pages
+    return path.startsWith('/workloads') || 
+           path.startsWith('/clusters') || 
+           path.startsWith('/overview') ||
+           path === '/';
+  });
 
   async function handleConnect() {
     await appStore.connect();
@@ -36,17 +47,19 @@
         {/if}
       </div>
 
-      <!-- Right: Connection Status -->
-      <div class="flex items-center space-x-4">
-        <ConnectionStatus 
-          connectionState={{
-            ...$connectionState,
-            autoConnectEnabled: $preferences.autoConnect
-          }}
-          onConnect={handleConnect}
-          onDisconnect={handleDisconnect}
-        />
-      </div>
+      <!-- Right: Connection Status (only on relevant pages) -->
+      {#if shouldShowConnectionStatus}
+        <div class="flex items-center space-x-4">
+          <ConnectionStatus 
+            connectionState={{
+              ...$connectionState,
+              autoConnectEnabled: $preferences.autoConnect
+            }}
+            onConnect={handleConnect}
+            onDisconnect={handleDisconnect}
+          />
+        </div>
+      {/if}
     </div>
   </div>
 </header>

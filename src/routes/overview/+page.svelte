@@ -3,6 +3,7 @@
   import { k8sAPI, type K8sNamespace, type K8sPod, type K8sService } from "$lib/api/k8s";
   import { appStore, connectionState, namespaceState } from "$lib/stores/app-store";
   import { toastStore } from "$lib/stores/toast-store";
+  import TopNavbar from "$lib/components/TopNavbar.svelte";
 
   // Dynamic data
   let isConnected = $state(false);
@@ -98,8 +99,6 @@
     } catch (error) {
       console.error("Failed to load overview data:", error);
       toastStore.error('Failed to load overview data');
-      // Add error to recent activity
-      addActivity('error', 'Failed to load cluster data', 'error');
     } finally {
       isLoading = false;
     }
@@ -108,187 +107,139 @@
   function updateRecentActivity() {
     const now = new Date();
     
-    // Add connection activity
-    if (isConnected && recentActivity.length === 0) {
-      addActivity('connection', `Connected to cluster: ${currentContext}`, 'success');
-    }
-    
-    // Add namespace activity
-    if (namespaces.length > 0) {
-      addActivity('namespace', `Loaded ${namespaces.length} namespaces`, 'info');
-    }
-    
-    // Add cluster status activity
-    if (isConnected) {
-      addActivity('connection', `Cluster status: ${clusterStatus}`, 'success');
-    }
-  }
-
-  function addActivity(type: 'connection' | 'warning' | 'error' | 'search' | 'namespace', message: string, severity: 'info' | 'warning' | 'error' | 'success') {
+    // Add connection success
     recentActivity = [
       {
-        type,
-        message,
-        timestamp: new Date(),
-        severity
+        type: 'connection',
+        message: `Connected to cluster: ${currentContext}`,
+        timestamp: now,
+        severity: 'success'
       },
-      ...recentActivity.slice(0, 9) // Keep only last 10 activities
+      {
+        type: 'namespace',
+        message: `Loaded ${namespaces.length} namespaces`,
+        timestamp: now,
+        severity: 'info'
+      }
     ];
   }
 
-  function getSeverityColor(severity: string) {
-    switch (severity) {
-      case 'success': return 'text-green-600 dark:text-green-400';
-      case 'warning': return 'text-yellow-600 dark:text-yellow-400';
-      case 'error': return 'text-red-600 dark:text-red-400';
-      default: return 'text-blue-600 dark:text-blue-400';
-    }
+  async function handleRefresh() {
+    await loadData();
   }
 
-  function getSeverityIcon(severity: string) {
-    switch (severity) {
-      case 'success': return '✓';
-      case 'warning': return '⚠';
-      case 'error': return '✕';
-      default: return 'ℹ';
-    }
-  }
-
-  function formatTimeAgo(date: Date): string {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  function handleNamespaceChange() {
+    // The effect will handle reloading data when namespace changes
   }
 </script>
 
-<div class="w-full">
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Kubernetes Overview</h1>
-    <p class="text-slate-600 dark:text-slate-400">Real-time cluster status and resource overview</p>
-  </div>
+<!-- Top Navigation Bar -->
+<TopNavbar 
+  pageTitle="Overview" 
+  pageDescription="Kubernetes cluster overview and statistics" 
+/>
 
-  <!-- Connection Status -->
-  <div class="mb-8">
-    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 rounded-full {isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}"></div>
-            <span class="text-lg font-semibold text-slate-900 dark:text-white">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-          </div>
-          {#if currentContext}
-            <span class="text-sm text-slate-600 dark:text-slate-400">({currentContext})</span>
-          {/if}
-        </div>
-        
-        <div class="flex items-center space-x-4">
-          <span class="text-sm text-slate-600 dark:text-slate-400">
-            Last updated: {formatTimeAgo(new Date())}
-          </span>
-          <button
-            onclick={loadData}
-            disabled={isLoading}
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {#if isLoading}
-              <svg class="animate-spin h-4 w-4 mr-2 inline" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+<!-- Main Content -->
+<div class="p-6">
+  <!-- Connection Status Check -->
+  {#if !isConnected}
+    <div class="text-center py-12">
+      <div class="text-slate-400 dark:text-slate-500 mb-4">
+        <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">
+        Not Connected to Kubernetes
+      </h3>
+      <p class="text-slate-500 dark:text-slate-400 mb-4">
+        Connect to a Kubernetes cluster to view overview data
+      </p>
+      <button
+        onclick={handleRefresh}
+        disabled={isLoading}
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {#if isLoading}
+          <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Connecting...
+        {:else}
+          Connect to Kubernetes
+        {/if}
+      </button>
+    </div>
+  {:else}
+    <!-- Overview Content -->
+    <div class="space-y-6">
+      <!-- Header with Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Cluster Status -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Cluster Status</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">{clusterStatus}</p>
+            </div>
+            <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              Loading...
-            {:else}
-              Refresh
-            {/if}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Key Metrics -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Namespaces</p>
-          <p class="text-2xl font-bold text-slate-900 dark:text-white">{totalNamespaces}</p>
-        </div>
-        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-          <span class="text-2xl">📁</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Active Clusters</p>
-          <p class="text-2xl font-bold text-slate-900 dark:text-white">{activeClusters}</p>
-        </div>
-        <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-          <span class="text-2xl">☸️</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Current Namespace</p>
-          <p class="text-lg font-bold text-slate-900 dark:text-white truncate">{currentNamespace}</p>
-        </div>
-        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-          <span class="text-2xl">🎯</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Cluster Status</p>
-          <p class="text-lg font-bold {isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">{clusterStatus}</p>
-        </div>
-        <div class="w-12 h-12 {isConnected ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'} rounded-lg flex items-center justify-center">
-          <span class="text-2xl">{isConnected ? '✅' : '❌'}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Recent Activity -->
-  <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-    <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Recent Activity</h2>
-    
-    {#if recentActivity.length === 0}
-      <div class="text-center py-8">
-        <p class="text-slate-500 dark:text-slate-400">No recent activity</p>
-      </div>
-    {:else}
-      <div class="space-y-3">
-        {#each recentActivity as activity}
-          <div class="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-700">
-            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center">
-              <span class="text-sm font-bold {getSeverityColor(activity.severity)}">
-                {getSeverityIcon(activity.severity)}
-              </span>
-            </div>
-            <div class="flex-1">
-              <p class="text-sm font-medium text-slate-900 dark:text-white">{activity.message}</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {formatTimeAgo(activity.timestamp)}
-              </p>
             </div>
           </div>
-        {/each}
+          <div class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Context: {currentContext}
+          </div>
+        </div>
+
+        <!-- Namespaces -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Namespaces</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">{totalNamespaces}</p>
+            </div>
+            <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Current: {currentNamespace}
+          </div>
+        </div>
       </div>
-    {/if}
-  </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-4">Recent Activity</h3>
+        <div class="space-y-3">
+          {#each recentActivity as activity}
+            <div class="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+              <div class="flex-shrink-0">
+                {#if activity.severity === 'success'}
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                {:else if activity.severity === 'warning'}
+                  <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                {:else if activity.severity === 'error'}
+                  <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                {:else}
+                  <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                {/if}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-900 dark:text-white">{activity.message}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  {activity.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    </div>
+  {/if}
 </div>

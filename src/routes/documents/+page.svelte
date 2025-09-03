@@ -2,14 +2,16 @@
   import { onMount } from 'svelte';
   import { logger } from '$lib/utils/logger.js';
   import Button from '$lib/components/ui/button.svelte';
-  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
-
-  import { Input, Textarea } from '$lib/components/ui/form/index.js';
   import { toastStore } from '$lib/stores/toast-store';
   import { invoke } from '@tauri-apps/api/core';
   import type { DocumentModel } from '$lib/types/documents';
   import Icon from '@iconify/svelte';
   import MarkdownEditor from '$lib/components/documents/MarkdownEditor.svelte';
+  import DocumentList from '$lib/components/documents/DocumentList.svelte';
+  import DocumentFilters from '$lib/components/documents/DocumentFilters.svelte';
+  import DocumentTabs from '$lib/components/documents/DocumentTabs.svelte';
+  import CreateDocumentModal from '$lib/components/documents/CreateDocumentModal.svelte';
+
 
   // State
   let documents = $state<DocumentModel[]>([]);
@@ -17,21 +19,23 @@
   let isLoading = $state(false);
   let searchQuery = $state('');
   let selectedTags = $state<string[]>([]);
+  let selectedProjectId = $state<number | null>(null);
   let selectedDocument = $state<DocumentModel | null>(null);
   let openTabs = $state<DocumentModel[]>([]);
   let activeTabIndex = $state(0);
   let showCreateModal = $state(false);
 
-  // Form state
-  let newDocumentTitle = $state('');
-  let newDocumentContent = $state('');
-  let newDocumentTags = $state<string[]>([]);
-  let newDocumentProjectId = $state<number | null>(null);
-  let parentDocumentId = $state<number | null>(null);
+
 
   // Available tags for filtering
   const availableTags = [
     'documentation', 'api', 'guide', 'tutorial', 'reference', 'notes', 'planning', 'design'
+  ];
+
+  // Available projects (TODO: Load from API)
+  const availableProjects = [
+    { id: 1, name: 'Project A' },
+    { id: 2, name: 'Project B' },
   ];
 
   onMount(() => {
@@ -77,6 +81,11 @@
         }
         return false;
       });
+    }
+
+    // Apply project filter
+    if (selectedProjectId !== null) {
+      filtered = filtered.filter(doc => doc.project_id === selectedProjectId);
     }
 
     filteredDocuments = filtered;
@@ -127,40 +136,23 @@
     }
   }
 
-  async function createDocument() {
-    if (!newDocumentContent.trim()) {
-      toastStore.error('Document content is required');
-      return;
-    }
-
+  async function createDocument(documentData: { title: string; content: string; tags: string[]; projectId: number | null }) {
     try {
       logger.info('Creating new document...');
       
-      // Use provided title or generate from first line (first 100 chars)
-      let title = newDocumentTitle.trim();
-      if (!title) {
-        const firstLine = newDocumentContent.trim().split('\n')[0];
-        title = firstLine.length > 100 ? firstLine.substring(0, 100) + '...' : firstLine;
-      }
-      
       const result = await invoke('create_document', {
-        title: title,
-        content: newDocumentContent.trim(),
-        projectId: newDocumentProjectId,
+        title: documentData.title,
+        content: documentData.content,
+        projectId: documentData.projectId,
         deploymentId: null,
-        tags: newDocumentTags.length > 0 ? newDocumentTags : null
+        tags: documentData.tags.length > 0 ? documentData.tags : null
       });
 
       const newDoc = result as DocumentModel;
       documents = [newDoc, ...documents];
       filteredDocuments = [newDoc, ...filteredDocuments];
 
-      // Reset form
-      newDocumentTitle = '';
-      newDocumentContent = '';
-      newDocumentTags = [];
-      newDocumentProjectId = null;
-      parentDocumentId = null;
+      // Close modal
       showCreateModal = false;
 
       // Open the new document
@@ -183,22 +175,7 @@
     filterDocuments();
   }
 
-  function getDocumentStatus(doc: DocumentModel) {
-    if (doc.is_draft) {
-      return { text: 'Draft', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' };
-    }
-    return { text: 'Published', class: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' };
-  }
 
-  function formatDate(dateString: string | null) {
-    if (!dateString) return 'Unknown';
-    return new Date(dateString).toLocaleDateString();
-  }
-
-  function truncateContent(content: string, maxLength: number = 100) {
-    if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + '...';
-  }
 
   // Watch for changes to apply filters
   $effect(() => {
@@ -220,151 +197,105 @@
 
 <div class="flex h-screen bg-gray-50 dark:bg-gray-900">
   <!-- Sidebar -->
-  <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+  <div class="w-96 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
     <!-- Sidebar Header -->
-    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Documents</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400">Manage your documents</p>
-    </div>
-
-    <!-- Search Bar -->
-    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-      <div class="relative">
-        <Icon icon="mdi:magnify" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 z-10" />
-        <Input
-          type="text"
-          placeholder="Search documents..."
-          bind:value={searchQuery}
-          className="pl-9"
-        />
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Documents</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Organize and manage your knowledge</p>
+        </div>
+        <Button onclick={() => showCreateModal = true} size="sm" className="flex-shrink-0">
+          <Icon icon="mdi:plus" className="w-4 h-4 mr-2" />
+          New
+        </Button>
+      </div>
+      
+      <!-- Quick Stats -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div class="text-lg font-semibold text-gray-900 dark:text-white">{documents.length}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Total</div>
+        </div>
+        <div class="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div class="text-lg font-semibold text-gray-900 dark:text-white">{documents.filter(d => d.is_draft).length}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Drafts</div>
+        </div>
+        <div class="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div class="text-lg font-semibold text-gray-900 dark:text-white">{documents.filter(d => d.project_id).length}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Projects</div>
+        </div>
       </div>
     </div>
 
-    <!-- Quick Tag Filters -->
-    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-      <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Filters:</h3>
-      <div class="flex flex-wrap gap-1">
-        {#each availableTags as tag}
-          <button
-            onclick={() => toggleTag(tag)}
-            class="px-2 py-1 text-xs rounded-full transition-colors {selectedTags.includes(tag) 
-              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
-              : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
-          >
-            {tag}
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <!-- Create Button -->
-    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-      <Button onclick={() => showCreateModal = true} className="w-full">
-        <Icon icon="mdi:plus" class="w-4 h-4 mr-2" />
-        New Document
-      </Button>
-    </div>
-
-    <!-- Documents List -->
-    <div class="flex-1 overflow-y-auto">
-      {#if isLoading}
-        <div class="flex justify-center items-center py-8">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        </div>
-      {:else if filteredDocuments.length === 0}
-        <div class="text-center py-8 px-4">
-          <Icon icon="mdi:file-document-outline" class="w-12 h-12 text-gray-400 mx-auto mb-2" />
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            {documents.length === 0 ? 'No documents yet' : 'No documents match your filters'}
-          </p>
-        </div>
-      {:else}
-        <div class="p-2">
-          {#each filteredDocuments as doc}
-            <div
-              onclick={() => openDocument(doc)}
-              class="p-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 {selectedDocument?.id === doc.id ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700' : ''}"
-            >
-              <div class="flex items-start justify-between mb-2">
-                <h4 class="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
-                  {doc.title}
-                </h4>
-                <span class="px-2 py-1 text-xs font-medium rounded-full {getDocumentStatus(doc).class} ml-2 flex-shrink-0">
-                  {getDocumentStatus(doc).text}
-                </span>
-              </div>
-              
-              <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
-                {truncateContent(doc.content, 80)}
-              </p>
-              
-              <div class="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
-                <span>{formatDate(doc.updated_at)}</span>
-                <div class="flex gap-1">
-                  <button
-                    onclick={(e) => { e.stopPropagation(); openInNewWindow(doc); }}
-                    class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
-                    title="Open in new window"
-                  >
-                    <Icon icon="mdi:open-in-new" class="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
+    <!-- Filters -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <DocumentFilters
+        searchQuery={searchQuery}
+        selectedTags={selectedTags}
+        selectedProject={selectedProjectId}
+        availableTags={availableTags}
+        availableProjects={availableProjects}
+        onSearchChange={(query) => searchQuery = query}
+        onTagToggle={toggleTag}
+        onProjectChange={(projectId) => selectedProjectId = projectId}
+        onClearFilters={() => {
+          searchQuery = '';
+          selectedTags = [];
+          selectedProjectId = null;
+        }}
+      />
     </div>
   </div>
 
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col">
     <!-- Tab Bar -->
-    {#if openTabs.length > 0}
-      <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-        <div class="flex items-center overflow-x-auto px-2">
-          {#each openTabs as tab, index}
-            <div
-              onclick={() => { activeTabIndex = index; selectedDocument = tab; }}
-              class="flex items-center px-6 py-3 border-r border-gray-200 dark:border-gray-700 cursor-pointer transition-colors {activeTabIndex === index ? 'bg-blue-50 dark:bg-blue-900/20 border-b-2 border-blue-500' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}"
-            >
-              <span class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-36">
-                {tab.title}
-              </span>
-              {#if openTabs.length > 1}
-                <button
-                  onclick={(e) => { e.stopPropagation(); closeTab(index); }}
-                  class="ml-3 p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
-                  title="Close tab"
-                >
-                  <Icon icon="mdi:close" class="w-3.5 h-3.5 text-gray-400" />
-                </button>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
+    <DocumentTabs
+      openTabs={openTabs}
+      activeTabIndex={activeTabIndex}
+      onTabSelect={(index) => { activeTabIndex = index; selectedDocument = openTabs[index]; }}
+      onTabClose={closeTab}
+    />
 
-    <!-- Document Editor -->
+    <!-- Content Area -->
     <div class="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900">
       {#if selectedDocument}
+        <!-- Document Editor -->
         <div class="h-full p-6">
           <MarkdownEditor 
             document={selectedDocument}
           />
         </div>
-      {:else}
+      {:else if openTabs.length === 0}
+        <!-- Welcome Screen -->
         <div class="flex items-center justify-center h-full p-8">
-          <div class="text-center">
-            <Icon icon="mdi:file-document-outline" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No Document Selected
+          <div class="text-center max-w-md">
+            <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Icon icon="mdi:file-document-multiple" className="w-12 h-12 text-white" />
+            </div>
+            <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+              Welcome to Documents
             </h3>
-            <p class="text-gray-600 dark:text-gray-400">
-              Select a document from the sidebar to start editing
+            <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+              Create, organize, and manage your documents with powerful markdown editing, 
+              smart tagging, and project organization.
             </p>
+            <Button onclick={() => showCreateModal = true} size="lg" class="mx-auto">
+              <Icon icon="mdi:plus" class="w-5 h-5 mr-2" />
+              Create Your First Document
+            </Button>
           </div>
+        </div>
+      {:else}
+        <!-- Document List View -->
+        <div class="h-full p-6">
+          <DocumentList
+            documents={filteredDocuments}
+            selectedDocument={selectedDocument}
+            onSelectDocument={openDocument}
+            onOpenInNew={openInNewWindow}
+          />
         </div>
       {/if}
     </div>
@@ -378,69 +309,22 @@
       <div class="p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Create New Document</h2>
         
-        <form onsubmit={(e) => { e.preventDefault(); createDocument(); }} class="space-y-4">
-          <div>
-            <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Title (optional - auto-generated from content)
-            </label>
-            <Input
-              id="title"
-              type="text"
-              bind:value={newDocumentTitle}
-              placeholder="Enter custom title or leave blank for auto-generation..."
-            />
-          </div>
-
-          <div>
-            <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Document Content *
-            </label>
-            <Textarea
-              id="content"
-              bind:value={newDocumentContent}
-              placeholder="Enter initial content (markdown supported)..."
-              rows={6}
-            />
-          </div>
-
-          <div>
-            <label for="tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Tags
-            </label>
-            <div class="flex flex-wrap gap-2">
-              {#each availableTags as tag}
-                <button
-                  type="button"
-                  onclick={() => {
-                    if (newDocumentTags.includes(tag)) {
-                      newDocumentTags = newDocumentTags.filter(t => t !== tag);
-                    } else {
-                      newDocumentTags = [...newDocumentTags, tag];
-                    }
-                  }}
-                  class="px-3 py-1 text-sm rounded-full transition-colors {newDocumentTags.includes(tag) 
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
-                    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
-                >
-                  {tag}
-                </button>
-              {/each}
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-3 pt-4">
-            <Button variant="outline" type="button" onclick={() => showCreateModal = false}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              Create Document
-            </Button>
-          </div>
-        </form>
+        <div class="text-center py-8">
+          <p class="text-gray-500 dark:text-gray-400">Use the new CreateDocumentModal component</p>
+        </div>
       </div>
     </div>
   </div>
 {/if}
+
+<!-- Create Document Modal -->
+<CreateDocumentModal
+  isOpen={showCreateModal}
+  onClose={() => showCreateModal = false}
+  onCreate={createDocument}
+  availableTags={availableTags}
+  availableProjects={availableProjects}
+/>
 
 <style>
   .line-clamp-2 {

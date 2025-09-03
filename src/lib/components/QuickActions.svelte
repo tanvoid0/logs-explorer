@@ -1,29 +1,37 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
   
-  let { isConnected = false } = $props<{ isConnected?: boolean }>();
-  
-  const dispatch = createEventDispatcher();
+  let { 
+    isConnected = false,
+    onQuickAction
+  } = $props<{ 
+    isConnected?: boolean;
+    onQuickAction?: (type: string, config: any) => void;
+  }>();
   
   function handleRecentLogs() {
-    dispatch('quickAction', { 
-      type: 'recent',
-      config: { logCount: 100, isLiveMode: false, isStaticMode: true }
+    onQuickAction?.('recent', { 
+      logCount: 100, 
+      isLiveMode: false, 
+      isStaticMode: true 
     });
   }
   
   function handleErrorLogs() {
-    dispatch('quickAction', { 
-      type: 'error',
-      config: { logCount: 50, searchQuery: 'ERROR', isLiveMode: false, isStaticMode: true }
+    onQuickAction?.('error', { 
+      logCount: 50, 
+      searchQuery: 'ERROR', 
+      isLiveMode: false, 
+      isStaticMode: true 
     });
   }
   
   function handleKubernetesLogs() {
-    dispatch('quickAction', { 
-      type: 'kubernetes',
-      config: { logCount: 100, searchQuery: 'kube', isLiveMode: false, isStaticMode: true }
+    onQuickAction?.('kubernetes', { 
+      logCount: 100, 
+      searchQuery: 'kube', 
+      isLiveMode: false, 
+      isStaticMode: true 
     });
   }
 </script>

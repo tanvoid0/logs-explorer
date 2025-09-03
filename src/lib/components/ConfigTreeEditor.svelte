@@ -1,15 +1,22 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from './ui/button.svelte';
   import { Input } from '$lib/components/ui/form/index.js';
 
-  const { data = {}, readOnly = false, title = 'Configuration Data' } = $props<{
+  const { 
+    data = {}, 
+    readOnly = false, 
+    title = 'Configuration Data',
+    onChange,
+    onSave,
+    onCancel
+  } = $props<{
     data?: Record<string, string>;
     readOnly?: boolean;
     title?: string;
+    onChange?: (data: Record<string, string>) => void;
+    onSave?: (data: Record<string, string>) => void;
+    onCancel?: () => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   let editingData = $state<Record<string, string>>({});
   let newKey = $state('');
@@ -27,29 +34,29 @@
       newKey = '';
       newValue = '';
       isAdding = false;
-      dispatch('change', editingData);
+      onChange?.(editingData);
     }
   }
 
   function removeKey(key: string) {
     delete editingData[key];
     editingData = { ...editingData };
-    dispatch('change', editingData);
+    onChange?.(editingData);
   }
 
   function updateValue(key: string, value: string) {
     editingData[key] = value;
     editingData = { ...editingData };
-    dispatch('change', editingData);
+    onChange?.(editingData);
   }
 
   function saveChanges() {
-    dispatch('save', editingData);
+    onSave?.(editingData);
   }
 
   function cancelChanges() {
     editingData = { ...data };
-    dispatch('cancel');
+    onCancel?.();
   }
 
   function formatValue(value: string): string {

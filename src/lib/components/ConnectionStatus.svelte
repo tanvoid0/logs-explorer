@@ -1,26 +1,31 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
   import type { AppState } from "$lib/stores/app-store";
   
   // Define the connection state type that includes autoConnect
   type ConnectionStateWithAutoConnect = AppState['connection'] & { autoConnectEnabled: boolean };
   
-  const { connectionState, onConnect, onDisconnect } = $props<{
+  const { 
+    connectionState, 
+    onConnect, 
+    onDisconnect,
+    onConnectEvent,
+    onDisconnectEvent
+  } = $props<{
     connectionState: ConnectionStateWithAutoConnect;
     onConnect: () => void;
     onDisconnect: () => void;
+    onConnectEvent?: () => void;
+    onDisconnectEvent?: () => void;
   }>();
   
-  const dispatch = createEventDispatcher();
-  
   function handleConnect() {
-    dispatch('connect');
+    onConnectEvent?.();
     onConnect();
   }
   
   function handleDisconnect() {
-    dispatch('disconnect');
+    onDisconnectEvent?.();
     onDisconnect();
   }
 </script>

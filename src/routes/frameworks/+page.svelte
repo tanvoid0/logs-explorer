@@ -41,8 +41,7 @@
     }
   }
 
-  async function handleCreateFramework(event: CustomEvent) {
-    const { values } = event.detail;
+  async function handleCreateFramework(values: Record<string, any>) {
     
     try {
       modalLoading = true;
@@ -64,8 +63,7 @@
     }
   }
 
-  async function handleUpdateFramework(event: CustomEvent) {
-    const { values } = event.detail;
+  async function handleUpdateFramework(values: Record<string, any>) {
     
     try {
       modalLoading = true;
@@ -80,8 +78,7 @@
     }
   }
 
-  async function handleDeleteFramework(event: CustomEvent) {
-    const { id } = event.detail;
+  async function handleDeleteFramework(id: number) {
     
     if (!confirm('Are you sure you want to delete this framework?')) return;
     
@@ -95,8 +92,7 @@
     }
   }
 
-  async function handleToggleActive(event: CustomEvent) {
-    const { id } = event.detail;
+  async function handleToggleActive(id: number) {
     
     try {
       await toggleFrameworkActive(id);
@@ -126,12 +122,12 @@
     return frameworks.filter(f => f.category === selectedCategory);
   }
 
-  function handleSearchChange(event: CustomEvent) {
-    searchQuery = event.detail.query;
+  function handleSearchChange(query: string) {
+    searchQuery = query;
   }
 
-  function handleCategoryChange(event: CustomEvent) {
-    selectedCategory = event.detail.category;
+  function handleCategoryChange(category: string) {
+    selectedCategory = category;
   }
 
   function handleModalClose() {
@@ -139,12 +135,11 @@
     editingFramework = null;
   }
 
-  function handleModalSave(event: CustomEvent) {
-    const { values, isEditing } = event.detail;
+  function handleModalSave(values: Record<string, any>, isEditing: boolean) {
     if (isEditing) {
-      handleUpdateFramework(event);
+      handleUpdateFramework(values);
     } else {
-      handleCreateFramework(event);
+      handleCreateFramework(values);
     }
   }
 
@@ -153,8 +148,8 @@
     showModal = true;
   }
 
-  function openEditModal(event: CustomEvent) {
-    editingFramework = event.detail.framework;
+  function openEditModal(framework: Framework) {
+    editingFramework = framework;
     showModal = true;
   }
 
@@ -195,10 +190,10 @@
     {selectedCategory}
     {categories}
     className="mb-6"
-    on:searchChange={handleSearchChange}
-    on:categoryChange={handleCategoryChange}
-    on:search={handleSearch}
-    on:refresh={loadData}
+    onSearchChange={handleSearchChange}
+    onCategoryChange={handleCategoryChange}
+    onSearch={handleSearch}
+    onRefresh={loadData}
   />
 
   <!-- Frameworks List -->
@@ -217,9 +212,9 @@
       {#each filteredFrameworks as framework}
         <FrameworkCard
           {framework}
-          on:toggleActive={handleToggleActive}
-          on:delete={handleDeleteFramework}
-          on:edit={openEditModal}
+          onToggleActive={handleToggleActive}
+          onDelete={handleDeleteFramework}
+          onEdit={openEditModal}
         />
       {/each}
     </div>
@@ -232,6 +227,6 @@
   editingFramework={editingFramework}
   {categories}
   loading={modalLoading}
-  on:close={handleModalClose}
-  on:save={handleModalSave}
+  onClose={handleModalClose}
+  onSave={handleModalSave}
 />

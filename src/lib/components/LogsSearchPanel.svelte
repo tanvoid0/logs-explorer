@@ -46,7 +46,17 @@
     isConnected?: boolean;
   }>();
   
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{
+    deploymentsChange: { deployments: string[] };
+    podsChange: { pods: string[] };
+    search: void;
+    severityChange: { severity: string };
+    traceIdChange: { traceId: string };
+    modeChange: { isLiveMode: boolean; isStaticMode: boolean };
+    timeChange: { startTime: string | null; endTime: string | null };
+    pinStartTime: void;
+    pinEndTime: void;
+  }>();
   
   // Removed handleNamespaceChange since we don't have namespace selector anymore
   

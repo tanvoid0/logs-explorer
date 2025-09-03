@@ -1,18 +1,17 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Button from "$lib/components/ui/button.svelte";
 
   let { 
     searchQuery = $bindable(""), 
     isConnected = false, 
-    logsLoading = false 
+    logsLoading = false,
+    onSearch
   } = $props<{
     searchQuery?: string;
     isConnected?: boolean;
     logsLoading?: boolean;
+    onSearch?: (query: string) => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   let showAdvancedSearch = false;
   let searchExamples = [
@@ -69,7 +68,7 @@
   ];
 
   function handleSearch() {
-    dispatch('search', { query: searchQuery });
+    onSearch?.(searchQuery);
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -85,7 +84,7 @@
 
   function clearSearch() {
     searchQuery = "";
-    dispatch('search', { query: "" });
+    onSearch?.("");
   }
 </script>
 

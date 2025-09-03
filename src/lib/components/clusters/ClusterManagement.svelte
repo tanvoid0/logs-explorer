@@ -1,17 +1,25 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ActionButton } from '$lib/components/ui/action/index.js';
   import { Input } from '$lib/components/ui/form/index.js';
   import { BaseSelector } from '$lib/components/ui/selector/index.js';
 
-  let { selectedClusterType = 'GKE (Google Kubernetes Engine)', kubeconfigFile = null, isAddingCluster = false, className = "" } = $props<{
+  let { 
+    selectedClusterType = 'GKE (Google Kubernetes Engine)', 
+    kubeconfigFile = null, 
+    isAddingCluster = false, 
+    className = "",
+    onClusterTypeChange,
+    onFileSelect,
+    onAddCluster
+  } = $props<{
     selectedClusterType?: string;
     kubeconfigFile?: File | null;
     isAddingCluster?: boolean;
     className?: string;
+    onClusterTypeChange?: (clusterType: string) => void;
+    onFileSelect?: (file: File) => void;
+    onAddCluster?: () => void;
   }>();
-
-  const dispatch = createEventDispatcher();
 
   const clusterTypes = [
     'GKE (Google Kubernetes Engine)',
@@ -23,19 +31,19 @@
 
   function handleClusterTypeChange(event: CustomEvent) {
     selectedClusterType = event.detail.values[0];
-    dispatch('clusterTypeChange', { clusterType: selectedClusterType });
+    onClusterTypeChange?.(selectedClusterType);
   }
 
   function handleFileSelect(event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files[0]) {
       kubeconfigFile = target.files[0];
-      dispatch('fileSelect', { file: kubeconfigFile });
+      onFileSelect?.(kubeconfigFile);
     }
   }
 
   function handleAddCluster() {
-    dispatch('addCluster');
+    onAddCluster?.();
   }
 </script>
 

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { k8sAPI, type K8sService } from "$lib/api/k8s";
   import { appStore, connectionState, namespaceState } from "$lib/stores/app-store";
-  import Toast from "$lib/components/Toast.svelte";
+  import { toastStore } from '$lib/stores/toast-store';
   import Button from "$lib/components/ui/button.svelte";
   import WorkloadTabs from "$lib/components/WorkloadTabs.svelte";
   import Table from "$lib/components/ui/table.svelte";
@@ -19,10 +19,7 @@
   let typeFilter = $state("");
   let statusFilter = $state("");
 
-  // Toast notifications
-  let toastMessage = $state("");
-  let toastType = $state<'success' | 'error' | 'warning' | 'info'>('info');
-  let showToast = $state(false);
+  // Toast notifications are handled by the toast store
 
   // Computed values
   let filteredServices = $derived(services.filter(service => {
@@ -37,9 +34,15 @@
   let serviceTypes = $derived(Array.from(new Set(services.map(s => s.type_))));
 
   function showNotification(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') {
-    toastMessage = message;
-    toastType = type;
-    showToast = true;
+    if (type === 'success') {
+      toastStore.success(message);
+    } else if (type === 'error') {
+      toastStore.error(message);
+    } else if (type === 'warning') {
+      toastStore.warning(message);
+    } else {
+      toastStore.info(message);
+    }
   }
 
   onMount(async () => {
@@ -395,10 +398,4 @@
   </div>
 </div>
 
-<!-- Toast Notifications -->
-<Toast 
-  message={toastMessage}
-  type={toastType}
-  show={showToast}
-  on:close={() => showToast = false}
-/>
+  <!-- Toast notifications are handled by the toast store -->
