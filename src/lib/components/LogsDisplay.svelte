@@ -2,6 +2,7 @@
   import Button from "$lib/components/ui/button.svelte";
   import LogEntry from "$lib/components/LogEntry.svelte";
   import type { K8sLog } from "$lib/types/k8s";
+  import { Select, IconButton, Container } from "$lib/components/ui";
   
   const {
     logs = [],
@@ -202,11 +203,11 @@
           <!-- Log Count Control -->
           <div class="flex items-center space-x-2">
             <span class="text-xs text-slate-600 dark:text-slate-400">Count:</span>
-            <select
-              value={logCount}
-              onchange={(e) => setLogCount(Number((e.target as HTMLSelectElement).value))}
-              class="text-xs border border-slate-300 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            <Select
+              size="sm"
+              className="text-xs"
               disabled={!isConnected}
+              onchange={(e) => setLogCount(Number((e.target as HTMLSelectElement).value))}
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -214,39 +215,43 @@
               <option value={100}>100</option>
               <option value={200}>200</option>
               <option value={500}>500</option>
-            </select>
+            </Select>
           </div>
           
           <!-- Scroll Controls -->
           <div class="flex items-center space-x-1">
-            <button
+            <IconButton
+              variant="ghost"
+              size="sm"
               onclick={scrollToTop}
-              class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               disabled={!isConnected || filteredLogs.length === 0}
               title="Scroll to top"
             >
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
-            </button>
-            <button
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              size="sm"
               onclick={scrollToBottom}
-              class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               disabled={!isConnected || filteredLogs.length === 0}
               title="Scroll to bottom"
             >
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
-            </button>
+            </IconButton>
           </div>
           
           <!-- Sort Controls -->
           <div class="flex items-center space-x-2">
-            <button
+            <IconButton
+              variant="ghost"
+              size="sm"
               onclick={toggleSortOrder}
-              class="flex items-center space-x-1 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               disabled={!isConnected || filteredLogs.length === 0}
+              className="flex items-center space-x-1 text-xs"
             >
               <span>Sort:</span>
               <span class="font-medium">
@@ -255,31 +260,33 @@
               <span class="text-xs">
                 {sortOrder === 'newest' ? '↓' : '↑'}
               </span>
-            </button>
+            </IconButton>
           </div>
           
           <!-- Pagination Controls -->
           <div class="flex items-center space-x-1">
-            <button
+            <IconButton
+              variant="ghost"
+              size="sm"
               onclick={handlePreviousPage}
               disabled={!isConnected || !hasPreviousPage || logsLoading}
-              class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               title="Previous page"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
-            </button>
-            <button
+            </IconButton>
+            <IconButton
+              variant="ghost"
+              size="sm"
               onclick={handleNextPage}
               disabled={!isConnected || !hasNextPage || logsLoading}
-              class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               title="Next page"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
               </svg>
-            </button>
+            </IconButton>
           </div>
         </div>
       </div>
@@ -291,10 +298,10 @@
         <!-- Load More Previous Button (at top) -->
         {#if logs.length > 0 && hasPreviousPage}
           <div class="flex justify-center mb-4">
-            <button
+            <Button
               onclick={handleLoadMorePrevious}
               disabled={!isConnected || logsLoadingMore}
-              class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="outline"
             >
               {#if logsLoadingMore}
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -308,7 +315,7 @@
                 </svg>
                 Load More Previous
               {/if}
-            </button>
+            </Button>
           </div>
         {/if}
 
@@ -337,10 +344,10 @@
               <p class="text-slate-600 dark:text-slate-400 max-w-md mb-6">
                 Load logs from your selected namespace and filters.
               </p>
-              <button
+              <Button
                 onclick={onLoadLogs}
                 disabled={!isConnected || logsLoading}
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="default"
               >
                 {#if logsLoading}
                   <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -354,7 +361,7 @@
                   </svg>
                   Load Logs
                 {/if}
-              </button>
+              </Button>
               <div class="mt-4 flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -380,10 +387,10 @@
         <!-- Load More Next Button (at bottom) -->
         {#if logs.length > 0 && hasNextPage}
           <div class="flex justify-center mt-4">
-            <button
+            <Button
               onclick={handleLoadMoreNext}
               disabled={!isConnected || logsLoadingMore}
-              class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 text-sm font-medium rounded-md text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="outline"
             >
               {#if logsLoadingMore}
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -396,8 +403,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
                 </svg>
                 Load More Next
-              {/if}
-            </button>
+                              {/if}
+            </Button>
           </div>
         {/if}
       </div>

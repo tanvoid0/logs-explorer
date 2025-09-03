@@ -8,6 +8,7 @@
   import { k8sAPI, type K8sNamespace } from "$lib/api/k8s";
   import { appStore, connectionState, namespaceState } from "$lib/stores/app-store";
   import { toastStore } from "$lib/stores/toast-store";
+  import { IconButton, Heading, Text, Container } from "$lib/components/ui";
   
   // Loading state
   let isLoading = $state(false);
@@ -215,80 +216,87 @@
 
 <nav class="w-64 bg-slate-800 text-white h-full flex flex-col">
   <!-- Header -->
-  <div class="p-4 border-b border-slate-700">
+  <Container variant="header" className="p-4 border-b border-slate-700">
     <div class="flex items-center space-x-2">
       <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
         <span class="text-white font-bold text-sm">LE</span>
       </div>
       <div>
-        <h1 class="text-lg font-semibold">Logs Explorer</h1>
-        <p class="text-xs text-slate-400">The Kubernetes IDE</p>
+        <Heading level="h1" variant="emphasized" className="text-lg">Logs Explorer</Heading>
+        <Text variant="muted" className="text-xs">The Kubernetes IDE</Text>
       </div>
     </div>
-  </div>
+  </Container>
 
   <!-- Navigation Controls -->
-  <div class="p-3 border-b border-slate-700">
+  <Container variant="header" className="p-3 border-b border-slate-700">
     <div class="flex items-center space-x-2">
-      <button
+      <IconButton
+        variant="ghost"
+        size="sm"
         onclick={goBack}
         disabled={!canGoBack}
-        class="flex items-center justify-center w-8 h-8 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         title="Go Back"
         aria-label="Go Back"
+        className="w-8 h-8 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
-      </button>
+      </IconButton>
       
-      <button
+      <IconButton
+        variant="ghost"
+        size="sm"
         onclick={goForward}
         disabled={!canGoForward}
-        class="flex items-center justify-center w-8 h-8 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         title="Go Forward"
         aria-label="Go Forward"
+        className="w-8 h-8 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-      </button>
+      </IconButton>
       
       <div class="flex-1"></div>
       
-      <button
+      <IconButton
+        variant="ghost"
+        size="sm"
         onclick={() => navigateTo('/overview')}
-        class="flex items-center justify-center w-8 h-8 rounded-md bg-slate-700 hover:bg-slate-600 transition-colors"
         title="Go to Overview"
         aria-label="Go to Overview"
+        className="w-8 h-8 bg-slate-700 hover:bg-slate-600"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
-      </button>
+      </IconButton>
     </div>
-  </div>
+  </Container>
   
   <!-- Navigation Items -->
   <div class="flex-1 overflow-y-auto py-4">
     <div class="px-4">
-      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+      <Heading level="h2" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
         Navigation
-      </h2>
+      </Heading>
       
       <ul class="space-y-1">
         {#each navigationItems as item}
           <li>
             <!-- Navigation Item -->
-            <button
+            <Button
+              variant="ghost"
               onclick={() => navigateTo(item.href)}
-              class="w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors hover:bg-slate-700 {isActive(item.href) ? 'bg-slate-700 text-white' : 'text-slate-300'}"
+              className="w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors hover:bg-slate-700 {isActive(item.href) ? 'bg-slate-700 text-white' : 'text-slate-300'}"
             >
               <div class="flex items-center space-x-3">
                 <span class="text-lg">{item.icon}</span>
                 <span class="font-medium">{item.name}</span>
               </div>
-            </button>
+            </Button>
           </li>
         {/each}
       </ul>
@@ -296,12 +304,12 @@
   </div>
   
   <!-- Footer with Connection Status and Namespace Selector -->
-  <div class="p-4 border-t border-slate-700 space-y-4">
+  <Container variant="header" className="p-4 border-t border-slate-700 space-y-4">
     <!-- Connection Status -->
     <div class="space-y-2">
-      <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+      <Heading level="h3" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
         Connection
-      </div>
+      </Heading>
       {#if $connectionState.isConnected}
         <div class="flex items-center space-x-2 bg-green-900/30 px-3 py-2 rounded-lg border border-green-700/50">
           <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
@@ -321,10 +329,12 @@
               <div class="text-xs text-red-400">No cluster connection</div>
             </div>
           </div>
-          <button 
+          <Button 
             onclick={handleRefresh}
             disabled={isLoading}
-            class="w-full flex items-center justify-center px-3 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="default"
+            size="sm"
+            className="w-full flex items-center justify-center px-3 py-2 text-xs"
           >
             {#if isLoading}
               <svg class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
@@ -338,7 +348,7 @@
               </svg>
               Connect to Cluster
             {/if}
-          </button>
+          </Button>
         </div>
       {/if}
     </div>
@@ -346,9 +356,9 @@
     <!-- Namespace Selector -->
     {#if $connectionState.isConnected}
       <div class="space-y-2">
-        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <Heading level="h3" variant="muted" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
           Namespace
-        </div>
+        </Heading>
         <div class="bg-slate-700/50 rounded-lg p-3">
           {#if $namespaceState.available.length > 0}
             <NamespaceSelector 
@@ -370,10 +380,12 @@
     <!-- Refresh Button - Compact -->
     {#if $connectionState.isConnected}
       <div class="pt-1">
-        <button 
+        <Button 
+          variant="ghost"
+          size="sm"
           onclick={handleRefresh}
           disabled={isLoading}
-          class="w-full flex items-center justify-center px-3 py-2 text-xs text-slate-400 hover:text-slate-300 hover:bg-slate-700/50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center px-3 py-2 text-xs text-slate-400 hover:text-slate-300 hover:bg-slate-700/50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {#if isLoading}
             <svg class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
@@ -386,9 +398,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Refresh Context ({$namespaceState.available.length} namespaces)
-          {/if}
-        </button>
+                      {/if}
+        </Button>
       </div>
     {/if}
-  </div>
+  </Container>
 </nav>

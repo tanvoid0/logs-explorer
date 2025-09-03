@@ -6,6 +6,7 @@
   import { toastStore } from '$lib/stores/toast-store';
   import LogsDisplay from "$lib/components/LogsDisplay.svelte";
   import LogsSearchPanel from "$lib/components/LogsSearchPanel.svelte";
+  import { Button, Heading, Text, Container } from "$lib/components/ui";
 
   // Props for configuring the logs viewer
   let { 
@@ -259,57 +260,55 @@
 
 <div class="flex-1 flex flex-col min-h-0 h-screen overflow-hidden">
   <!-- Header -->
-  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
-    <div class="px-6 py-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-xl font-semibold text-slate-900 dark:text-white">
-            {title}
-          </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">
-            {description}
-          </p>
-        </div>
+  <Container variant="header" className="flex-shrink-0">
+    <div class="flex items-center justify-between">
+      <div>
+        <Heading level="h1" variant="emphasized">
+          {title}
+        </Heading>
+        <Text variant="muted" className="text-sm">
+          {description}
+        </Text>
       </div>
     </div>
-  </header>
+  </Container>
 
   <!-- Main Content -->
   <main class="flex-1 p-6 overflow-hidden">
     <div class="w-full h-full flex flex-col overflow-hidden">
       {#if !$connectionState.isConnected}
-        <div class="text-center py-12">
+        <Container className="text-center py-12">
           <div class="text-slate-400 dark:text-slate-500 mb-4">
             <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">
+          <Heading level="h3" variant="emphasized" className="mb-2">
             Not Connected to Kubernetes
-          </h3>
-          <p class="text-slate-500 dark:text-slate-400 mb-4">
+          </Heading>
+          <Text variant="muted" className="mb-4">
             Connect to a Kubernetes cluster to view logs
-          </p>
-          <button 
+          </Text>
+          <Button 
             onclick={() => appStore.connect()}
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            variant="default"
           >
             Connect to Kubernetes
-          </button>
-        </div>
+          </Button>
+        </Container>
       {:else}
         <!-- Namespace Filter Label -->
         {#if showNamespaceLabel}
-          <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md">
+          <Container className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md">
             <div class="flex items-center space-x-2">
               <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
               </svg>
-              <span class="text-sm font-medium text-blue-800 dark:text-blue-200">
+              <Text className="text-sm font-medium text-blue-800 dark:text-blue-200">
                 Filtered by namespace: <span class="font-semibold">{currentNamespace}</span>
-              </span>
+              </Text>
             </div>
-          </div>
+          </Container>
         {/if}
 
         <!-- Search Panel -->
