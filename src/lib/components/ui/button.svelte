@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from "$lib/utils";
+  import { cn } from "$lib/utils/index";
 
   type Variant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   type Size = "default" | "sm" | "lg" | "icon";

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from "$lib/utils";
+  import { cn } from "$lib/utils/index";
 
   const { maxWidth = "default", className = "", children } = $props<{
     maxWidth?: "sm" | "default" | "lg" | "xl" | "2xl" | "full";

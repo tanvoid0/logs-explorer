@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from "$lib/utils";
+  import { cn } from "$lib/utils/index";
   import Card from "../card/index.svelte";
   import CardContent from "../card/content.svelte";
   import CardHeader from "../card/header.svelte";

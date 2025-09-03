@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from "$lib/utils";
+  import { cn } from "$lib/utils/index";
   import Table from "./table.svelte";
   import TableHeader from "./table-header.svelte";
   import TableBody from "./table-body.svelte";

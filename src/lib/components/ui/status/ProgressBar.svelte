@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from "$lib/utils";
+  import { cn } from "$lib/utils/index";
 
   const variantClasses = {
     default: "bg-blue-600",
@@ -7,6 +7,8 @@
     warning: "bg-yellow-600",
     error: "bg-red-600"
   } as const;
+
+  type Variant = keyof typeof variantClasses;
 
   const sizeClasses = {
     sm: "h-1",
@@ -23,7 +25,7 @@
   } = $props<{
     value?: number;
     max?: number;
-    variant?: "default" | "success" | "warning" | "error";
+    variant?: Variant;
     size?: "sm" | "default" | "lg";
     className?: string;
   }>();
@@ -35,5 +37,5 @@
   <div 
     class={cn("rounded-full transition-all duration-300", variantClasses[variant])}
     style="width: {percentage}%"
-  />
+  ></div>
 </div>

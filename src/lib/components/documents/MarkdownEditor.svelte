@@ -298,7 +298,7 @@ import type { DocumentModel } from '$lib/types/documents';
         
         <Card className="h-96 overflow-y-auto">
           <CardContent className="p-6">
-            <div class="prose prose-sm max-w-none dark:prose-invert">
+            <div class="prose prose-sm max-w-none dark:prose-invert [&_h1]:mt-6 [&_h1]:mb-4 [&_h1]:font-semibold [&_h1]:text-3xl [&_h1]:leading-9 [&_h2]:mt-6 [&_h2]:mb-4 [&_h2]:font-semibold [&_h2]:text-2xl [&_h2]:leading-8 [&_h3]:mt-6 [&_h3]:mb-4 [&_h3]:font-semibold [&_h3]:text-xl [&_h3]:leading-7 [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:mb-4 [&_ul]:pl-6 [&_ol]:mb-4 [&_ol]:pl-6 [&_li]:mb-2 [&_blockquote]:border-l-4 [&_blockquote]:border-slate-200 [&_blockquote]:pl-4 [&_blockquote]:my-6 [&_blockquote]:italic [&_blockquote]:text-slate-500 [&_blockquote]:bg-slate-50 [&_blockquote]:p-4 [&_blockquote]:rounded-md [&_code]:font-mono [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_pre]:bg-slate-800 [&_pre]:text-slate-50 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:my-6 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_table]:my-6 [&_th]:border [&_th]:border-slate-200 [&_th]:p-3 [&_th]:text-left [&_th]:bg-slate-50 [&_th]:font-semibold [&_td]:border [&_td]:border-slate-200 [&_td]:p-3 [&_td]:text-left">
               {@html renderMarkdown(contentDraft)}
             </div>
           </CardContent>
@@ -308,95 +308,4 @@ import type { DocumentModel } from '$lib/types/documents';
   </div>
 </div>
 
-<style>
-  .prose h1, .prose h2, .prose h3 {
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-  }
 
-  .prose h1 {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-  }
-
-  .prose h2 {
-    font-size: 1.5rem;
-    line-height: 2rem;
-  }
-
-  .prose h3 {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-  }
-
-  .prose p {
-    margin-bottom: 1rem;
-    line-height: 1.6;
-  }
-
-  .prose ul, .prose ol {
-    margin-bottom: 1rem;
-    padding-left: 1.5rem;
-  }
-
-  .prose li {
-    margin-bottom: 0.5rem;
-  }
-
-  .prose blockquote {
-    border-left: 4px solid #e5e7eb;
-    padding-left: 1rem;
-    margin: 1.5rem 0;
-    font-style: italic;
-    color: #6b7280;
-    background-color: #f9fafb;
-    padding: 1rem;
-    border-radius: 0.375rem;
-  }
-
-  .prose code {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    background-color: #f3f4f6;
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-  }
-
-  .prose pre {
-    background-color: #1f2937;
-    color: #f9fafb;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    margin: 1.5rem 0;
-  }
-
-  .prose pre code {
-    background-color: transparent;
-    padding: 0;
-    color: inherit;
-  }
-
-  .prose hr {
-    margin: 2rem 0;
-    border-color: #e5e7eb;
-  }
-
-  .prose table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5rem 0;
-  }
-
-  .prose th, .prose td {
-    border: 1px solid #e5e7eb;
-    padding: 0.75rem;
-    text-align: left;
-  }
-
-  .prose th {
-    background-color: #f9fafb;
-    font-weight: 600;
-  }
-</style>

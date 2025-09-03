@@ -264,10 +264,10 @@
   }
 </script>
 
-<div class="pipeline-editor">
-  <div class="editor-header">
-    <h2>{pipeline ? 'Edit Pipeline' : 'Create New Pipeline'}</h2>
-    <div class="header-actions">
+<div class="max-w-6xl mx-auto bg-white rounded-lg shadow-md">
+  <div class="flex justify-between items-center p-6 border-b border-slate-200">
+    <h2 class="m-0 text-2xl font-semibold">{pipeline ? 'Edit Pipeline' : 'Create New Pipeline'}</h2>
+    <div class="flex gap-2">
       <Button variant="outline" onclick={onCancel}>
         <Icon icon="mdi:close" class="w-4 h-4 mr-2" />
         Cancel
@@ -280,46 +280,46 @@
   </div>
 
   {#if validationErrors.length > 0}
-    <div class="validation-errors">
-      <h3>Validation Errors:</h3>
-      <ul>
+    <div class="bg-red-50 border border-red-200 rounded-md p-4 mx-6 my-4">
+      <h3 class="m-0 mb-2 text-red-600 text-sm font-semibold">Validation Errors:</h3>
+      <ul class="m-0 pl-6">
         {#each validationErrors as error}
-          <li class="error">{error}</li>
+          <li class="text-red-600 text-sm">{error}</li>
         {/each}
       </ul>
     </div>
   {/if}
 
-  <div class="editor-content">
+  <div class="p-6">
     <!-- Basic Information -->
-    <div class="section">
-      <h3>Basic Information</h3>
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="name">Pipeline Name *</label>
+    <div class="mb-8">
+      <h3 class="m-0 mb-4 text-lg font-semibold text-slate-700">Basic Information</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <div class="mb-4">
+          <label for="name" class="block mb-2 font-medium text-slate-700">Pipeline Name *</label>
           <input
             id="name"
             type="text"
             bind:value={name}
             placeholder="Enter pipeline name"
-            class="form-input"
+            class="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
 
-        <div class="form-group">
-          <label for="version">Version *</label>
+        <div class="mb-4">
+          <label for="version" class="block mb-2 font-medium text-slate-700">Version *</label>
           <input
             id="version"
             type="text"
             bind:value={version}
             placeholder="1.0.0"
-            class="form-input"
+            class="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
 
-        <div class="form-group">
-          <label for="framework">Framework</label>
-          <select id="framework" bind:value={framework} class="form-select">
+        <div class="mb-4">
+          <label for="framework" class="block mb-2 font-medium text-slate-700">Framework</label>
+          <select id="framework" bind:value={framework} class="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
             <option value={null}>Any Framework</option>
             {#each frameworks as fw}
               <option value={fw}>{fw}</option>
@@ -327,9 +327,9 @@
           </select>
         </div>
 
-        <div class="form-group">
-          <label for="category">Category</label>
-          <select id="category" bind:value={category} class="form-select">
+        <div class="mb-4">
+          <label for="category" class="block mb-2 font-medium text-slate-700">Category</label>
+          <select id="category" bind:value={category} class="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
             <option value="">No Category</option>
             {#each categories as cat}
               <option value={cat}>{cat}</option>
@@ -338,37 +338,37 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="description">Description</label>
+      <div class="mb-4">
+        <label for="description" class="block mb-2 font-medium text-slate-700">Description</label>
         <textarea
           id="description"
           bind:value={description}
           placeholder="Describe what this pipeline does..."
-          class="form-textarea"
+          class="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           rows="3"
         ></textarea>
       </div>
 
-      <div class="form-group">
-        <label for="tags-input">Tags</label>
-        <div class="tags-input">
-          <div class="tags-list">
+      <div class="mb-4">
+        <label for="tags-input" class="block mb-2 font-medium text-slate-700">Tags</label>
+        <div class="border border-slate-300 rounded-md p-2">
+          <div class="flex flex-wrap gap-2 mb-2">
             {#each tags as tag}
-              <span class="tag">
+              <span class="inline-flex items-center bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs">
                 {tag}
-                <Button variant="ghost" size="sm" onclick={() => removeTag(tag)} class="tag-remove">
+                <Button variant="ghost" size="sm" onclick={() => removeTag(tag)} class="ml-1 p-0 text-slate-500 hover:text-red-600">
                   <Icon icon="mdi:close" class="w-3 h-3" />
                 </Button>
               </span>
             {/each}
           </div>
-          <div class="tag-input">
+          <div class="flex gap-2">
             <input
               id="tags-input"
               type="text"
               bind:value={newTag}
               placeholder="Add tag..."
-              class="form-input"
+              class="flex-1 p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               onkeydown={(e) => e.key === 'Enter' && addTag()}
             />
             <Button size="sm" onclick={addTag}>

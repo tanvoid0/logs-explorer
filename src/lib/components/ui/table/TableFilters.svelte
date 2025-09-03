@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from "$lib/utils";
+  import { cn } from "$lib/utils/index";
   import Button from "../button.svelte";
   import BaseSelector from "../selector/BaseSelector.svelte";
 
