@@ -7,6 +7,7 @@ pub mod m20240101_000004_create_framework_ide_mappings_table;
 pub mod m20240101_000005_create_projects_table;
 pub mod m20240101_000006_create_frameworks_table;
 pub mod m20240101_000007_create_framework_detections_table;
+pub mod m20240101_000008_create_documents_table;
 
 // Re-export all migrations for easy access
 pub use m20240101_000001_create_task_groups_table::Migration as createTaskGroupsTable;
@@ -16,6 +17,7 @@ pub use m20240101_000004_create_framework_ide_mappings_table::Migration as creat
 pub use m20240101_000005_create_projects_table::Migration as createProjectsTable;
 pub use m20240101_000006_create_frameworks_table::Migration as createFrameworksTable;
 pub use m20240101_000007_create_framework_detections_table::Migration as createFrameworkDetectionsTable;
+pub use m20240101_000008_create_documents_table::Migration as createDocumentsTable;
 
 // Create a function to get all migrations
 pub fn get_migrations() -> Vec<Box<dyn MigrationTrait>> {
@@ -27,5 +29,6 @@ pub fn get_migrations() -> Vec<Box<dyn MigrationTrait>> {
         Box::new(createProjectsTable),
         Box::new(createFrameworksTable),
         Box::new(createFrameworkDetectionsTable),
+        Box::new(createDocumentsTable),
     ]
 }

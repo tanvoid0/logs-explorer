@@ -35,18 +35,21 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 - **SDK Manager**: Detect and manage development tools
 - **Integrated Terminal**: Project-aware command execution with timeout protection
 - **Project Management**: Organize and manage development projects
+- **Document Management**: Create, edit, and manage markdown documents with draft support
 - **Cross-Platform**: Windows, macOS, and Linux support
 
 ### 🔄 In Progress
 - **GCP Integration**: Cloud Logging API integration (planned)
 - **Command Palette**: Global search and navigation (planned)
 - **Advanced Analytics**: Metrics and dashboard features (planned)
+- **Document Editor**: Enhanced markdown editor with live preview and project linking
 
 ### 📋 Planned Features
 - **Real-time Streaming**: Enhanced terminal output streaming
 - **Virtual Scrolling**: Handle millions of log entries efficiently
 - **Performance Optimization**: Memory and CPU usage optimization
 - **Enterprise Features**: Multi-tenancy and compliance features
+- **Advanced Document Features**: Collaborative editing, version control, and rich media support
 
 ## Security Considerations
 
@@ -94,7 +97,13 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 - Error handling improvements
 - Cross-platform testing
 
-### Phase 4: Enterprise Features 📋 **PLANNED**
+### Phase 4: Document Management ✅ **COMPLETED**
+- Document creation and editing with markdown support
+- Draft system with auto-save functionality
+- Project and deployment linking
+- Search and filtering capabilities
+
+### Phase 5: Enterprise Features 📋 **PLANNED**
 - GCP Cloud Logging integration
 - Command palette and search
 - Advanced analytics and metrics
@@ -136,7 +145,8 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 ## Future Roadmap
 
 ### Short Term (1-2 months)
-- GCP Cloud Logging integration
+- Enhanced markdown editor with live preview
+- Document project linking and organization
 - Command palette implementation
 - Performance optimization
 - Enhanced error handling
@@ -144,12 +154,14 @@ A modern, cross-platform desktop application for exploring and managing Kubernet
 ### Medium Term (3-6 months)
 - Advanced analytics and metrics
 - Multi-cluster management
+- Document collaboration features
 - Enterprise features
 - Plugin system
 
 ### Long Term (6+ months)
 - Machine learning integration
 - Advanced collaboration features
+- Document version control and history
 - Cloud-native deployment
 - Enterprise compliance features
 
@@ -434,7 +446,7 @@ The project is considered complete when:
 11. **Svelte 5 State Management**: Reactive variables migrated to use `$state()` ✅ **COMPLETED** (5 components updated)
 12. **Slot Deprecation Migration**: All deprecated slot syntax converted to modern render patterns 🔄 **IN PROGRESS** (Target: <500 errors)
 
-**Current Progress**: ~99.5% complete
+**Current Progress**: ~99.8% complete
 **Next Major Milestone**: Complete slot deprecation migration
 **Estimated Completion**: 2-3 weeks for remaining slot migration fixes
 

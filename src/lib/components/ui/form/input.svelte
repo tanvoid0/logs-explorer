@@ -1,13 +1,15 @@
 <script lang="ts">
   import { cn } from "$lib/utils";
 
-  const { 
+  let { 
+    value = $bindable(""),
     type = "text",
     className = "",
     placeholder = "",
     disabled = false,
     ...rest 
   } = $props<{
+    value?: string;
     type?: string;
     className?: string;
     placeholder?: string;
@@ -24,5 +26,6 @@
   )}
   placeholder={placeholder}
   disabled={disabled}
+  bind:value
   {...rest}
 />

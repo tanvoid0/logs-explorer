@@ -11,7 +11,7 @@
   import ProjectDeploymentSelector from "$lib/components/ProjectDeploymentSelector.svelte";
   import CentralizedTerminal from "$lib/components/CentralizedTerminal.svelte";
   import PipelineExecutor from "$lib/components/PipelineExecutor.svelte";
-  import TaskPage from "$lib/components/TaskPage.svelte";
+  import TaskPage from "$lib/components/tasks/TaskPage.svelte";
 
   // Project state
   let project = $state<Project | null>(null);

@@ -8,6 +8,7 @@ pub mod projects;
 pub mod frameworks;
 pub mod settings;
 pub mod k8s;
+pub mod documents;
 
 // Infrastructure modules
 pub mod process;
@@ -99,6 +100,21 @@ pub fn run() {
             crate::frameworks::commands::get_detection_stats,
             crate::frameworks::commands::get_high_confidence_framework_detections,
             crate::frameworks::commands::get_recent_framework_detections,
+
+            // Document commands
+            crate::documents::commands::get_all_documents,
+            crate::documents::commands::get_document,
+            crate::documents::commands::get_document_by_uuid,
+            crate::documents::commands::get_documents_by_project,
+            crate::documents::commands::get_documents_by_deployment,
+            crate::documents::commands::create_document,
+            crate::documents::commands::update_draft,
+            crate::documents::commands::save_document,
+            crate::documents::commands::update_document_metadata,
+            crate::documents::commands::delete_document,
+            crate::documents::commands::search_documents,
+            crate::documents::commands::get_document_stats,
+            crate::documents::commands::open_document_in_new_window,
 
             // Kubernetes commands
             crate::k8s::commands::init_k8s,

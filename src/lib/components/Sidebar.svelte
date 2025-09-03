@@ -19,6 +19,7 @@
     { name: 'Workloads', href: '/workloads', icon: '☸️' },
     { name: 'Tasks', href: '/tasks', icon: '✅' },
     { name: 'Projects', href: '/projects', icon: '📁' },
+    { name: 'Documents', href: '/documents', icon: '📄' },
     { name: 'SDK Manager', href: '/sdk-manager', icon: '🔧' },
     { name: 'Settings', href: '/settings', icon: '⚙️' }
   ];

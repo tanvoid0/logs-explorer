@@ -1,8 +1,7 @@
 // UI Components
 export * from './ui/index.js';
 
-// Navigation Components
-export * from './navigation/index.js';
+// Navigation Components - removed redundant navigation folder
 
 // Terminal Components
 export * from './terminal/index.js';
