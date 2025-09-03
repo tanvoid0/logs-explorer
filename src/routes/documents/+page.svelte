@@ -9,8 +9,9 @@
   import MarkdownEditor from '$lib/components/documents/MarkdownEditor.svelte';
   import DocumentList from '$lib/components/documents/DocumentList.svelte';
   import DocumentFilters from '$lib/components/documents/DocumentFilters.svelte';
-  import DocumentTabs from '$lib/components/documents/DocumentTabs.svelte';
-  import CreateDocumentModal from '$lib/components/documents/CreateDocumentModal.svelte';
+import DocumentTree from '$lib/components/documents/DocumentTree.svelte';
+import DocumentTabs from '$lib/components/documents/DocumentTabs.svelte';
+import CreateDocumentModal from '$lib/components/documents/CreateDocumentModal.svelte';
 
 
   // State
@@ -24,22 +25,21 @@
   let openTabs = $state<DocumentModel[]>([]);
   let activeTabIndex = $state(0);
   let showCreateModal = $state(false);
+  let isCreatingSampleData = $state(false);
 
 
 
-  // Available tags for filtering
-  const availableTags = [
-    'documentation', 'api', 'guide', 'tutorial', 'reference', 'notes', 'planning', 'design'
-  ];
-
-  // Available projects (TODO: Load from API)
-  const availableProjects = [
-    { id: 1, name: 'Project A' },
-    { id: 2, name: 'Project B' },
-  ];
+  // Available tags and projects - will be loaded from database
+  let availableTags = $state<string[]>([]);
+  let availableProjects = $state<Array<{ id: number; name: string }>>([]);
+  let tagCounts = $state<Record<string, number>>({});
+  
+  // UI state
+  let showFilters = $state(false);
 
   onMount(() => {
     loadDocuments();
+    loadProjects();
   });
 
   async function loadDocuments() {
@@ -51,6 +51,9 @@
       documents = result as DocumentModel[];
       filteredDocuments = [...documents];
       
+      // Extract unique tags from documents
+      tagCounts = extractTagsFromDocuments();
+      
       logger.info(`Loaded ${documents.length} documents`);
     } catch (error) {
       logger.error('Failed to load documents:', error);
@@ -58,6 +61,81 @@
     } finally {
       isLoading = false;
     }
+  }
+
+  async function loadProjects() {
+    try {
+      logger.info('Loading projects...');
+      
+      const result = await invoke('get_all_projects');
+      availableProjects = result as Array<{ id: number; name: string }>;
+      
+      logger.info(`Loaded ${availableProjects.length} projects:`, availableProjects);
+      
+      // If no projects found, add a default project for testing
+      if (availableProjects.length === 0) {
+        logger.info('No projects found, adding default project for testing');
+        availableProjects = [
+          { id: 1, name: 'Sample Project' },
+          { id: 2, name: 'Documentation' }
+        ];
+      }
+    } catch (error) {
+      logger.error('Failed to load projects:', error);
+      toastStore.error('Failed to load projects');
+      
+      // Fallback to default projects if loading fails
+      logger.info('Using fallback default projects');
+      availableProjects = [
+        { id: 1, name: 'Sample Project' },
+        { id: 2, name: 'Documentation' }
+      ];
+    }
+  }
+
+  function extractTagsFromDocuments() {
+    const allTags = new Set<string>();
+    const tagCounts: Record<string, number> = {};
+    
+    logger.info(`Processing ${documents.length} documents for tags`);
+    
+    documents.forEach(doc => {
+      logger.info(`Document ${doc.id}: ${doc.title} - tags:`, doc.tags);
+      
+      if (doc.tags) {
+        try {
+          const docTags = JSON.parse(doc.tags as any);
+          logger.info(`Parsed tags for document ${doc.id}:`, docTags);
+          
+          if (Array.isArray(docTags)) {
+            docTags.forEach((tag: string) => {
+              allTags.add(tag);
+              tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            });
+          }
+        } catch (e) {
+          logger.warn(`Failed to parse tags for document ${doc.id}: ${e}`);
+        }
+      } else {
+        logger.info(`Document ${doc.id} has no tags`);
+      }
+    });
+    
+    availableTags = Array.from(allTags).sort();
+    logger.info(`Extracted ${availableTags.length} unique tags from documents:`, availableTags);
+    logger.info(`Tag counts:`, tagCounts);
+    
+    // If no tags found in documents, provide some default tags for testing
+    if (availableTags.length === 0) {
+      logger.info('No tags found in documents, adding default tags for testing');
+      const defaultTags = ['documentation', 'api', 'guide', 'tutorial', 'reference', 'notes', 'planning', 'design'];
+      availableTags = defaultTags;
+      defaultTags.forEach(tag => {
+        tagCounts[tag] = 0; // These tags have 0 documents initially
+      });
+    }
+    
+    return tagCounts;
   }
 
   function filterDocuments() {
@@ -166,6 +244,213 @@
     }
   }
 
+  async function createSampleData() {
+    try {
+      isCreatingSampleData = true;
+      logger.info('Creating sample data...');
+      
+      // Create sample projects first
+      const sampleProjects = [
+        { name: 'Sample Project', path: '/tmp/sample-project', framework: 'Node.js' },
+        { name: 'Documentation', path: '/tmp/documentation', framework: 'Vue.js' }
+      ];
+      
+      const projectIds = [];
+      for (const project of sampleProjects) {
+        try {
+          const projectId = await invoke('add_project', {
+            name: project.name,
+            path: project.path,
+            framework: project.framework,
+            deployment: null
+          });
+          projectIds.push(projectId);
+          logger.info(`Created project: ${project.name} (ID: ${projectId})`);
+        } catch (error) {
+          logger.warn(`Project "${project.name}" might already exist: ${error}`);
+          // Try to get existing project ID
+          try {
+            const projects = await invoke('get_all_projects') as Array<{ id: number; name: string }>;
+            const existingProject = projects.find((p: { id: number; name: string }) => p.name === project.name);
+            if (existingProject) {
+              projectIds.push(existingProject.id);
+            } else {
+              projectIds.push(projectIds.length + 1); // Fallback ID
+            }
+          } catch (getError) {
+            projectIds.push(projectIds.length + 1); // Fallback ID
+          }
+        }
+      }
+      
+      // Create sample documents
+      const sampleDocuments = [
+        {
+          title: 'Getting Started Guide',
+          content: `# Getting Started Guide
+
+Welcome to Logs Explorer! This guide will help you get started with the application.
+
+## Features
+
+- **Document Management**: Create, organize, and manage your knowledge base
+- **Project Organization**: Group documents by projects
+- **Smart Tagging**: Use tags to categorize and find documents quickly
+- **Markdown Support**: Write rich content with markdown formatting
+
+## Quick Start
+
+1. Create your first document
+2. Add tags to organize content
+3. Group documents by projects
+4. Use the search to find what you need
+
+Happy documenting!`,
+          tags: ['guide', 'documentation', 'getting-started'],
+          projectId: projectIds[0] || 1
+        },
+        {
+          title: 'API Reference',
+          content: `# API Reference
+
+This document contains the API reference for Logs Explorer.
+
+## Endpoints
+
+### Documents
+- \`GET /documents\` - Get all documents
+- \`POST /documents\` - Create a new document
+- \`PUT /documents/:id\` - Update a document
+- \`DELETE /documents/:id\` - Delete a document
+
+### Projects
+- \`GET /projects\` - Get all projects
+- \`POST /projects\` - Create a new project
+
+## Authentication
+
+All API endpoints require authentication via JWT tokens.`,
+          tags: ['api', 'reference', 'documentation'],
+          projectId: projectIds[0] || 1
+        },
+        {
+          title: 'Project Planning Notes',
+          content: `# Project Planning Notes
+
+## Current Sprint Goals
+
+- [ ] Implement document search functionality
+- [ ] Add document versioning
+- [ ] Improve tag management
+- [ ] Add export functionality
+
+## Future Features
+
+- Document templates
+- Collaborative editing
+- Advanced search filters
+- Document analytics
+
+## Notes
+
+Remember to update the roadmap document with any new ideas or requirements.`,
+          tags: ['planning', 'notes', 'project'],
+          projectId: projectIds[1] || 2
+        },
+        {
+          title: 'Design System',
+          content: `# Design System
+
+## Color Palette
+
+- **Primary**: Blue (#3B82F6)
+- **Secondary**: Purple (#8B5CF6)
+- **Success**: Green (#10B981)
+- **Warning**: Yellow (#F59E0B)
+- **Error**: Red (#EF4444)
+
+## Typography
+
+- **Headings**: Inter, sans-serif
+- **Body**: Inter, sans-serif
+- **Monospace**: JetBrains Mono
+
+## Components
+
+- Buttons
+- Input fields
+- Cards
+- Modals
+- Navigation`,
+          tags: ['design', 'ui', 'documentation'],
+          projectId: projectIds[1] || 2
+        },
+        {
+          title: 'Tutorial: Creating Your First Document',
+          content: `# Tutorial: Creating Your First Document
+
+Follow this step-by-step guide to create your first document in Logs Explorer.
+
+## Step 1: Navigate to Documents
+
+Click on the "Documents" section in the sidebar.
+
+## Step 2: Create New Document
+
+Click the "+ New" button in the top right corner.
+
+## Step 3: Fill in Details
+
+- **Title**: Enter a descriptive title
+- **Content**: Write your content in markdown
+- **Tags**: Add relevant tags (comma-separated)
+- **Project**: Select a project (optional)
+
+## Step 4: Save
+
+Click "Create Document" to save your document.
+
+## Next Steps
+
+- Edit your document
+- Add more tags
+- Organize into projects
+- Share with team members`,
+          tags: ['tutorial', 'guide', 'getting-started'],
+          projectId: null
+        }
+      ];
+      
+      for (const doc of sampleDocuments) {
+        try {
+          const result = await invoke('create_document', {
+            title: doc.title,
+            content: doc.content,
+            projectId: doc.projectId,
+            deploymentId: null,
+            tags: doc.tags
+          }) as DocumentModel;
+          logger.info(`Created document: ${doc.title} (ID: ${result.id})`);
+        } catch (error) {
+          logger.error(`Failed to create document "${doc.title}":`, error);
+        }
+      }
+      
+      // Reload documents and projects
+      await loadDocuments();
+      await loadProjects();
+      
+      toastStore.success('Sample data created successfully!');
+      logger.info('Sample data creation completed');
+      
+    } catch (error) {
+      logger.error('Failed to create sample data:', error);
+      toastStore.error('Failed to create sample data');
+    } finally {
+      isCreatingSampleData = false;
+    }
+  }
+
   function toggleTag(tag: string) {
     if (selectedTags.includes(tag)) {
       selectedTags = selectedTags.filter(t => t !== tag);
@@ -205,10 +490,22 @@
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Documents</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">Organize and manage your knowledge</p>
         </div>
-        <Button onclick={() => showCreateModal = true} size="sm" className="flex-shrink-0">
-          <Icon icon="mdi:plus" className="w-4 h-4 mr-2" />
-          New
-        </Button>
+        <div class="flex gap-2">
+          <Button 
+            onclick={createSampleData} 
+            size="sm" 
+            variant="outline"
+            disabled={isCreatingSampleData}
+            className="flex-shrink-0"
+          >
+            <Icon icon="mdi:database-plus" className="w-4 h-4 mr-2" />
+            {isCreatingSampleData ? 'Creating...' : 'Sample Data'}
+          </Button>
+          <Button onclick={() => showCreateModal = true} size="sm" className="flex-shrink-0">
+            <Icon icon="mdi:plus" className="w-4 h-4 mr-2" />
+            New
+          </Button>
+        </div>
       </div>
       
       <!-- Quick Stats -->
@@ -228,24 +525,54 @@
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="flex-1 overflow-y-auto p-4">
-      <DocumentFilters
-        searchQuery={searchQuery}
-        selectedTags={selectedTags}
-        selectedProject={selectedProjectId}
-        availableTags={availableTags}
-        availableProjects={availableProjects}
-        onSearchChange={(query) => searchQuery = query}
-        onTagToggle={toggleTag}
-        onProjectChange={(projectId) => selectedProjectId = projectId}
-        onClearFilters={() => {
-          searchQuery = '';
-          selectedTags = [];
-          selectedProjectId = null;
-        }}
-      />
-    </div>
+          <!-- Document Tree Navigation -->
+      <div class="flex-1 overflow-y-auto p-4">
+        <DocumentTree
+          documents={documents}
+          projects={availableProjects}
+          selectedDocument={selectedDocument}
+          onDocumentSelect={openDocument}
+          className="mb-4"
+        />
+        
+        <!-- Filters Toggle -->
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <button
+            onclick={() => showFilters = !showFilters}
+            class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+          >
+            <span class="flex items-center gap-2">
+              <Icon icon="mdi:filter-variant" class="w-4 h-4" />
+              Advanced Filters
+            </span>
+            <Icon 
+              icon={showFilters ? 'mdi:chevron-up' : 'mdi:chevron-down'} 
+              class="w-4 h-4" 
+            />
+          </button>
+          
+          {#if showFilters}
+            <div class="mt-4">
+              <DocumentFilters
+                searchQuery={searchQuery}
+                selectedTags={selectedTags}
+                selectedProject={selectedProjectId}
+                availableTags={availableTags}
+                availableProjects={availableProjects}
+                tagCounts={tagCounts}
+                onSearchChange={(query) => searchQuery = query}
+                onTagToggle={toggleTag}
+                onProjectChange={(projectId) => selectedProjectId = projectId}
+                onClearFilters={() => {
+                  searchQuery = '';
+                  selectedTags = [];
+                  selectedProjectId = null;
+                }}
+              />
+            </div>
+          {/if}
+        </div>
+      </div>
   </div>
 
   <!-- Main Content Area -->
@@ -281,10 +608,22 @@
               Create, organize, and manage your documents with powerful markdown editing, 
               smart tagging, and project organization.
             </p>
-            <Button onclick={() => showCreateModal = true} size="lg" class="mx-auto">
-              <Icon icon="mdi:plus" class="w-5 h-5 mr-2" />
-              Create Your First Document
-            </Button>
+            <div class="flex flex-col gap-3">
+              <Button onclick={() => showCreateModal = true} size="lg" class="mx-auto">
+                <Icon icon="mdi:plus" class="w-5 h-5 mr-2" />
+                Create Your First Document
+              </Button>
+              <Button 
+                onclick={createSampleData} 
+                size="sm" 
+                variant="outline"
+                disabled={isCreatingSampleData}
+                class="mx-auto"
+              >
+                <Icon icon="mdi:database-plus" class="w-4 h-4 mr-2" />
+                {isCreatingSampleData ? 'Creating Sample Data...' : 'Create Sample Data'}
+              </Button>
+            </div>
           </div>
         </div>
       {:else}

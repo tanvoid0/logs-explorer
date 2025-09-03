@@ -2,6 +2,7 @@
   import { Input } from '$lib/components/ui/form/index.js';
   import { Badge } from '$lib/components/ui/feedback/index.js';
   import Button from '$lib/components/ui/button.svelte';
+  import { BaseSelector } from '$lib/components/ui/selector/index.js';
   import Icon from '@iconify/svelte';
 
   const { 
@@ -10,6 +11,7 @@
     selectedProject = null,
     availableTags = [],
     availableProjects = [],
+    tagCounts = {},
     onSearchChange = () => {},
     onTagToggle = () => {},
     onProjectChange = () => {},
@@ -21,6 +23,7 @@
     selectedProject: number | null;
     availableTags: string[];
     availableProjects: Array<{ id: number; name: string }>;
+    tagCounts: Record<string, number>;
     onSearchChange: (query: string) => void;
     onTagToggle: (tag: string) => void;
     onProjectChange: (projectId: number | null) => void;
@@ -111,41 +114,37 @@
   {/if}
 
   <!-- Filter Options -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="space-y-6">
     <!-- Project Filter -->
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
         Filter by Project
       </label>
-      <div class="space-y-2">
-        <Button
-          onclick={() => onProjectChange(null)}
-          className="w-full text-left px-3 py-2 rounded-lg transition-colors {selectedProject === null ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}"
-        >
-          <div class="flex items-center gap-2">
-            <Icon icon="mdi:folder-outline" className="w-4 h-4" />
-            <span>All Projects</span>
-            {#if selectedProject === null}
-              <Icon icon="mdi:check" className="w-4 h-4 ml-auto text-blue-600" />
-            {/if}
-          </div>
-        </Button>
-        
-        {#each availableProjects as project}
-          <Button
-            onclick={() => onProjectChange(project.id)}
-            className="w-full text-left px-3 py-2 rounded-lg transition-colors {selectedProject === project.id ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}"
-          >
-            <div class="flex items-center gap-2">
-              <Icon icon="mdi:folder" className="w-4 h-4" />
-              <span>{project.name}</span>
-              {#if selectedProject === project.id}
-                <Icon icon="mdi:check" className="w-4 h-4 ml-auto text-blue-600" />
-              {/if}
-            </div>
-          </Button>
-        {/each}
-      </div>
+      {#if availableProjects.length === 0}
+        <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+          <Icon icon="mdi:folder-off" className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p class="text-sm">No projects available</p>
+          <p class="text-xs">Create projects to see them here</p>
+        </div>
+      {:else}
+        <BaseSelector
+          options={[
+            { value: "", label: "All Projects" },
+            ...availableProjects.map((project: { id: number; name: string }) => ({ 
+              value: project.id.toString(), 
+              label: project.name 
+            }))
+          ]}
+          selectedValues={selectedProject !== null ? [selectedProject.toString()] : []}
+          placeholder="Select a project..."
+          size="default"
+          onchange={(event) => {
+            const value = event.detail.value[0];
+            onProjectChange(value ? parseInt(value) : null);
+          }}
+          className="w-full"
+        />
+      {/if}
     </div>
 
     <!-- Tags Filter -->
@@ -153,22 +152,33 @@
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
         Filter by Tags
       </label>
-      <div class="flex flex-wrap gap-2">
-        {#each availableTags as tag}
-          <Button
-            onclick={() => onTagToggle(tag)}
-            className="px-3 py-2 text-sm rounded-lg transition-colors {selectedTags.includes(tag) ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
-          >
-            <div class="flex items-center gap-2">
-              <Icon icon="mdi:tag" className="w-3 h-3" />
-              {tag}
-              {#if selectedTags.includes(tag)}
-                <Icon icon="mdi:check" className="w-3 h-3 text-blue-600" />
-              {/if}
-            </div>
-          </Button>
-        {/each}
-      </div>
+      {#if availableTags.length === 0}
+        <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+          <Icon icon="mdi:tag-off" className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p class="text-sm">No tags available</p>
+          <p class="text-xs">Create documents with tags to see them here</p>
+        </div>
+      {:else}
+        <div class="flex flex-wrap gap-2">
+          {#each availableTags as tag}
+            <Button
+              onclick={() => onTagToggle(tag)}
+              className="px-3 py-2 text-sm rounded-lg transition-colors {selectedTags.includes(tag) ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
+            >
+              <div class="flex items-center gap-2">
+                <Icon icon="mdi:tag" className="w-3 h-3" />
+                <span>{tag}</span>
+                <span class="text-xs bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded-full text-gray-600 dark:text-gray-400">
+                  {tagCounts[tag] || 0}
+                </span>
+                {#if selectedTags.includes(tag)}
+                  <Icon icon="mdi:check" className="w-3 h-3 text-blue-600" />
+                {/if}
+              </div>
+            </Button>
+          {/each}
+        </div>
+      {/if}
     </div>
   </div>
 </div>
