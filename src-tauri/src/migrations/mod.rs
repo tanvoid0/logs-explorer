@@ -1,3 +1,5 @@
+use sea_orm_migration::prelude::*;
+
 pub mod m20240101_000001_create_task_groups_table;
 pub mod m20240101_000002_create_tasks_table;
 pub mod m20240101_000003_create_ide_configs_table;
@@ -14,3 +16,16 @@ pub use m20240101_000004_create_framework_ide_mappings_table::Migration as creat
 pub use m20240101_000005_create_projects_table::Migration as createProjectsTable;
 pub use m20240101_000006_create_frameworks_table::Migration as createFrameworksTable;
 pub use m20240101_000007_create_framework_detections_table::Migration as createFrameworkDetectionsTable;
+
+// Create a function to get all migrations
+pub fn get_migrations() -> Vec<Box<dyn MigrationTrait>> {
+    vec![
+        Box::new(createTaskGroupsTable),
+        Box::new(createTasksTable),
+        Box::new(createIdeConfigsTable),
+        Box::new(createFrameworkIdeMappingsTable),
+        Box::new(createProjectsTable),
+        Box::new(createFrameworksTable),
+        Box::new(createFrameworkDetectionsTable),
+    ]
+}

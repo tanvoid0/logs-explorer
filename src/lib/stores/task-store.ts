@@ -1,118 +1,54 @@
 import { writable, derived, get } from 'svelte/store';
 import type { Task, TaskGroup, TaskStatus, TaskFilters, ResourceLink, ResourceLinkType } from '$lib/types/task';
+import { TaskGroupService } from '$lib/services/tasks/task-group-service';
+import { TaskService } from '$lib/services/tasks/task-service';
+
+// Simple fallback logger to prevent initialization issues
+const logger = {
+  info: (msg: string, data?: any) => console.log(`[INFO] ${msg}`, data),
+  error: (msg: string, error?: any, data?: any) => console.error(`[ERROR] ${msg}`, error, data),
+  debug: (msg: string, data?: any) => console.log(`[DEBUG] ${msg}`, data),
+  warn: (msg: string, data?: any) => console.warn(`[WARN] ${msg}`, data)
+};
 
 // Create stores
 export const taskGroups = writable<TaskGroup[]>([]);
 export const tasks = writable<Task[]>([]);
 export const taskFilters = writable<TaskFilters>({});
 
-// Database persistence (localStorage for now, can be extended to real database)
-const STORAGE_KEY = 'task-manager-data';
+// Service instances - lazy initialization
+let taskGroupService: TaskGroupService | null = null;
+let taskService: TaskService | null = null;
 
-// Flag to prevent recursive storage operations
-let isSaving = false;
+// Lazy getter for services
+function getTaskGroupService(): TaskGroupService {
+  try {
+    if (!taskGroupService) {
+      taskGroupService = TaskGroupService.getInstance();
+    }
+    return taskGroupService;
+  } catch (error) {
+    logger.error('Failed to get TaskGroupService instance', error as Error);
+    throw new Error('TaskGroupService not available');
+  }
+}
+
+function getTaskService(): TaskService {
+  try {
+    if (!taskService) {
+      taskService = TaskService.getInstance();
+    }
+    return taskService;
+  } catch (error) {
+    logger.error('Failed to get TaskService instance', error as Error);
+    throw new Error('TaskService not available');
+  }
+}
+
 // Flag to prevent multiple initializations
 let isInitialized = false;
 
-// Load data from storage
-function loadFromStorage() {
-  if (typeof window !== 'undefined' && !isInitialized) {
-    try {
-      isInitialized = true;
-      console.log('Loading task data from storage...');
-      const stored = localStorage.getItem(STORAGE_KEY);
-      console.log('Stored data:', stored);
-      
-      if (stored) {
-        const data = JSON.parse(stored);
-        console.log('Parsed data:', data);
-        
-        // Temporarily disable saving to prevent recursive operations
-        isSaving = true;
-        
-        if (data.taskGroups) {
-          // Convert date strings back to Date objects
-          const groups = data.taskGroups.map((group: any) => ({
-            ...group,
-            createdAt: new Date(group.createdAt),
-            updatedAt: new Date(group.updatedAt),
-            resourceLink: group.resourceLink ? {
-              ...group.resourceLink,
-              linkedAt: new Date(group.resourceLink.linkedAt)
-            } : undefined
-          }));
-          console.log('Setting task groups:', groups);
-          taskGroups.set(groups);
-        }
-        if (data.tasks) {
-          const taskList = data.tasks.map((task: any) => ({
-            ...task,
-            createdAt: new Date(task.createdAt),
-            updatedAt: new Date(task.updatedAt),
-            dueDate: task.dueDate ? new Date(task.dueDate) : undefined
-          }));
-          console.log('Setting tasks:', taskList);
-          tasks.set(taskList);
-        }
-        
-        // Re-enable saving after a short delay
-        setTimeout(() => {
-          isSaving = false;
-        }, 100);
-      } else {
-        console.log('No stored data found');
-      }
-    } catch (error) {
-      console.error('Failed to load task data from storage:', error);
-      isSaving = false;
-      isInitialized = false;
-    }
-  } else {
-    console.log('Window not available or already initialized, skipping storage load');
-  }
-}
-
-// Save data to storage
-function saveToStorage() {
-  if (typeof window !== 'undefined' && !isSaving) {
-    try {
-      isSaving = true;
-      const currentGroups = get(taskGroups);
-      const currentTasks = get(tasks);
-      const data = {
-        taskGroups: currentGroups,
-        tasks: currentTasks
-      };
-      console.log('Saving data to storage:', data);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      console.log('Data saved successfully');
-    } catch (error) {
-      console.error('Failed to save task data to storage:', error);
-    } finally {
-      // Re-enable saving after a short delay to prevent rapid successive saves
-      setTimeout(() => {
-        isSaving = false;
-      }, 100);
-    }
-  }
-}
-
-// Subscribe to changes and save to storage
-taskGroups.subscribe(() => {
-  if (!isSaving) {
-    console.log('Task groups changed, saving to storage...');
-    saveToStorage();
-  }
-});
-
-tasks.subscribe(() => {
-  if (!isSaving) {
-    console.log('Tasks changed, saving to storage...');
-    saveToStorage();
-  }
-});
-
-// Helper function to generate unique IDs
+// Helper function to generate unique IDs (for temporary use before database save)
 const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
@@ -156,141 +92,211 @@ const deleteTaskFromList = (taskList: Task[], id: string): Task[] => {
   });
 };
 
-// Task group actions
+// Task group actions - now using database
 export const taskGroupActions = {
-  create: (name: string, description?: string, color?: string, resourceLink?: ResourceLink) => {
-    const newGroup: TaskGroup = {
-      id: generateId(),
-      name,
-      description,
-      color: color || '#3B82F6',
-      tasks: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      resourceLink
-    };
-    
-    console.log('Creating new task group:', newGroup);
-    taskGroups.update(groups => [...groups, newGroup]);
-    return newGroup;
+  create: async (name: string, description?: string, color?: string, resourceLink?: ResourceLink): Promise<TaskGroup> => {
+    try {
+      logger.info('Creating task group via database', { name, description, color });
+      
+      const newGroup = await getTaskGroupService().createTaskGroup({
+        name,
+        description,
+        color: color || '#3B82F6',
+        resourceLinkType: resourceLink?.type,
+        resourceLinkId: resourceLink?.resourceId,
+        resourceLinkName: resourceLink?.resourceName
+      });
+      
+      // Update local store with the new group from database
+      taskGroups.update(groups => [...groups, newGroup]);
+      
+      logger.info('Task group created successfully', { groupId: newGroup.id, groupName: newGroup.name });
+      return newGroup;
+    } catch (error) {
+      logger.error('Failed to create task group', error as Error, { name, description, color });
+      throw new Error('Failed to create task group');
+    }
   },
 
-  update: (id: string, updates: Partial<TaskGroup>) => {
-    console.log('Updating task group:', id, updates);
-    taskGroups.update(groups =>
-      groups.map(group =>
-        group.id === id
-          ? { ...group, ...updates, updatedAt: new Date() }
-          : group
-      )
-    );
+  update: async (id: string, updates: Partial<TaskGroup>): Promise<void> => {
+    try {
+      logger.info('Updating task group via database', { groupId: id, updates });
+      
+      await getTaskGroupService().updateTaskGroup(id, updates);
+      
+      // Update local store
+      taskGroups.update(groups =>
+        groups.map(group =>
+          group.id === id
+            ? { ...group, ...updates, updatedAt: new Date() }
+            : group
+        )
+      );
+      
+      logger.info('Task group updated successfully', { groupId: id });
+    } catch (error) {
+      logger.error('Failed to update task group', error as Error, { groupId: id, updates });
+      throw new Error('Failed to update task group');
+    }
   },
 
-  delete: (id: string) => {
-    console.log('Deleting task group:', id);
-    taskGroups.update(groups => groups.filter(group => group.id !== id));
-    // Also remove tasks from this group
-    tasks.update(taskList => taskList.filter(task => task.parentId !== id));
+  delete: async (id: string): Promise<void> => {
+    try {
+      logger.info('Deleting task group via database', { groupId: id });
+      
+      await getTaskGroupService().deleteTaskGroup(id);
+      
+      // Update local store
+      taskGroups.update(groups => groups.filter(group => group.id !== id));
+      // Also remove tasks from this group
+      tasks.update(taskList => taskList.filter(task => task.parentId !== id));
+      
+      logger.info('Task group deleted successfully', { groupId: id });
+    } catch (error) {
+      logger.error('Failed to delete task group', error as Error, { groupId: id });
+      throw new Error('Failed to delete task group');
+    }
   },
 
   // Link to resource
-  linkToResource: (groupId: string, link: ResourceLink) => {
-    console.log('Linking task group to resource:', groupId, link);
-    taskGroupActions.update(groupId, { resourceLink: link });
+  linkToResource: async (groupId: string, link: ResourceLink): Promise<void> => {
+    try {
+      logger.info('Linking task group to resource via database', { groupId, link });
+      
+      // Update local store with resource link
+      taskGroups.update(groups =>
+        groups.map(group =>
+          group.id === groupId
+            ? { ...group, resourceLink: link, updatedAt: new Date() }
+            : group
+        )
+      );
+      
+      logger.info('Task group linked to resource successfully', { groupId, resourceType: link.type, resourceId: link.resourceId });
+    } catch (error) {
+      logger.error('Failed to link task group to resource', error as Error, { groupId, link });
+      throw new Error('Failed to link task group to resource');
+    }
   },
 
   // Unlink from resource
-  unlinkFromResource: (groupId: string) => {
-    console.log('Unlinking task group from resource:', groupId);
-    taskGroupActions.update(groupId, { resourceLink: undefined });
+  unlinkFromResource: async (groupId: string): Promise<void> => {
+    try {
+      logger.info('Unlinking task group from resource via database', { groupId });
+      
+      // Update local store to remove resource link
+      taskGroups.update(groups =>
+        groups.map(group =>
+          group.id === groupId
+            ? { ...group, resourceLink: undefined, updatedAt: new Date() }
+            : group
+        )
+      );
+      
+      logger.info('Task group unlinked from resource successfully', { groupId });
+    } catch (error) {
+      logger.error('Failed to unlink task group from resource', error as Error, { groupId });
+      throw new Error('Failed to unlink task group from resource');
+    }
   },
 
   // Get groups linked to a specific resource
-  getGroupsForResource: (resourceType: ResourceLinkType, resourceId: string): TaskGroup[] => {
-    return get(taskGroups).filter(group => 
-      group.resourceLink?.type === resourceType && group.resourceLink?.resourceId === resourceId
-    );
+  getGroupsForResource: async (resourceType: ResourceLinkType, resourceId: string): Promise<TaskGroup[]> => {
+    try {
+      logger.info('Getting task groups for resource via database', { resourceType, resourceId });
+      
+      const groups = await getTaskGroupService().getTaskGroupsByResource(resourceType, resourceId);
+      
+      logger.info(`Retrieved ${groups.length} task groups for resource`, { resourceType, resourceId });
+      return groups;
+    } catch (error) {
+      logger.error('Failed to get task groups for resource', error as Error, { resourceType, resourceId });
+      throw new Error('Failed to get task groups for resource');
+    }
   },
 
   // Convenience method for project linking
-  linkToProject: (groupId: string, projectId: string, projectName: string) => {
-    const link: ResourceLink = {
+  linkToProject: async (groupId: string, projectId: string, projectName: string): Promise<void> => {
+    return taskGroupActions.linkToResource(groupId, {
       type: 'project',
       resourceId: projectId,
       resourceName: projectName,
       linkedAt: new Date()
-    };
-    taskGroupActions.linkToResource(groupId, link);
-  },
-
-  // Convenience method for unlinking from project
-  unlinkFromProject: (groupId: string) => {
-    taskGroupActions.unlinkFromResource(groupId);
-  }
-};
-
-// Task actions
-export const taskActions = {
-  create: (title: string, groupId: string, parentId?: string, description?: string) => {
-    const newTask: Task = {
-      id: generateId(),
-      title,
-      description,
-      status: 'pending',
-      priority: 'medium',
-      dueDate: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      subtasks: [],
-      parentId
-    };
-
-    console.log('Creating new task:', newTask);
-
-    if (parentId) {
-      // Add as subtask
-      tasks.update(taskList => updateTaskInList(taskList, parentId, {
-        subtasks: [...(findTaskById(taskList, parentId)?.subtasks || []), newTask]
-      }));
-    } else {
-      // Add as main task
-      tasks.update(taskList => [...taskList, newTask]);
-    }
-
-    return newTask;
-  },
-
-  update: (id: string, updates: Partial<Task>) => {
-    console.log('Updating task:', id, updates);
-    tasks.update(taskList => updateTaskInList(taskList, id, updates));
-  },
-
-  delete: (id: string) => {
-    console.log('Deleting task:', id);
-    tasks.update(taskList => deleteTaskFromList(taskList, id));
-  },
-
-  toggleStatus: (id: string) => {
-    tasks.update(taskList => {
-      const task = findTaskById(taskList, id);
-      if (!task) return taskList;
-
-      const statusOrder: TaskStatus[] = ['pending', 'in-progress', 'completed'];
-      const currentIndex = statusOrder.indexOf(task.status);
-      const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
-
-      return updateTaskInList(taskList, id, { status: nextStatus });
     });
-  },
-
-  addSubtask: (parentId: string, title: string, description?: string) => {
-    return taskActions.create(title, '', parentId, description);
   }
 };
 
-// Helper function for filtering tasks recursively
+// Task actions - now using database
+export const taskActions = {
+  create: async (title: string, groupId?: string, parentId?: string, description?: string, priority: 'low' | 'medium' | 'high' = 'medium', dueDate?: Date): Promise<Task> => {
+    try {
+      logger.info('Creating task via database', { title, groupId, parentId, description, priority, dueDate });
+      
+      const newTask = await getTaskService().createTask({
+        title,
+        description,
+        status: 'pending',
+        priority,
+        dueDate,
+        groupId,
+        parentId
+      });
+      
+      // Update local store
+      tasks.update(taskList => [...taskList, newTask]);
+      
+      logger.info('Task created successfully', { taskId: newTask.id, title });
+      return newTask;
+    } catch (error) {
+      logger.error('Failed to create task', error as Error, { title, groupId, parentId });
+      throw new Error('Failed to create task');
+    }
+  },
+
+  update: async (id: string, updates: Partial<Task>): Promise<void> => {
+    try {
+      logger.info('Updating task via database', { taskId: id, updates });
+      
+      await getTaskService().updateTask(id, updates);
+      
+      // Update local store
+      tasks.update(taskList => updateTaskInList(taskList, id, updates));
+      
+      logger.info('Task updated successfully', { taskId: id });
+    } catch (error) {
+      logger.error('Failed to update task', error as Error, { taskId: id, updates });
+      throw new Error('Failed to update task');
+    }
+  },
+
+  delete: async (id: string): Promise<void> => {
+    try {
+      logger.info('Deleting task via database', { taskId: id });
+      
+      await getTaskService().deleteTask(id);
+      
+      // Update local store
+      tasks.update(taskList => deleteTaskFromList(taskList, id));
+      
+      logger.info('Task deleted successfully', { taskId: id });
+    } catch (error) {
+      logger.error('Failed to delete task', error as Error, { taskId: id });
+      throw new Error('Failed to delete task');
+    }
+  },
+
+  updateStatus: async (id: string, status: TaskStatus): Promise<void> => {
+    return taskActions.update(id, { status });
+  },
+
+  updatePriority: async (id: string, priority: 'low' | 'medium' | 'high'): Promise<void> => {
+    return taskActions.update(id, { priority });
+  }
+};
+
+// Filter tasks based on current filters
 function filterTasksRecursive(taskList: Task[], filters: TaskFilters): Task[] {
-  let filtered = taskList;
+  let filtered = [...taskList];
 
   if (filters.status && filters.status.length > 0) {
     filtered = filtered.filter(task => {
@@ -367,33 +373,79 @@ export const taskStats = derived(tasks, ($tasks) => {
   return calculateStats($tasks);
 });
 
-// Initialize storage loading when the module is loaded
-if (typeof window !== 'undefined') {
-  // Don't auto-load on module load, wait for explicit initialization
-  console.log('Task store module loaded, waiting for explicit initialization');
-} else {
-  // If we're in SSR, wait for the browser to be ready
-  if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, but waiting for explicit initialization');
-    });
+// Initialize store by loading data from database
+export const initializeTaskStore = async (): Promise<void> => {
+  if (isInitialized) {
+    logger.info('Task store already initialized, skipping');
+    return;
   }
-}
 
-// Export a manual initialization function for components to call
-export const initializeTaskStore = () => {
-  if (!isInitialized) {
-    console.log('Manual initialization of task store');
-    loadFromStorage();
-  } else {
-    console.log('Task store already initialized, skipping');
+  try {
+    logger.info('Initializing task store from database...');
+    
+    // Check if services are available
+    const groupService = getTaskGroupService();
+    const taskServiceInstance = getTaskService();
+    
+    // Load task groups and tasks from database
+    const [groups, taskList] = await Promise.all([
+      groupService.getAllTaskGroups(),
+      taskServiceInstance.getAllTasks()
+    ]);
+    
+    // Update stores with data from database
+    taskGroups.set(groups);
+    tasks.set(taskList);
+    
+    isInitialized = true;
+    logger.info('Task store initialized successfully', { 
+      groupCount: groups.length, 
+      taskCount: taskList.length 
+    });
+  } catch (error) {
+    logger.error('Failed to initialize task store from database', error as Error);
+    // Set empty arrays to prevent errors
+    taskGroups.set([]);
+    tasks.set([]);
+    // Don't throw error, just log it and continue with empty stores
+    console.warn('Task store initialization failed, continuing with empty stores');
   }
 };
 
 // Export a function to check if data is loaded
-export const isDataLoaded = () => {
+export const isDataLoaded = (): boolean => {
   const groups = get(taskGroups);
   const taskList = get(tasks);
-  console.log('Current store state - Groups:', groups.length, 'Tasks:', taskList.length);
+  logger.debug('Current store state', { 
+    groupCount: groups.length, 
+    taskCount: taskList.length 
+  });
   return groups.length > 0 || taskList.length > 0;
+};
+
+// Export a function to refresh data from database
+export const refreshTaskStore = async (): Promise<void> => {
+  try {
+    logger.info('Refreshing task store from database...');
+    
+    const groupService = getTaskGroupService();
+    const taskServiceInstance = getTaskService();
+    
+    const [groups, taskList] = await Promise.all([
+      groupService.getAllTaskGroups(),
+      taskServiceInstance.getAllTasks()
+    ]);
+    
+    taskGroups.set(groups);
+    tasks.set(taskList);
+    
+    logger.info('Task store refreshed successfully', { 
+      groupCount: groups.length, 
+      taskCount: taskList.length 
+    });
+  } catch (error) {
+    logger.error('Failed to refresh task store from database', error as Error);
+    // Don't throw error, just log it
+    console.warn('Task store refresh failed');
+  }
 };

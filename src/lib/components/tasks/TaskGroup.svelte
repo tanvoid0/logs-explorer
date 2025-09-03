@@ -21,8 +21,8 @@
   let newTaskTitle = $state('');
   let newTaskDescription = $state('');
 
-  // Get tasks for this group - tasks that have this group's ID as their parentId
-  const groupTasks = $derived($tasks.filter(task => task.parentId === group.id));
+  // Get tasks for this group - tasks that have this group's ID as their groupId
+  const groupTasks = $derived($tasks.filter(task => task.groupId === group.id));
 
   function handleEdit() {
     isEditing = true;
@@ -52,12 +52,16 @@
     }
   }
 
-  function handleAddTask() {
+  async function handleAddTask() {
     if (newTaskTitle.trim()) {
-      taskActions.create(newTaskTitle.trim(), group.id, undefined, newTaskDescription.trim());
-      newTaskTitle = '';
-      newTaskDescription = '';
-      showAddTask = false;
+      try {
+        await taskActions.create(newTaskTitle.trim(), group.id, undefined, newTaskDescription.trim());
+        newTaskTitle = '';
+        newTaskDescription = '';
+        showAddTask = false;
+      } catch (error) {
+        console.error('Failed to create task:', error);
+      }
     }
   }
 

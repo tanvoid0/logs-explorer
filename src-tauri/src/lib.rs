@@ -18,6 +18,7 @@ pub mod utils;
 
 use tauri::Builder;
 use tauri::generate_handler;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -26,6 +27,21 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init());
 
     builder
+        .setup(|app| {
+            // Initialize database manager synchronously in setup
+            let app_handle = app.handle().clone();
+            
+            // Use block_on to make the async initialization synchronous
+            let db_manager = tauri::async_runtime::block_on(async {
+                crate::database::DatabaseManager::new(&app_handle)
+                    .await
+                    .expect("Failed to initialize database manager")
+            });
+            
+            // Manage the database manager immediately
+            app_handle.manage(db_manager);
+            Ok(())
+        })
         .invoke_handler(generate_handler![
             // Task commands
             crate::tasks::commands::get_all_task_groups,
@@ -86,6 +102,8 @@ pub fn run() {
 
             // Kubernetes commands
             crate::k8s::commands::init_k8s,
+            crate::k8s::commands::k8s_health_check,
+            crate::k8s::commands::check_k8s_cluster_health,
             crate::k8s::commands::k8s_get_namespaces,
             crate::k8s::commands::k8s_get_pods,
             crate::k8s::commands::k8s_get_pod,

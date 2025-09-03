@@ -6,6 +6,7 @@
   import Icon from '@iconify/svelte';
   import type { TaskFilters as TaskFiltersType, ResourceLinkType } from '$lib/types/task';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
+  import TaskCRUDTester from './TaskCRUDTester.svelte';
 
   // Props for customization
   const { 
@@ -56,29 +57,33 @@
     return true;
   }));
 
-  function handleAddGroup() {
+  async function handleAddGroup() {
     if (newGroupName.trim()) {
-      const newGroup = taskGroupActions.create(
-        newGroupName.trim(), 
-        newGroupDescription.trim(), 
-        newGroupColor
-      );
-      
-      // If we have resource link filters, automatically link the new group
-      if ($taskFilters.resourceLinkType && $taskFilters.resourceLinkId) {
-        const resourceName = $taskFilters.resourceLinkType === 'project' ? 'Project' : 'Resource';
-        taskGroupActions.linkToResource(newGroup.id, {
-          type: $taskFilters.resourceLinkType,
-          resourceId: $taskFilters.resourceLinkId,
-          resourceName,
-          linkedAt: new Date()
-        });
+      try {
+        const newGroup = await taskGroupActions.create(
+          newGroupName.trim(), 
+          newGroupDescription.trim(), 
+          newGroupColor
+        );
+        
+        // If we have resource link filters, automatically link the new group
+        if ($taskFilters.resourceLinkType && $taskFilters.resourceLinkId) {
+          const resourceName = $taskFilters.resourceLinkType === 'project' ? 'Project' : 'Resource';
+          await taskGroupActions.linkToResource(newGroup.id, {
+            type: $taskFilters.resourceLinkType,
+            resourceId: $taskFilters.resourceLinkId,
+            resourceName,
+            linkedAt: new Date()
+          });
+        }
+        
+        newGroupName = '';
+        newGroupDescription = '';
+        newGroupColor = '#3B82F6';
+        showAddGroup = false;
+      } catch (error) {
+        console.error('Failed to create task group:', error);
       }
-      
-      newGroupName = '';
-      newGroupDescription = '';
-      newGroupColor = '#3B82F6';
-      showAddGroup = false;
     }
   }
 
@@ -307,4 +312,7 @@
       {/if}
     </div>
   </div>
+
+  <!-- Task CRUD Integration Tester -->
+  <TaskCRUDTester />
 </div>

@@ -38,7 +38,7 @@
   ];
 
   // Apply initial filters
-  onMount(() => {
+  onMount(async () => {
     console.log('TaskPage mounted, checking data...');
     
     // Apply initial filters only once
@@ -47,13 +47,12 @@
     }
     
     // Ensure the store is initialized
-    initializeTaskStore();
-    
-    // Check if data is loaded
-    setTimeout(() => {
-      const loaded = isDataLoaded();
-      console.log('Data loaded check:', loaded);
-    }, 100);
+    try {
+      await initializeTaskStore();
+      console.log('Task store initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize task store:', error);
+    }
   });
 
   // Get filtered task groups based on current filters
@@ -68,41 +67,54 @@
     });
   });
 
-  function handleAddGroup() {
+  async function handleAddGroup() {
     if (newGroupName.trim()) {
-      const newGroup = taskGroupActions.create(
-        newGroupName.trim(), 
-        newGroupDescription.trim(), 
-        newGroupColor
-      );
-      
-      // If we have resource link filters, automatically link the new group
-      if ($taskFilters.resourceLinkType && $taskFilters.resourceLinkId) {
-        const resourceName = $taskFilters.resourceLinkType === 'project' ? 'Project' : 'Resource';
-        taskGroupActions.linkToResource(newGroup.id, {
-          type: $taskFilters.resourceLinkType,
-          resourceId: $taskFilters.resourceLinkId,
-          resourceName,
-          linkedAt: new Date()
-        });
+      try {
+        const newGroup = await taskGroupActions.create(
+          newGroupName.trim(), 
+          newGroupDescription.trim(), 
+          newGroupColor
+        );
+        
+        // If we have resource link filters, automatically link the new group
+        if ($taskFilters.resourceLinkType && $taskFilters.resourceLinkId) {
+          const resourceName = $taskFilters.resourceLinkType === 'project' ? 'Project' : 'Resource';
+          await taskGroupActions.linkToResource(newGroup.id, {
+            type: $taskFilters.resourceLinkType,
+            resourceId: $taskFilters.resourceLinkId,
+            resourceName,
+            linkedAt: new Date()
+          });
+        }
+        
+        newGroupName = '';
+        newGroupDescription = '';
+        newGroupColor = '#3B82F6';
+        showAddGroup = false;
+      } catch (error) {
+        console.error('Failed to create task group:', error);
+        // You might want to show an error message to the user here
       }
-      
-      newGroupName = '';
-      newGroupDescription = '';
-      newGroupColor = '#3B82F6';
-      showAddGroup = false;
     }
   }
 
-  function handleUpdateGroup(event: CustomEvent) {
-    taskGroupActions.update(event.detail.id, {
-      name: event.detail.name,
-      description: event.detail.description
-    });
+  async function handleUpdateGroup(event: CustomEvent) {
+    try {
+      await taskGroupActions.update(event.detail.id, {
+        name: event.detail.name,
+        description: event.detail.description
+      });
+    } catch (error) {
+      console.error('Failed to update task group:', error);
+    }
   }
 
-  function handleDeleteGroup(event: CustomEvent) {
-    taskGroupActions.delete(event.detail);
+  async function handleDeleteGroup(event: CustomEvent) {
+    try {
+      await taskGroupActions.delete(event.detail);
+    } catch (error) {
+      console.error('Failed to delete task group:', error);
+    }
   }
 
   function getProgressPercentage() {

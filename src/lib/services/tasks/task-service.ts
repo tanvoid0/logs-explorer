@@ -132,12 +132,12 @@ export class TaskService {
       logger.debug('API call: add_task', request);
       
       const task = await invoke<any>('add_task', {
+        groupId: request.groupId,
         title: request.title,
         description: request.description,
         status: request.status,
         priority: request.priority,
         dueDate: request.dueDate?.toISOString(),
-        groupId: request.groupId,
         parentId: request.parentId
       });
       

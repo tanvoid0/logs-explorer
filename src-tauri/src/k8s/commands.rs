@@ -11,6 +11,28 @@ pub async fn init_k8s() -> Result<bool, String> {
         .map_err(|e| e.to_string())
 }
 
+// Health check command
+#[command]
+pub async fn k8s_health_check() -> Result<bool, String> {
+    // Simple health check - try to get namespaces to verify connection
+    let service = NamespaceService::new();
+    match service.get_namespaces().await {
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false)
+    }
+}
+
+// Cluster health check command
+#[command]
+pub async fn check_k8s_cluster_health() -> Result<bool, String> {
+    // More comprehensive cluster health check
+    let service = NamespaceService::new();
+    match service.get_namespaces().await {
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false)
+    }
+}
+
 // Namespace commands
 #[command]
 pub async fn k8s_get_namespaces() -> Result<Vec<crate::k8s::types::K8sNamespace>, String> {

@@ -1,5 +1,3 @@
-import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface LogContext {
@@ -28,77 +26,14 @@ export interface LogEntry {
 type LogInput = string | object | any[];
 
 class Logger {
-  private logger: winston.Logger;
   private currentTraceId: string | null = null;
   private currentOperation: string | null = null;
 
   constructor() {
-    // Determine if we're in development mode
-    const isDev = (import.meta as any).env?.DEV || 
-                  (import.meta as any).env?.VITE_DEV === 'true' ||
-                  window.location.hostname === 'localhost';
-
-    const logDir = isDev ? './logs' : './logs';
-
-    // Create console format
-    const consoleFormat = winston.format.combine(
-      winston.format.colorize(),
-      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      winston.format.printf(({ timestamp, level, message, traceId, operation, ...context }) => {
-        const traceInfo = traceId ? `[${traceId}]` : '';
-        const operationInfo = operation ? `[${operation}]` : '';
-        const contextInfo = Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : '';
-        return `${timestamp} ${level} ${traceInfo}${operationInfo} ${message}${contextInfo}`;
-      })
-    );
-
-    // Create file format (JSON)
-    const fileFormat = winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.errors({ stack: true }),
-      winston.format.json()
-    );
-
-    this.logger = winston.createLogger({
-      level: isDev ? 'debug' : 'info',
-      format: fileFormat,
-      defaultMeta: { service: 'logs-explorer-frontend' },
-      transports: [
-        // Console transport
-        new winston.transports.Console({
-          format: consoleFormat,
-          level: isDev ? 'debug' : 'info'
-        }),
-
-        // Daily rotate file transport
-        new DailyRotateFile({
-          filename: `${logDir}/logs-explorer-frontend-%DATE%.log`,
-          datePattern: 'YYYY-MM-DD',
-          zippedArchive: true,
-          maxSize: '20m',
-          maxFiles: '14d',
-          format: fileFormat
-        }),
-
-        // Error file transport
-        new DailyRotateFile({
-          filename: `${logDir}/logs-explorer-frontend-error-%DATE%.log`,
-          datePattern: 'YYYY-MM-DD',
-          zippedArchive: true,
-          maxSize: '20m',
-          maxFiles: '30d',
-          level: 'error',
-          format: fileFormat
-        })
-      ]
-    });
-
     // Log initialization
     this.info('Frontend logger initialized', {
-      isDev,
-      logDir,
-      userAgent: navigator.userAgent,
-      url: window.location.href
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      timestamp: new Date().toISOString()
     });
   }
 
@@ -212,19 +147,19 @@ class Logger {
   info(input: LogInput, context?: LogContext) {
     const { message, context: inputContext } = this.formatLogInput(input);
     const mergedContext = { ...inputContext, ...context };
-    this.logger.info(message, this.createLogMeta(mergedContext));
+    console.info(message, this.createLogMeta(mergedContext));
   }
 
   debug(input: LogInput, context?: LogContext) {
     const { message, context: inputContext } = this.formatLogInput(input);
     const mergedContext = { ...inputContext, ...context };
-    this.logger.debug(message, this.createLogMeta(mergedContext));
+    console.debug(message, this.createLogMeta(mergedContext));
   }
 
   warn(input: LogInput, context?: LogContext) {
     const { message, context: inputContext } = this.formatLogInput(input);
     const mergedContext = { ...inputContext, ...context };
-    this.logger.warn(message, this.createLogMeta(mergedContext));
+    console.warn(message, this.createLogMeta(mergedContext));
   }
 
   error(input: LogInput, error?: Error | unknown, context?: LogContext) {
@@ -248,7 +183,7 @@ class Logger {
         };
       }
     }
-    this.logger.error(message, meta);
+    console.error(message, meta);
   }
 
   // Convenience methods for common patterns
